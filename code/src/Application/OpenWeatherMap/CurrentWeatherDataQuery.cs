@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using ThirdPartyAPIs.Application.Common.Models;
 using System.Text.Json;
+using ThirdPartyAPIs.Domain.Common;
+using ThirdPartyAPIs.Application.Common.Contracts;
 
 namespace ThirdPartyAPIs.Application.OpenWeatherMap;
 
@@ -28,22 +30,13 @@ public class CurrentWeatherDataQueryValidator : AbstractValidator<CurrentWeather
 public class CurrentWeatherDataQueryHandler(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     : IRequestHandler<CurrentWeatherDataQuery, ResponseBase>
 {
-    private ResponseBase ErrorResponse(string error)
-    {
-        return new ResponseBase
-        {
-            Status = false,
-            Error = error
-        };
-    }
-
     public async Task<ResponseBase> Handle(CurrentWeatherDataQuery request, CancellationToken cancellationToken)
     {
         var apiKey = configuration["OpenWeatherMap:APIKey"];
         var apiUrl = configuration["OpenWeatherMap:CurrentWeatherApiUrl"];
 
         if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiUrl))
-            return ErrorResponse("API key or API URL is not configured.");
+            return ApiResponse.Error("API key or API URL is not configured.");
 
         var apiCall = $"{apiUrl}" +
                      $"lat={request.Latitude}" +
@@ -54,7 +47,7 @@ public class CurrentWeatherDataQueryHandler(IConfiguration configuration, IHttpC
         var response = await client.GetAsync(apiCall, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
-            return ErrorResponse($"Failed to retrieve current weather data. Code: {response.StatusCode}.");
+            return ApiResponse.Error($"Failed to retrieve current weather data. Code: {response.StatusCode.GetDescription}.");
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -92,16 +85,11 @@ public class CurrentWeatherDataQueryHandler(IConfiguration configuration, IHttpC
                 dto.Sunset = dto.Sunset.AddHours(5);
             }
 
-            return new ResponseBase
-            {
-                Status = true,
-                Data = dto,
-                Message = "Current weather data retrieved successfully."
-            };
+            return ApiResponse.Success(dto, "Current weather data retrieved successfully.");
         }
         else
         {
-            return ErrorResponse("Invalid weather data received.");
+            return ApiResponse.Error("Invalid weather data received.");
         }
     }
 }
