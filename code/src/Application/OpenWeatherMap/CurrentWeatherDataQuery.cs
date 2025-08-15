@@ -61,15 +61,71 @@ public class CurrentWeatherDataQueryHandler(IConfiguration configuration, IHttpC
         var weatherData = JsonSerializer.Deserialize<CurrentWeatherResponse>(content,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        return new ResponseBase
+        if (weatherData is not null)
         {
-            Status = true,
-            Data = weatherData,
-            Message = "Current weather data retrieved successfully."
-        };
+            decimal tempCelsius = weatherData.Main?.Temp ?? 0;
+            decimal feelsLikeCelsius = weatherData.Main?.FeelsLike ?? 0;
+            int humidityPercent = weatherData.Main?.Humidity ?? 0;
+            decimal windSpeedKmh = (weatherData.Wind?.Speed ?? 0) * 3.6m;
+
+            var dto = new CurrentWeatherInfoDto
+            {
+                City = weatherData.Name,
+                Country = weatherData.Sys?.Country,
+                Longitude = weatherData.Coord?.Lon ?? 0,
+                Latitude = weatherData.Coord?.Lat ?? 0,
+                Unit = "celsius",
+                ObservationTime = DateTimeOffset.FromUnixTimeSeconds(weatherData.Dt).UtcDateTime,
+                Temperature = Math.Round((weatherData.Main?.Temp ?? 0) - 273.15m, 1),
+                FeelsLike = Math.Round((weatherData.Main?.FeelsLike ?? 0) - 273.15m, 1),
+                Description = weatherData.Weather?.FirstOrDefault()?.Description ?? string.Empty,
+                Humidity = $"{humidityPercent}%",
+                WindSpeed = $"{Math.Round(windSpeedKmh, 1)} km/h",
+                Sunrise = DateTimeOffset.FromUnixTimeSeconds(weatherData.Sys?.Sunrise ?? 0).UtcDateTime,
+                Sunset = DateTimeOffset.FromUnixTimeSeconds(weatherData.Sys?.Sunset ?? 0).UtcDateTime
+            };
+
+            if (dto.Country == "PK")
+            {
+                dto.ObservationTime = dto.ObservationTime.AddHours(5);
+                dto.Sunrise = dto.Sunrise.AddHours(5);
+                dto.Sunset = dto.Sunset.AddHours(5);
+            }
+
+            return new ResponseBase
+            {
+                Status = true,
+                Data = dto,
+                Message = "Current weather data retrieved successfully."
+            };
+        }
+        else
+        {
+            return ErrorResponse("Invalid weather data received.");
+        }
     }
 }
 
+// Custom Response
+public class CurrentWeatherInfoDto
+{
+    public string? City { get; set; }
+    public string? Country { get; set; }
+    public decimal Longitude { get; set; }
+    public decimal Latitude { get; set; }
+    public string? Unit { get; set; } // e.g., "celsius". 
+    public DateTime ObservationTime { get; set; }
+    public decimal Temperature { get; set; }
+    public decimal FeelsLike { get; set; }
+    public string? Description { get; set; }
+    public string? Humidity { get; set; }
+    public string? WindSpeed { get; set; }
+    public DateTime Sunrise { get; set; }
+    public DateTime Sunset { get; set; }
+}
+
+
+// Raw Response
 public class CurrentWeatherResponse
 {
     [JsonPropertyName("coord")]
