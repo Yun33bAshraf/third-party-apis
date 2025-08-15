@@ -28,4 +28,13 @@ public class OpenWeatherMapController(ISender sender) : ControllerBase
         var result = await sender.Send(query);
         return result.Status ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("5-days-3-hours-forecast")]
+    [ProducesResponseType(typeof(ResponseBase), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseBase), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> _5Day3HourForecastData([FromQuery] _5Day3HourForecastDataQuery query)
+    {
+        var result = await sender.Send(query);
+        return result.Status ? Ok(result) : BadRequest(result);
+    }
 }
