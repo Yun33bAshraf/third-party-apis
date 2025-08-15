@@ -1,0 +1,155 @@
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Globalization
+@using System.Linq.Expressions
+
+@typeparam TValue
+
+@if (Type == "textarea")
+{
+    <textarea id="@Id" name="@Name" class="@GetInputClass()" placeholder="@Placeholder" rows="@Rows"
+        autocomplete="@AutoComplete" @onchange="HandleInput" @onblur="OnBlur" disabled="@Disabled" readonly="@ReadOnly"
+        @ref="InputRef">@(ValueAsString ?? string.Empty)</textarea>
+}
+else
+{
+    <input id="@Id" name="@Name" class="@GetInputClass()" placeholder="@Placeholder" type="@CurrentType"
+        autocomplete="@AutoComplete" value="@ValueAsString" pattern="@Pattern" min="@Min" max="@Max" @onchange="HandleInput"
+        @onblur="OnBlur" @onkeypress="OnKeyPress" @onkeydown="OnKeyDown" disabled="@Disabled" readonly="@ReadOnly"
+        @ref="InputRef" />
+
+    @if (Type == "password")
+    {
+        <div class="position-relative">
+            <span class="@GetToggleIconClass()"
+                style="position: absolute; bottom: 20%; right: 6%; transform: translateY(-50%); cursor: pointer;">
+                <a href="#" @onclick="TogglePassword" class="link-secondary" title="Toggle password visibility">
+                    <i class="bi @(ShowPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                </a>
+            </span>
+        </div>
+
+    }
+}
+
+
+
+@if (EditContext != null && Validate != null)
+{
+    <ValidationMessage For="Validate" class="text-danger" />
+}
+else if (!string.IsNullOrEmpty(Error))
+{
+    <div class="invalid-feedback d-block">
+        @Error
+    </div>
+}
+
+@code {
+    // UI/Input props
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public string Id { get; set; }
+    [Parameter] public string Name { get; set; }
+    [Parameter] public string Placeholder { get; set; }
+    [Parameter] public string AutoComplete { get; set; } = "off";
+    [Parameter] public string Pattern { get; set; }
+    [Parameter] public int Rows { get; set; } = 3;
+    [Parameter] public string Min { get; set; }
+    [Parameter] public string Max { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool ReadOnly { get; set; } = false;
+
+    // Data binding
+    [Parameter] public TValue Value { get; set; }
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+
+    // Validation
+    [Parameter] public Expression<Func<TValue>> Validate { get; set; }
+    [Parameter] public string Error { get; set; }
+
+    [CascadingParameter] private EditContext EditContext { get; set; }
+
+    // Events
+    [Parameter] public EventCallback<FocusEventArgs> OnBlur { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyPress { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    // Internal state
+    private ElementReference InputRef;
+    private CancellationTokenSource _debounceCts;
+    private bool ShowPassword { get; set; } = false;
+    private FieldIdentifier _fieldIdentifier;
+
+    private string CurrentType =>
+    Type == "password" ? (ShowPassword ? "text" : "password") : Type;
+
+    private string ValueAsString =>
+    (BindConverter.FormatValue(Value) as string) ?? string.Empty;
+
+
+
+    protected override void OnParametersSet()
+    {
+        if (EditContext != null && Validate != null)
+        {
+            _fieldIdentifier = FieldIdentifier.Create(Validate);
+        }
+    }
+
+private async Task HandleInput(ChangeEventArgs e)
+{
+    _debounceCts?.Cancel();
+    _debounceCts = new CancellationTokenSource();
+
+    var localCts = _debounceCts;
+    try
+    {
+        await Task.Delay(60, localCts.Token); // Debounce delay
+
+        if (!localCts.Token.IsCancellationRequested)
+        {
+            var stringValue = e.Value?.ToString();
+            if (BindConverter.TryConvertTo<TValue>(stringValue, CultureInfo.InvariantCulture, out var parsedValue))
+            {
+                Value = parsedValue;
+                await ValueChanged.InvokeAsync(Value);
+
+                if (EditContext != null && Validate != null)
+                {
+                    EditContext.NotifyFieldChanged(_fieldIdentifier);
+                }
+            }
+        }
+    }
+    catch (TaskCanceledException) { }
+}
+
+    private void TogglePassword()
+    {
+        ShowPassword = !ShowPassword;
+    }
+
+    private string GetInputClass()
+    {
+        var baseClass = "form-control";
+
+        if (EditContext != null && Validate != null && EditContext.GetValidationMessages(_fieldIdentifier).Any())
+        {
+            baseClass += " is-invalid";
+        }
+        else if (!string.IsNullOrEmpty(Error))
+        {
+            baseClass += " is-invalid";
+        }
+
+        return baseClass;
+    }
+
+    private string GetToggleIconClass()
+    {
+        return !string.IsNullOrEmpty(Error)
+        ? "input-group-text c-is-invalid"
+        : "input-group-text";
+    }
+}

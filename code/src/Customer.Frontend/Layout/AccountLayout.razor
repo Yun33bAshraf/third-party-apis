@@ -1,0 +1,32 @@
+﻿@using IApply.Frontend.Services
+@using IApply.Frontend.Components.Alert
+@using IApply.Frontend.Components.CLoader
+@inherits LayoutComponentBase
+@inject LoadingService LoadingService
+<div class="d-flex flex-column">
+    <div class="page page-center">
+
+        <div class="container vh-100 d-flex align-items-center justify-content-center">
+            <div class="row align-items-center">
+                <div class="col-lg">
+                    @Body
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<CLoader Show="LoadingService.IsLoading" HandleClose="@(async (val) => { })" />
+    <Alert />
+
+@code {
+    protected override void OnInitialized()
+    {
+        LoadingService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        LoadingService.OnChange -= StateHasChanged;
+    }
+}

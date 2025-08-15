@@ -1,0 +1,157 @@
+﻿@page "/employee-attendance-summary/{Id}"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+
+@inject LoadingService LoadingService
+@inject IAttendenceService AttendanceService
+@inject AlertService alertService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Attendance Summary</PageTitle>
+
+<div class="col-12">
+    <FilterCard Title="Monthly Attendance Summary Filters" ExecApi="true" IsFilter="true">
+        <EditForm Model="attendanceSummary" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label class="form-label">Month & Year</label>
+                            <InputSelect @bind-Value="SelectedMonthYear" class="form-select">
+                                <option value="">Select</option>
+                                @foreach (var monthYear in AvailableMonthYear)
+                                {
+                                    <option value="@monthYear.MonthYearDateTime">
+                                        @monthYear.MonthYear
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Form Buttons -->
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <!-- Reset Button -->
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<div class="col-12">
+    <CTable Items="attendanceSummary" TotalCountFromServer="currentMonthSummaryCount"
+            ActionRequired="false" />
+</div>
+
+@code {
+    private List<Models.Attendances.AttendenceDailySummary>? attendanceSummary = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    public Models.Attendances.AttendenceDailySummary? attendanceDailySummary { get; set; }
+    private int currentMonthSummaryCount = 0;
+    [Parameter]
+    public string Id { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 33;
+    private int? EmployeeId { get; set; }
+    private DateOnly? StartDate { get; set; }
+    private DateOnly? EndDate { get; set; }
+    private List<Models.Attendances.GetMonthYear> AvailableMonthYear { get; set; } = new();
+    private DateTime? SelectedMonthYear { get; set; }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await LoadMonthYearFilter();
+
+        SelectedMonthYear = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+        await GetAttendanceSummaryByEmployeeId();
+    }
+
+    private async Task LoadMonthYearFilter()
+    {
+        var response = await AttendanceService.GetMonthYearForMonthlyAttendanceFilter();
+
+        if (response?.Data != null)
+        {
+            AvailableMonthYear = response.Data;
+        }
+    }
+
+    private async Task GetAttendanceSummaryByEmployeeId()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            int employeeId = 0;
+
+            if (!int.TryParse(Id, out employeeId))
+            {
+                alertService.ShowError("Invalid Employee ID.");
+                return;
+            }
+
+            employeeId = Utils.GetUserId(UserState);
+
+            var filterDate = SelectedMonthYear ?? DateTime.Now;
+            var firstDayOfMonth = new DateOnly(filterDate.Year, filterDate.Month, 1);
+            var lastDayOfMonth = new DateOnly(filterDate.Year, filterDate.Month, DateTime.DaysInMonth(filterDate.Year, filterDate.Month));
+
+            // var today = DateTime.Now;
+            // var firstDayOfMonth = new DateOnly(today.Year, today.Month, 1);
+            // var lastDayOfMonth = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+
+            var request = new AttendanceGetDailyReq
+            {
+                EmployeeId = employeeId,
+                StartDate = StartDate ?? firstDayOfMonth,
+                EndDate = EndDate ?? lastDayOfMonth
+            };
+
+            var response = await AttendanceService.GetAttendanceDailySummary(request);
+            if (response != null && response.IsSuccess && response.Data != null)
+            {
+                attendanceSummary = response.Data;
+                currentMonthSummaryCount = response.Pagination.TotalCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetAttendanceSummaryByEmployeeId();
+    }
+
+    private async Task ResetFilters()
+    {
+        SelectedMonthYear = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        await GetAttendanceSummaryByEmployeeId();
+    }
+}

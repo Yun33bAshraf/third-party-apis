@@ -1,0 +1,154 @@
+﻿@page "/roles/{id}"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Models.Roles
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+
+
+@inject AlertService alertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+
+@attribute [Authorize]
+<PageTitle>Role Information</PageTitle>
+
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body p-0 mb-2">
+            <div class="d-flex align-items-center">
+                <!-- Link -->
+                <div class="bd-highlight mb-0">
+                    <a href="/role-detail" class="btn btn-link text-decoration-none mb-0 pb-0 pe-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56">
+                            <path fill="currentColor" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.875-23.906-23.93-23.906C14.899 4.094 4.095 14.945 4.095 28c0 13.078 10.828 23.906 23.906 23.906m6.351-13.828c-.445 0-.82-.094-1.171-.305l-14.672-7.617c-1.031-.515-1.43-1.148-1.43-2.156c0-.914.469-1.617 1.43-2.156l14.672-7.922a2.6 2.6 0 0 1 1.242-.281c1.148 0 1.969.867 1.969 1.945c0 .89-.422 1.477-1.407 1.992l-12.47 6.282V28l12.47 6.14c1.03.47 1.406 1.055 1.406 1.97c0 1.1-.844 1.968-2.04 1.968" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Heading -->
+                <div class="bd-highlight ms-1 mb-0 mt-2">
+                    <h3 class="mb-0 pb-0">@roles.RoleName</h3>
+                </div>
+
+                <!-- Button -->
+                <div class="ms-auto bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1 mt-2 me-2" @onclick="ToggleRolesOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* <div class="col-12">
+    <div class="card">
+        <div class="card-body p-2">
+            <div class="d-flex bd-highlight">
+                <div class="w-100 bd-highlight">
+                    <h3 class="m-0">@roles.RoleName</h3>
+                </div>
+                <div class="flex-shrink-1 bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1" @onclick="ToggleRolesOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body py-2">
+
+            <div class="datagrid"> 
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Rights</div>
+                    <div class="datagrid-content">
+                        <ol>
+                        @foreach(var item in roles.Rights){
+                          <li>@System.Text.RegularExpressions.Regex.Replace(item.RightName, "([a-z])([A-Z])", "$1 $2")</li>
+                           }
+                        </ol>
+                    </div>
+                </div>   
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<RolesCreateUpdateOffCanvas @ref="rolesOffCanvas" GetRoles="GetRoles" EditAsset="roles" IsEditMode="true"/>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    public RolesCreateUpdateOffCanvas? rolesOffCanvas { get; set; }
+    private RoleModel? roles = new();
+    private RolesCreateUpdateRequest? rolesRequest = new();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetRoles();
+    }
+
+    private void ToggleRolesOffCanvas()
+    {
+        rolesOffCanvas?.ToggleOffCanvas();
+    }
+    private async Task GetRoles()
+    {
+        try
+        {
+            LoadingService.Show();
+            if (!int.TryParse(Id, out int roleId))
+            {
+                alertService.ShowError("Invalid Role");
+                return;
+            }
+            var request = new RolesGetRequest
+            {
+                RoleId = roleId,
+                PageNumber = 1,
+                PageSize = 1
+            };
+
+            var response = await SystemService.GetRoles(request.Name, request.StartDate, request.EndDate, request.PageNumber, request.PageSize);
+            
+            if (response != null && response.IsSuccess)
+            {
+               roles = response.Data.FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}
+    

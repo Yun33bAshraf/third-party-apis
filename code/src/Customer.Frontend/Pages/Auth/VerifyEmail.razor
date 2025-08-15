@@ -1,0 +1,104 @@
+﻿@page "/verify-email"
+
+@using IApply.Frontend.Models.Auth.VerifyEmail
+@using IApply.Frontend.Services.ApiService.Auth
+
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject IAuthService authService
+@inject NavigationManager navigation
+
+@layout AccountLayout
+
+<PageTitle>Verify Email</PageTitle>
+
+@if (showSuccessCard)
+{
+    <div class="card text-center shadow-sm" style="width: 18rem; margin: auto;">
+        <div class="card-body">
+            <div class="mb-3">
+                <i class="bi bi-check-circle-fill text-success display-4"></i>
+            </div>
+            <h5 class="card-title text-success">Success!</h5>
+            <p class="card-text">@successMessage</p>
+            <p class="text-muted">Redirecting to login page...</p>
+        </div>
+    </div>
+}
+else
+{
+    <p>Verifying your email, please wait...</p>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int UserId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Token { get; set; } = string.Empty;
+
+    private bool showSuccessCard = false;
+    private string successMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId > 0 && !string.IsNullOrWhiteSpace(Token))
+        {
+            await EmailVerification();
+        }
+        else
+        {
+            alertService.ShowError("Invalid email verification link.");
+            navigation.NavigateTo("/", true);
+        }
+    }
+
+    private async Task EmailVerification()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var request = new VerifyEmailRequest
+                {
+                    UserId = UserId,
+                    Token = Token
+                };
+
+            var response = await authService.VerifyEmail(request);
+
+            if (response.Status)
+            {
+                // Distinguish based on message content
+                if (response.Message?.Contains("already confirmed.", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    successMessage = "Your email was already verified. You can now log in.";
+                }
+                else
+                {
+                    successMessage = "Email verified successfully. You can now log in.";
+                }
+
+                showSuccessCard = true;
+                await Task.Delay(3000);
+                navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                alertService.ShowError(response.Message ?? "Email verification failed.");
+                navigation.NavigateTo("/", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError($"Unexpected error: {ex.Message}");
+            navigation.NavigateTo("/", true);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

@@ -1,0 +1,89 @@
+﻿@page "/add-subscription/{SubscriptionId:int}"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Subscription
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.Subscription
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Models.User
+@inject AlertService AlertService
+@inject ISubscriptionService SubscriptionService
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+
+@* <EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="BusinessSubscriptionForm" Enhance> *@
+    @* <DataAnnotationsValidator /> *@
+
+    @* <div class="row"> *@
+    @*     <div class="col-md-4 col-sm-12 "> *@
+    @*         <div class="mb-2"> *@
+    @*             <label for="floating-name" >Subscription Id <span class="text-danger">*</span></label> *@
+    @*             <CInput Type="text" Id="name" Name="Name" Placeholder="Name" *@
+    @*                     @bind-Value="CreateUpdateBusinessSubscriptionRequest.SubscriptionId" Validate="() => CreateUpdateBusinessSubscriptionRequest.Name" /> *@
+    @*         </div> *@
+    @*     </div> *@
+
+    @*     <div class="col-md-4 col-sm-12 "> *@
+    @*         <div class="mb-2"> *@
+    @*             <label for="durationInDays">Duration In Days <span class="text-danger">*</span></label> *@
+    @*             <CInput Type="number" Id="durationInDays" Name="durationInDays" Placeholder="Duration In Days" *@
+    @*                     @bind-Value="CreateUpdateBusinessSubscriptionRequest.DurationInDays" Validate="@(() => CreateUpdateBusinessSubscriptionRequest.DurationInDays)" /> *@
+    @*         </div> *@
+    @*     </div> *@
+
+    @*     <div class="col-md-4 col-sm-12 "> *@
+    @*         <div class="mb-2"> *@
+    @*             <label for="price">Price</label> *@
+    @*             <CInput Type="number" Id="price" Name="price" Placeholder="price"  *@
+    @*                      @bind-Value="CreateUpdateBusinessSubscriptionRequest.Price" Validate="@(() => CreateUpdateBusinessSubscriptionRequest.Price)" /> *@
+    @*         </div> *@
+    @*     </div> *@
+
+    @*     <div class="col-md-4 col-sm-12"> *@
+
+    @*         <div class="mt-4 form-check form-switch"> *@
+    @*             <input type="checkbox" *@
+    @*                    class="form-check-input" *@
+    @*                    id="status" *@
+    @*                    @bind="CreateUpdateBusinessSubscriptionRequest.Status" /> *@
+    @*             <label class="form-check-label" for="status"> *@
+    @*                 Active *@
+    @*             </label> *@
+    @*         </div> *@
+    @*     </div> *@
+
+
+    @*     <div class="col-md-12 col-sm-12 "> *@
+    @*         <div class="mb-2"> *@
+    @*             <label >Description </label> *@
+    @*             <InputTextArea class="form-control h-100" id="floating-input" @bind-Value="CreateUpdateBusinessSubscriptionRequest.Description" autocomplete="off" rows="8" placeholder="Comment" /> *@
+    @*             <ValidationMessage For="() => CreateUpdateBusinessSubscriptionRequest.Description" class="text-danger" /> *@
+    @*         </div> *@
+    @*     </div> *@
+    @* </div> *@
+@* </EditForm> *@
+
+@code {
+    [Parameter]
+    public int SubscriptionId { get; set; }
+
+    private ClaimsPrincipal? UserState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        
+    }
+
+}

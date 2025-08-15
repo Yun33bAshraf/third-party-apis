@@ -1,0 +1,337 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Models.Cities
+@using IApply.Frontend.Models.EmployeeLeave
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IEmployeeService EmployeeService
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="EmployeeForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <!-- First Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-firstname">First Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="First Name"
+                        @bind-Value="createEmployeeRequest.FirstName" 
+                        Validate="() => createEmployeeRequest.FirstName" />
+            </div>
+        </div>
+
+        <!-- Last Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-lastname" >Last Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Last Name"
+                        @bind-Value="createEmployeeRequest.LastName" Validate="() => createEmployeeRequest.LastName" />
+            </div>
+        </div>
+
+        <!-- Father / Husband Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-FatherHusbandName">Father / Husband Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Father Husband Name"
+                        @bind-Value="createEmployeeRequest.FatherHusbandName" Validate="() => createEmployeeRequest.FatherHusbandName" />
+            </div>
+        </div>
+
+        <!-- CNIC -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-CNIC">CNIC <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="CNIC"
+                        @bind-Value="createEmployeeRequest.Cnic" Validate="() => createEmployeeRequest.Cnic" />
+            </div>
+        </div>
+
+        <!-- Official Email -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-email">Official Email <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Email"
+                        @bind-Value="createEmployeeRequest.Email" Validate="() => createEmployeeRequest.Email" />
+            </div>
+        </div>
+
+        <!-- Personal Email -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-personalEmail">Personal Email</label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Personal Email"
+                        @bind-Value="createEmployeeRequest.PersonalEmail" Validate="() => createEmployeeRequest.PersonalEmail" />
+            </div>
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-mobilenumber">Mobile Number <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Mobile Number"
+                        @bind-Value="createEmployeeRequest.MobileNumber" Validate="() => createEmployeeRequest.MobileNumber" />
+            </div>
+        </div>
+
+        <!-- LandLine Number -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-landlinenumber">LandLine Number</label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Land Line Number"
+                        @bind-Value="createEmployeeRequest.LandLineNumber" Validate="() => createEmployeeRequest.LandLineNumber" />
+            </div>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-dob">Date of Birth <span class="text-danger">*</span></label>
+                <InputDate class="form-control" id="floating-dob" @bind-Value="createEmployeeRequest.DateOfBirth" autocomplete="off" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <ValidationMessage For="()=> createEmployeeRequest.DateOfBirth" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Date of Joining -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-doj">Date of Joining <span class="text-danger">*</span></label>
+                <InputDate class="form-control" id="floating-doj" @bind-Value="createEmployeeRequest.DateOfJoining" autocomplete="off" min="@minDate" max="@maxDate" />
+                <ValidationMessage For="()=> createEmployeeRequest.DateOfJoining" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Gender -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-gender">Gender <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-gender" @bind-Value="createEmployeeRequest.Gender">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var status in Enum.GetValues(typeof(GenderType)))
+                    {
+                        <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => createEmployeeRequest.Gender" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Marital Status -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-marital-status">Marital Status <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-marital-status" @bind-Value="createEmployeeRequest.MaritalStatusId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var status in Enum.GetValues(typeof(MaritalStatus)))
+                    {
+                        <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=> createEmployeeRequest.MaritalStatusId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-status" >Status <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-status" @bind-Value="createEmployeeRequest.StatusId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var status in Enum.GetValues(typeof(EmployeeStatus)))
+                    {
+                        <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => createEmployeeRequest.StatusId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- City -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-city">City <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-city" @bind-Value="createEmployeeRequest.CityId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var city in Enum.GetValues(typeof(Models.Enum.City)))
+                    {
+                        <option value="@((int)city)">@Utils.GetDescription((Enum)city)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=> createEmployeeRequest.CityId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Designation -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-Designation">Designation</label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Designation"
+                        @bind-Value="createEmployeeRequest.Designation" Validate="() => createEmployeeRequest.Designation" />
+            </div>
+        </div>
+
+        <!-- Resignation Date -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-resigndate">Resignation Date</label>
+                <InputDate class="form-control" id="floating-resigndate" @bind-Value="createEmployeeRequest.ResignDate" autocomplete="off" min="@minDate" max="@maxDate" placeholder="Resign Date" />
+                <ValidationMessage For="()=> createEmployeeRequest.ResignDate" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Last Working Date -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-lastworkingdate">Last Working Date</label>
+                <InputDate class="form-control" id="floating-lastworkingdate" @bind-Value="createEmployeeRequest.LastWorkingDate" autocomplete="off" min="@minDate" max="@maxDate" placeholder="Last Working Date" />
+                <ValidationMessage For="()=> createEmployeeRequest.LastWorkingDate" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Current Address -->
+        <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-CurrentAddress">Current Address <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Current Address"
+                        @bind-Value="createEmployeeRequest.CurrentAddress" Validate="() => createEmployeeRequest.CurrentAddress" />
+            </div>
+        </div>
+
+        <!-- Permanent Address -->
+        <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-PermanentAddress">Permanent Address</label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Permanent Address"
+                        @bind-Value="createEmployeeRequest.PermanentAddress" Validate="() => createEmployeeRequest.PermanentAddress" />
+            </div>
+        </div>
+
+        <!-- Comment -->
+        <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label >Comment</label>
+                <InputTextArea class="form-control h-100" id="floating-input" @bind-Value="createEmployeeRequest.Comment" autocomplete="off" rows="8" placeholder="Comment" />
+                <ValidationMessage For="() => createEmployeeRequest.Comment" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm(FormName = "EmployeeForm")]
+    public EmployeeCreateRequest createEmployeeRequest { get; set; } = new();
+    private EditContext editContext;
+
+    [Parameter]
+    public Models.Employee.Employee? EditEmployee { get; set; }
+
+    public Models.Employee.Employee? prevEditEmployee { get; set; }
+    private DateTime minDate = DateTime.Today;
+    private DateTime maxDate = DateTime.Today;
+
+    public List<CategoryGet> categories { get; set; } = new();
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(createEmployeeRequest);
+    }
+
+    [Parameter]
+    public EventCallback<EmployeeCreateRequest> AddEmployee { get; set; }
+
+    public void ResetForm()
+    {
+        createEmployeeRequest = new();
+        EditEmployee = null;
+        prevEditEmployee = null;
+        SetEditContext();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddEmployee.InvokeAsync(createEmployeeRequest);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditEmployee != null)
+        {
+            if (EditEmployee != prevEditEmployee)
+            {
+                prevEditEmployee = EditEmployee;
+                await GetEmployee();
+                SetEditContext();
+            }
+        }
+    }
+
+    private async Task GetEmployee()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new EmployeeGetRequest
+                {
+                    EmployeeId = EditEmployee.EmployeeId,
+                };
+            var response = await EmployeeService.GetEmployees(request);
+            if (response != null && response.IsSuccess)
+            {
+                var employee = response.Data.FirstOrDefault();
+                if (employee != null)
+                {
+                    var names = employee.EmployeeName.Split(' ');
+                    createEmployeeRequest = new EmployeeCreateRequest
+                        {
+                            EmployeeId = employee.EmployeeId,
+                            FirstName = names.Length > 0 ? names[0] : string.Empty,
+                            LastName = names.Length > 1 ? string.Join(" ", names.Skip(1)) : string.Empty,
+                            Email = employee.Email,
+                            MobileNumber = employee.MobileNumber ?? string.Empty,
+                            DateOfBirth = employee.DateOfBirth,
+                            Gender = int.TryParse(employee.GenderId.ToString(), out int genderValue) ? genderValue : 0,
+                            MaritalStatusId = int.TryParse(employee.MaritalStatusId.ToString(), out int maritalStatusId) ? maritalStatusId : 0,
+                            StatusId = int.TryParse(employee.StatusId.ToString(), out int statusId) ? statusId : 0,
+                            // CreatedAt = employee.CreatedAt,
+                            UserId = employee.UserId,
+                            PersonalEmail = employee.PersonalEmail ?? string.Empty,
+                            CityId = employee.CityId.GetValueOrDefault(),
+                            PermanentAddress = employee.PermanentAddress ?? string.Empty,
+                            CurrentAddress = employee.CurrentAddress ?? string.Empty,
+                            LandLineNumber = employee.LandLineNumber ?? string.Empty,
+                            DateOfJoining = employee.DateOfJoining,
+                            FatherHusbandName = employee.FatherHusbandName ?? string.Empty,
+                            Cnic = employee.CNIC ?? string.Empty,
+                            Designation = employee.Designation ?? string.Empty,
+                            ResignDate = employee.ResignDate,
+                            LastWorkingDate = employee.LastWorkingDate,
+                            Comment = employee.Comment,
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

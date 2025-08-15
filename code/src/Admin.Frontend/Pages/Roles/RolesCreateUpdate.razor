@@ -1,0 +1,170 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Models.Rights
+@using IApply.Frontend.Models.Roles
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.MultiSelect
+
+
+@inject AlertService alertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject AuthenticationStateProvider authStateProvider
+
+<EditForm EditContext="@editContext"OnValidSubmit="HandleValidSubmit" FormName="RolesForm" Enhance>
+    <DataAnnotationsValidator />
+    <div class="row">
+         <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-firstname">Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="floating-firstname" Placeholder="Name"
+                        @bind-Value="roleCreateRequest.RoleName" Validate="() => roleCreateRequest.RoleName" />
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="form-floating">
+                <MultiSelect TItem="RightsGet"
+                             Options="@AvailableRights"
+                             SelectedOptions="@SelectedRights"
+                             SelectedOptionsChanged="OnSelectedOptionsChanged"
+                             LabelProperty="Name"
+                             ValueProperty="RightId"
+                             DefaultText="Select Rights"
+                             IsMultiSelect="true"
+                             CanFilter="true"
+                             SearchPlaceHolder="Search Rights..." />
+
+                <ValidationMessage For="@(() => roleCreateRequest.Rights)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] 
+    public EventCallback<RolesCreateUpdateRequest> RolesCreateUpdateRequest { get; set; }
+    [Parameter]
+    public RoleModel? EditAsset { get; set; }
+    public RoleModel? prevEditAsset { get; set; }
+    private EditContext editContext;
+    [SupplyParameterFromForm(FormName = "RolesForm")]
+    public RolesCreateUpdateRequest roleCreateRequest { get; set; } = new();
+    public List<RightsGet> AvailableRights { get; set; } = new();
+    private List<RightsGet> SelectedRights { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRights();
+    }
+     protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditAsset != null)
+        {
+            if (EditAsset != prevEditAsset)
+            {
+                prevEditAsset = EditAsset;
+                await GetRoles();
+                SetEditContext();
+            }
+        }
+    }
+
+    private async Task LoadRights()
+    {
+        var response = await SystemService.GetRights();
+        if (response?.Data != null)
+        {
+            AvailableRights = response.Data;
+        }
+    }
+private async Task GetRoles()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new RolesGetRequest
+            {
+                RoleId = EditAsset.RoleId,
+                PageNumber = 1,
+                PageSize = 1
+            };
+
+            var response = await SystemService.GetRoles(request.Name, request.StartDate, request.EndDate, request.PageNumber, request.PageSize);
+            
+            if (response != null && response.IsSuccess)
+            {
+               var roles = response.Data.FirstOrDefault();
+                if (roles != null)
+                {
+                    roleCreateRequest = new RolesCreateUpdateRequest
+                        {
+                            RoleId = roles.RoleId,
+                            RoleName = roles.RoleName,
+                            Rights = roles.Rights
+                            .Select(r => new CreateRoleRightModel
+                                        {
+                                            RightId = r.RightId,
+                                        }) .ToList()
+                        };
+                        SelectedRights = roles.Rights
+                            .Select(r => new RightsGet
+                                        {
+                                            RightId = r.RightId,
+                                            Name = r.RightName,
+                                        }) .ToList();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            if (SelectedRights.Any()) // Ensure rights are selected
+            {
+                roleCreateRequest.Rights = SelectedRights.Select(r => new CreateRoleRightModel { RightId = r.RightId }).ToList();
+            }
+            else
+            {
+                roleCreateRequest.Rights = new List<CreateRoleRightModel>(); // Prevent null issues
+            }
+        await RolesCreateUpdateRequest.InvokeAsync(roleCreateRequest);
+        }
+    }
+
+    public void ResetForm()
+    {
+        roleCreateRequest = new();
+        SelectedRights = new();
+        EditAsset = null;
+        prevEditAsset = null;
+        SetEditContext();
+    }
+
+    private void OnSelectedOptionsChanged(List<RightsGet> selected)
+    {
+        SelectedRights = selected;
+        roleCreateRequest.Rights = selected.Select(r => new CreateRoleRightModel { RightId = r.RightId }).ToList();
+    }
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(roleCreateRequest);
+    }
+}

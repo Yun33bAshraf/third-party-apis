@@ -1,0 +1,93 @@
+﻿@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject ICategoryService CategoryService
+@inject AlertService alertService
+
+@using IApply.Frontend.Models.Settings.Configurations
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Offcanvas
+
+
+<Offcanvas Width="50" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>Add Category</div>
+    </OffCanvasHeader>
+
+    <OffCanvasBody>
+        <CreateCategory @ref="createCategory" AddCategory="AddCategory" EditCategory="EditCategory" />
+    </OffCanvasBody>
+
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveLead">Save</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    // Parameters
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetCategory { get; set; }
+
+    [Parameter]
+    public CategoryGetResponse? EditCategory { get; set; }
+
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    // References
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateCategory? createCategory { get; set; }
+
+    // Methods
+    public void ToggleOffCanvas()
+    {
+        createCategory?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    private void CloseOffCanvas()
+    {
+        createCategory?.ResetForm();
+    }
+
+    private void HandleSaveLead()
+    {
+        createCategory?.HandleValidSubmit();
+    }
+
+    private async Task AddCategory(CategoryCreate category)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await CategoryService.CreateCategories(category);
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetCategory.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+                alertService.Show("Category Created Successfully");
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null
+                    ? ErrorService.GetErrorMessage(response.ErrorCode)
+                    : "An unknown error occurred.";
+
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

@@ -1,0 +1,203 @@
+﻿@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Settings.Configurations
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Components.CInput
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ICategoryService CategoryService
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleValidSubmit" FormName="CategoryForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <!-- Full Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Full Name <span class="text-danger">*</span></label>
+                <CInput Type="text"
+                        Placeholder="Name"
+                        @bind-Value="createCategoryRequest.Name"
+                        Validate="() => createCategoryRequest.Name" />
+            </div>
+        </div>
+
+        <!-- Entity Type -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Entity Type <span class="text-danger">*</span></label>
+                <select class="form-select" @onchange="OnEntityTypeChanged">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var entity in AvailableEntities)
+                    {
+                        <option value="@entity.EntityTypeId">@entity.EntityName</option>
+                    }
+                </select>
+                <ValidationMessage For="() => createCategoryRequest.EntityTypeId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Category Type -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Parent Category</label>
+                <InputSelect class="form-select" @bind-Value="createCategoryRequest.ParentCategoryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+@*                 <ValidationMessage For="() => createCategoryRequest.ParentCategoryId" class="text-danger" />
+ *@            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    // Parameters and Form Binding
+    [SupplyParameterFromForm(FormName = "CategoryForm")]
+    public CategoryCreate createCategoryRequest { get; set; } = new();
+
+    [Parameter]
+    public CategoryGetResponse? EditCategory { get; set; }
+
+    public CategoryGetResponse? prevEditCategory { get; set; }
+
+    [Parameter]
+    public EventCallback<CategoryCreate> AddCategory { get; set; }
+
+    // Supporting Fields
+    private EditContext editContext;
+    public int EntityTypeId { get; set; }
+    public int? ParentCategoryId { get; set; }
+
+    // Data Lists
+    public List<GetCategory> AvailableCategories { get; set; } = new();
+    public List<EntityGetRequest> AvailableEntities { get; set; } = new();
+
+    // Lifecycle Hooks
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await LoadCategory();
+        await LoadEntity();
+    }
+    private async Task OnEntityTypeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int selectedEntityTypeId))
+        {
+            createCategoryRequest.EntityTypeId = selectedEntityTypeId;
+            await LoadCategory(selectedEntityTypeId);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditCategory != null && EditCategory != prevEditCategory)
+        {
+            prevEditCategory = EditCategory;
+            await GetCategory();
+            SetEditContext();
+        }
+    }
+
+    // Form Methods
+    private void SetEditContext()
+    {
+        editContext = new EditContext(createCategoryRequest);
+    }
+
+    public void ResetForm()
+    {
+        createCategoryRequest = new();
+        EditCategory = null;
+        prevEditCategory = null;
+        SetEditContext();
+        AvailableCategories.Clear();
+    }
+   
+
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddCategory.InvokeAsync(createCategoryRequest);
+        }
+    }
+
+    // Load Methods
+    private async Task LoadCategory(int entityTypeId)
+    {
+        var request = new GetCategory
+            {
+                EntityTypeId = entityTypeId
+            };
+        var response = await CategoryService.GetCategory(request);
+
+        if (response?.Data != null)
+        {
+            AvailableCategories = response.Data;
+        }
+        else
+        {
+        }
+
+        createCategoryRequest.ParentCategoryId = 0;
+    }
+
+    private async Task LoadEntity()
+    {
+        var request = new EntityGetRequest { };
+        var response = await CategoryService.GetEntity(request);
+
+        if (response?.Data != null)
+        {
+            AvailableEntities = response.Data;
+        }
+    }
+
+    // Edit Mode Support
+    private async Task GetCategory()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new CategoryGetRequest
+                {
+                    EntityTypeId = EditCategory.EntityTypeId
+                };
+
+            var response = await CategoryService.GetCategories(request);
+
+            if (response?.IsSuccess == true)
+            {
+                var category = response.Data.FirstOrDefault();
+                if (category != null)
+                {
+                    createCategoryRequest = new CategoryCreate
+                        {
+                            EntityTypeId = category.EntityTypeId,
+                            Name = category.CategoryName,
+                            ParentCategoryId = category.ParentCategoryId,
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

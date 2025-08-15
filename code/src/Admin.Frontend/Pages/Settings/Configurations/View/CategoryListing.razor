@@ -1,0 +1,190 @@
+﻿@page "/categories-detail"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Models.Settings.Configurations
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+
+
+@inject AlertService AlertService
+@inject IJSRuntime JS
+@inject LoadingService LoadingService
+@inject ICategoryService CatgoryService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+<PageTitle>Category Management</PageTitle>
+
+
+<div class="col-12">
+    <FilterCard Title="Category Filters" IsBtn="true" ExecApi="true" HandleBtnClick="ToggleCategoryOffCanvas" IsFilter="true">
+        <EditForm Model="categories" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+         @*    <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+
+                    <!-- Name Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name" @bind-Value="fullName" />
+                        </div>
+                    </div>
+
+                    <!-- Email Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Email</label>
+                            <CInput Type="text" Id="email" Name="Email" Placeholder="Email" @bind-Value="companyName" />
+                        </div>
+                    </div>
+
+                    <!-- Start Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="startDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                    <!-- End Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="endDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div> *@
+        </EditForm>
+    </FilterCard>
+</div>
+<CreateCategoryOffCanvas @ref="createCategoryOffCanvas" GetCategory="GetCategories" />
+
+<!-- =================== UI SECTION =================== -->
+<div class="col-12">
+    <CTable Items="categories"
+            TotalCountFromServer="CategoryCount"
+            Action="MyAction"
+            ActionRequired="false"
+            CustomRenderFragments="customRenderFragments"
+            BackendPagination="true"
+            BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged"
+            InitialPageNumber="CurrentPage"
+            InitialPageSize="CurrentPageSize" />
+</div>
+
+<!-- =================== CODE SECTION =================== -->
+@code {
+    // -------------------- State --------------------
+    private List<CategoryGetResponse>? categories = new();
+    private Dictionary<string, RenderFragment<CategoryGetResponse>>? customRenderFragments { get; set; }
+    private CreateCategoryOffCanvas? createCategoryOffCanvas { get; set; }
+
+    private int CategoryCount = 0;
+    private int EntityTypeId { get; set; }
+    private int ParentCategoryId { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    private ClaimsPrincipal? UserState { get; set; }
+  
+
+
+    // -------------------- Lifecycle --------------------
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await GetCategories();
+    }
+    private void ToggleCategoryOffCanvas()
+    {
+        createCategoryOffCanvas?.ToggleOffCanvas();
+    }
+
+    // -------------------- Data Fetching --------------------
+    private async Task GetCategories()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new CategoryGetRequest
+            {
+                EntityTypeId = EntityTypeId,
+                ParentCategoryId = ParentCategoryId,
+                PageNumber = CurrentPage,
+                PageSize = CurrentPageSize,
+            };
+
+            var response = await CatgoryService.GetCategories(request);
+
+            if (response?.IsSuccess == true && response.Pagination != null)
+            {
+                categories = response.Data;
+                CategoryCount = response.Pagination.TotalCount;
+
+                // SetCustomFragments(); // Optional future logic
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    // -------------------- Events --------------------
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+
+        await GetCategories();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetCategories();
+    }
+
+    private async Task ResetFilters()
+    {
+        // Example: assetsName = string.Empty; startDate = null; etc.
+        await GetCategories();
+    }
+
+    // -------------------- Custom Actions --------------------
+    private RenderFragment<CategoryGetResponse> MyAction => item => builder =>
+    {
+        builder.OpenElement(0, "button");
+        builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+        // builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createAssetsOffCanvas.SetAsset(item)));
+
+        builder.OpenElement(3, "i");
+        builder.AddAttribute(4, "class", "ti ti-edit");
+        builder.CloseElement();
+
+        builder.AddContent(5, " Edit");
+        builder.CloseElement();
+    };
+}

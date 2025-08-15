@@ -1,0 +1,109 @@
+﻿@using IApply.Frontend.Models.PublicHoliday
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Holiday
+@using IApply.Frontend.Components.Offcanvas
+@inject LoadingService LoadingService
+@inject IHolidayService HolidayService
+@inject AlertService alertService
+
+<Offcanvas Width="25" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Holiday</div>
+    </OffCanvasHeader>
+
+    <OffCanvasBody>
+        <CreateHoliday @ref="createholiday" AddHoliday="AddHoliday" EditHoliday="EditHolidays" />
+    </OffCanvasBody>
+
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveHoliday">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    // References and Parameters
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateHoliday? createholiday { get; set; }
+
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetHoliday { get; set; }
+
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public Holidays? EditHolidays { get; set; }
+
+    // Lifecycle Methods
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialization logic if required
+    }
+
+    // Public Methods
+    public void ToggleOffCanvas()
+    {
+        createholiday?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    public void SetHoliday(Holidays item)
+    {
+        EditHolidays = item;
+        Offcanvas?.Open();
+    }
+
+    // Handlers
+    private void CloseOffCanvas()
+    {
+        createholiday?.ResetForm();
+    }
+
+    private void HandleSaveHoliday()
+    {
+        createholiday?.HandleValidSubmit();
+    }
+
+    // API Call to Add or Update Holiday
+    private async Task AddHoliday(HolidayCreate holiday)
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var response = holiday.HolidayId > 0
+                ? await HolidayService.UpdateHoliday(holiday)
+                : await HolidayService.CreateHoliday(holiday);
+
+            if (response != null && response.IsSuccess)
+            {
+                // Trigger the parent to refresh the holidays list
+                await GetHoliday.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+
+                // Show success message
+                string message = holiday.HolidayId > 0 ? "Holiday Updated Successfully" : "Holiday Created Successfully";
+                alertService.Show(message);
+            }
+            else
+            {
+                // Handle API error response
+                string errorMessage = response?.ErrorCode != null
+                    ? ErrorService.GetErrorMessage(response.ErrorCode)
+                    : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

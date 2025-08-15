@@ -1,0 +1,104 @@
+﻿@page "/login-redirect/{key}"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Constants
+@using IApply.Frontend.Models
+@using IApply.Frontend.Models.Auth.Login
+@using IApply.Frontend.Models.Rights
+@using IApply.Frontend.Services
+
+@layout AuthLayout
+
+@inject AuthResponseService authResponceService
+@inject AuthenticationStateProvider authStateProvider
+@inject IHttpContextAccessor httpContextAccessor
+@inject LoadingService LoadingService
+@inject NavigationManager _navigationManager
+
+@code {
+    [Parameter]
+    public string key { get; set; }
+    private LoginResponse response;
+    private List<Right> rights;
+    protected override async Task OnParametersSetAsync()
+    {
+        await AddAuthStateAsync();
+    }
+
+    private async Task AddAuthStateAsync()
+    {
+        LoadingService.Show();
+        if (!string.IsNullOrEmpty(key))
+        {
+            Console.WriteLine($"Key is not null or empty: {key}");
+
+            if (authResponceService.Responses.ContainsKey(key))
+            {
+                response = authResponceService.Responses[key];
+                Console.WriteLine($"Response found for key: {key}, UserId: {response.Data.UserId}, AccessToken: {response.Data.AccessToken}");
+            }
+
+            if (authResponceService.Rights.ContainsKey(key))
+            {
+                rights = authResponceService.Rights[key];
+                Console.WriteLine($"Rights found for key: {key}, Rights count: {rights.Count}");
+            }
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var userState = authState.User;
+            Console.WriteLine($"Authentication state fetched. User is authenticated: {authState.User.Identity.IsAuthenticated}");
+
+            if (response != null && !authState.User.Identity.IsAuthenticated)
+            {
+                LoggedInUserModel user = new LoggedInUserModel(response.Data.UserId, null, null, response.Data.AccessToken,response.Data.RoleId);
+                Console.WriteLine($"User Data: {user}");
+
+                var claims = user.ToClaims().ToList();
+                if (response.Data.Rights != null)
+                {
+                    foreach (var item in response.Data.Rights)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Rsa, item.ToString()));
+                    }
+                }
+                if (response.Data.RefreshToken != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.AuthenticationInstant, response.Data.RefreshToken));
+                }
+                var identity = new ClaimsIdentity(claims, Constants.AUTH_SCHEME);
+                Console.WriteLine($"Identity Data: {identity}");
+                var claimsPrincipal = new ClaimsPrincipal(identity);
+                Console.WriteLine($"Claims Principal Data: {claimsPrincipal}");
+                var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                    ExpiresUtc = response.Data.ExpiryDate
+
+                    };
+                Console.WriteLine($"User Data: {authProperties}");
+                await httpContextAccessor.HttpContext.SignInAsync(Constants.AUTH_SCHEME, claimsPrincipal, authProperties);
+                var authState1 = await authStateProvider.GetAuthenticationStateAsync();
+                Console.WriteLine($"authState1: {authState1}");
+                // Console.WriteLine($"SignIn: {httpContextAccessor.HttpContext.SignInAsync(Constants.AUTH_SCHEME, claimsPrincipal, authProperties)}");
+                authResponceService.Responses.Remove(key);
+                authResponceService.Rights.Remove(key);
+                await InvokeAsync(StateHasChanged);
+            }
+            var targetUrl = "home";
+            Console.WriteLine($"Navigating to1: {_navigationManager.ToAbsoluteUri(targetUrl)}");
+
+            // _navigationManager.NavigateTo(targetUrl);
+            // _navigationManager.NavigateTo("home");
+            _navigationManager.NavigateTo(targetUrl, forceLoad: true);
+        }
+        else
+        {
+            var targetUrl = "/";
+            Console.WriteLine($"Navigating to: {_navigationManager.ToAbsoluteUri(targetUrl)}");
+
+            _navigationManager.NavigateTo(targetUrl);
+            // _navigationManager.NavigateTo("/");
+        }
+    }
+}

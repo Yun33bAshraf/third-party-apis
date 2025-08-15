@@ -1,0 +1,131 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Roles
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Role
+@using IApply.Frontend.Components.Offcanvas
+
+
+@inject AlertService alertService
+@inject LoadingService LoadingService
+@inject IRoleService roleService
+@inject AuthenticationStateProvider authStateProvider
+
+<Offcanvas Width="25" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(EditRoleId != null ? "Update" : "Add") Role</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <CreateRoles @ref="CreateRoles" AddRole="AddRole" UpdateRole="UpdateRole" RoleId="EditRoleId" CanEdit="CanEdit" />
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border" @onclick="() => Offcanvas?.Close()">Close</button>
+            @if (CanEdit)
+            {
+                <button class="btn custom-btn" @onclick="HandleSaveRole">Save</button>
+            }
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback GetRoles { get; set; }
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateRoles? CreateRoles { get; set; }
+    private Guid? EditRoleId;
+    private ClaimsPrincipal? UserState { get; set; }
+    private bool CanEdit { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CanEdit = Utils.HasRight(UserState, SystemRights.UpdateRoles);
+    }
+
+    public void ToggleOffCanvas()
+    {
+        Offcanvas?.Open();
+    }
+
+    private void HandleSaveRole()
+    {
+
+        CreateRoles?.HandleValidSubmit();
+
+    }
+    private void CloseOffCanvas()
+    {
+        CreateRoles?.ResetForm();
+        EditRoleId = null;
+    }
+    public void Edit(Role role)
+    {
+        EditRoleId = role.Id;
+        Offcanvas?.Open();
+
+    }
+
+    private async Task AddRole(RoleRequest role)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.AddRole(role);
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetRoles.InvokeAsync();
+                Offcanvas?.Close();
+                alertService.Show("Role Created Successfully");
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task UpdateRole(RoleRequest role)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.UpdateRole(role);
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetRoles.InvokeAsync();
+                Offcanvas?.Close();
+                alertService.Show("Role Updated Successfully");
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

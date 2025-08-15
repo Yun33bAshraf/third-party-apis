@@ -1,0 +1,166 @@
+﻿@page "/attendance-current-month-summary"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Models.Cities
+@using IApply.Frontend.Pages.Attendance.Component
+@using IApply.Frontend.Services.ApiService.System
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject AlertService AlertService
+@inject IEmployeeService EmployeeService
+@inject IAttendenceService AttendenceService
+
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Current Month Attendance Summary</PageTitle>
+
+<div class="col-12">
+    <FilterCard Title="Current Month Summary Filters" ExecApi="true" IsFilter="true">
+        <EditForm Model="this" OnValidSubmit="HandleValidSubmit">
+            <div class="card-body p-2 ">
+                <div class="d-flex gap-2 flex-wrap col-md-3">
+                    <div class="form-floating flex-sm-fill">
+                        <select class="form-select" @bind="EmployeeId">
+                            <option value="">Select Employee</option>
+                            @foreach (var employee in AvailableEmployees)
+                            {
+                                <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                            }
+                        </select>
+                        <label for="employeeDropdown">Employee</label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer m-0 p-1 border-0  bg-transparent">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1 rounded-5" type="button" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1 rounded-5 " type="submit">Filter</button>
+                </div>
+            </div>
+             </EditForm>
+    </FilterCard>
+</div>
+
+<div class="col-12">
+    <CTable Items="attendanceSummary" TotalCountFromServer="currentMonthSummaryCount"
+            ActionRequired="false" BackendPagination="true" BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    private List<Models.Attendances.AttendenceDailySummary>? attendanceSummary = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    public AttendenceDailySummary? attendanceDailySummary { get; set; }
+
+    private int currentMonthSummaryCount = 0;
+
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    private int? EmployeeId { get; set; }
+    private DateOnly? StartDate { get; set; }
+    private DateOnly? EndDate { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await LoadEmployees();
+        await GetCurrentMonthAttendanceSummary();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetCurrentMonthAttendanceSummary();
+    }
+
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetCurrentMonthAttendanceSummary();
+    }
+
+    private async Task GetCurrentMonthAttendanceSummary()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var today = DateTime.Now;
+            var firstDayOfMonth = new DateOnly(today.Year, today.Month, 1);
+            var lastDayOfMonth = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+
+            var request = new AttendanceGetDailyReq
+                {
+                    EmployeeId = EmployeeId ?? null,
+                    StartDate = StartDate ?? firstDayOfMonth,
+                    EndDate = EndDate ?? lastDayOfMonth
+                };
+
+            var response = await AttendenceService.GetAttendanceDailySummary(request);
+
+            if (response != null && response.IsSuccess)
+            {
+                attendanceSummary = response.Data;
+                currentMonthSummaryCount = response.Pagination?.TotalCount ?? 0;
+            }
+            else
+            {
+                AlertService.ShowError("Failed to fetch attendance data.");
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public List<Models.Employee.Employee> AvailableEmployees { get; set; } = new();
+
+    private async Task LoadEmployees()
+    {
+        EmployeeGetRequest request = new()
+            {
+                PageNumber = 1,
+                PageSize = 1000,
+            };
+
+        var response = await EmployeeService.GetEmployees(request);
+
+        if (response?.Data != null)
+        {
+            AvailableEmployees = response.Data;
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        EmployeeId = null;
+        // StartDate = new DateOnly(today.Year, today.Month, 1);
+        // EndDate = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+        await GetCurrentMonthAttendanceSummary();
+    }
+}
+
+
+
+

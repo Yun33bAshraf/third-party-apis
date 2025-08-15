@@ -1,0 +1,148 @@
+﻿@page "/business-subscribed-listing"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Subscription
+@using IApply.Frontend.Pages.Subscription.Components
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Pages.Assets.Components
+@using IApply.Frontend.Services.ApiService.Subscription
+@inject AlertService AlertService
+@inject IJSRuntime JS
+@inject LoadingService LoadingService
+@inject ISubscriptionService SubscriptionService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Subscribed Business Management</PageTitle>
+
+<div class="col-12">
+    <FilterCard Title="Subscribed Business Filters" IsBtn="false" ExecApi="true" IsFilter="false">
+     </FilterCard>
+</div>
+
+@* <CreateSubscriptionsOffCanvas @ref="createSubscriptionsOffCanvas" GetSubscriptions="GetSubscriptions" /> *@
+
+<div class="col-12">
+    <CTable Items="businessSubscriptions" TotalCountFromServer="businessSubscriptionsCount" Action="null"
+            ActionRequired="false" CustomRenderFragments="customRenderFragments" BackendPagination="true" BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    private List<SubscribedBusinessListingModel>? businessSubscriptions = new();
+    private int businessSubscriptionsCount = 0;
+    private Dictionary<string, RenderFragment<SubscribedBusinessListingModel>>? customRenderFragments { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+    // public CreateSubscriptionsOffCanvas? createSubscriptionsOffCanvas { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private List<SubscriptionListing> Subscriptions { get; set; } = new();
+
+    // private RenderFragment<SubscribedBusinessListingModel> MyAction => item => builder =>
+    //         {
+    //             You can add action buttons or links here (e.g., edit, delete)
+    //             builder.OpenElement(0, "button");
+    //             builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+    //             builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createSubscriptionsOffCanvas.SetSubscription(item)));
+
+    //             builder.OpenElement(3, "i");
+    //             builder.AddAttribute(4, "class", "ti ti-edit");
+    //             builder.CloseElement();
+
+    //             builder.AddContent(5, " Edit");
+    //             builder.CloseElement();
+    //         };
+
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetBusinessSubscriptions();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetBusinessSubscriptions();
+    }
+
+    private async Task GetBusinessSubscriptions()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new GetSubscribedBusinessListingRequest
+            {
+                PageNo = CurrentPage,
+                PageSize = CurrentPageSize,
+                SubscriptionId = 0,
+                BusinessId = 0
+            };
+
+            var response = await SubscriptionService.GetSubscribedBusinessListing(request);
+            if (response != null && response.Status)
+            {
+                businessSubscriptions = response.Data;
+                businessSubscriptionsCount = response.Pagination.TotalCount;
+
+                SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<SubscribedBusinessListingModel>>
+        {
+                    ["SubscriptionName"] = item => new RenderFragment(builder =>
+                {
+                    builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/subscription/{item.SubscriptionId}")>
+        <span class="link-primary text-blue">@item.SubscriptionName</span>
+    </NavLink>);
+            }),
+
+    ["BusinessName"] = item => new RenderFragment(builder =>
+{
+            builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/business-detail/{item.BusinessId}")>
+        <span class="link-primary text-blue">@item.BusinessName</span>
+    </NavLink>);
+                }),
+
+            ["IsActive"] = item => new RenderFragment(builder =>
+        {
+            builder.AddContent(0, @<div>
+        <Badge Text="@(item.IsActive.ToString())" BackgroundColor="@GetBackgroundColor(item.IsActive.ToString())" />
+    </div>);
+        }),
+        };
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "True" => "bg-success",
+            "False" => "bg-warning",
+            _ => "bg-light"
+        };
+    }
+}

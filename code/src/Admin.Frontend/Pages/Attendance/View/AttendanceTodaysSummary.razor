@@ -1,0 +1,92 @@
+﻿@page "/attendance-today-summary"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Models.Attendances
+
+@inject AlertService AlertService
+@inject IAttendenceService AttendenceService
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Today's Attendance Summary</PageTitle>
+
+<div class="col-12">
+    <CTable Items="todaysAttendanceSummary" TotalCountFromServer="todaysSummaryCount"
+            ActionRequired="false" />
+</div>
+
+@code {
+    private List<Models.Attendances.AttendenceDailySummary>? todaysAttendanceSummary = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    public AttendenceDailySummary? todaysSummary { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await GetTodaysAttendanceSummary();
+    }
+
+    private int todaysSummaryCount = 0;
+
+    // private int CurrentPage { get; set; } = 1;
+    // private int CurrentPageSize { get; set; } = 20;
+
+    // GetAttendanceTodaySummary
+
+    private int? EmployeeId { get; set; }
+    private DateOnly? StartDate { get; set; }
+    private DateOnly? EndDate { get; set; }
+
+    private async Task GetTodaysAttendanceSummary()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            // var response = await SystemService.GetAttendanceTodaySummary();
+
+            DateOnly today = DateOnly.FromDateTime(DateTime.Now);
+            DateOnly startOfDay = today;
+            DateOnly endOfDay = today;
+
+            StartDate = StartDate ?? startOfDay;
+            EndDate = EndDate ?? endOfDay;
+
+            var request = new AttendanceGetDailyReq
+            {
+                EmployeeId = EmployeeId ?? null,
+                StartDate = StartDate ?? startOfDay,
+                EndDate = EndDate ?? endOfDay
+            };
+
+            var response = await AttendenceService.GetAttendanceDailySummary(request);
+
+            if (response != null && response.IsSuccess)
+            {
+                todaysAttendanceSummary = response.Data;
+                todaysSummaryCount = response.Pagination?.TotalCount ?? 0;
+            }
+            else
+            {
+                AlertService.ShowError("Failed to fetch attendance data.");
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

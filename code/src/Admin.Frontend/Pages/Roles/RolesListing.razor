@@ -1,0 +1,186 @@
+﻿@page "/role-detail"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Roles
+
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+@* Page Title *@
+<PageTitle>Role Management</PageTitle>
+
+@* Filters Bar *@
+<div class="col-12">
+    <FilterCard Title="Filter" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddRole))" ExecApi="true" IsFilter="true" BtnTitle="Add" HandleBtnClick="ToggleRoleCreateUpdateCanvas">
+                <EditForm Model="roles" OnValidSubmit="HandleValidSubmit" Enhance>
+                    <DataAnnotationsValidator />
+                    <div class="card-body px-3 py-1 border-y">
+                        <div class="row">
+                            @* name *@
+                                <div class="col-md-3 col-sm-12">
+                                <div class="mb-3">
+                                      <label>Name</label>
+                                    <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                                        @bind-Value="rolesName"  />
+                                  
+                                </div>
+                            </div>
+                            @* start date *@
+                            <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Start Date</label>
+                            <input type="date" class="form-control" id="start-date" autocomplete="off" @bind="startDate"
+                                   onfocus="this.showPicker();" />
+                            </div>
+                        </div>
+                            @* end date date *@
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>End Date</label>
+                            <input type="date" class="form-control" id="end-date" autocomplete="off" @bind="endDate"
+                                   onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer m-0 px-2  py-1 border-0 ">
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-light border me-1 py-1" type="button" @onclick="ResetFilters">Reset</button>
+                            <button class="btn btn-primary py-1" type="submit">Filter</button>
+                        </div>
+                    </div>
+                </EditForm>
+    </FilterCard>
+</div>
+
+@* Create/Update OffCanvas *@
+<RolesCreateUpdateOffCanvas @ref="rolesCreateUpdateOffCanvas" GetRoles="GetRoles" />
+
+@* Table *@
+<div class="col-12">
+
+    <CTable Items="roles" TotalCountFromServer="(roles == null ? 0 : roles.Count)"
+            ActionRequired="false" Action="MyAction" CustomRenderFragments="customRenderFragments"/>
+ </div>
+
+
+@code {
+    private List<RoleModel>? roles = new();
+    private Dictionary<string, RenderFragment<RoleModel>> customRenderFragments;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // search filters
+    private string rolesName { get; set; } = string.Empty;
+    private DateTime? startDate { get; set; } = null;
+    private DateTime? endDate { get; set; } = null;
+
+    //import here to link the off canvas
+    public RolesCreateUpdateOffCanvas? rolesCreateUpdateOffCanvas { get; set; }
+
+    private RenderFragment<RoleModel> MyAction => item => builder =>
+                            {
+                                // if (Utils.HasRight(UserState, SystemRights.ModifyCities))
+                                // {
+                                // Edit Button with Icon
+                                builder.OpenElement(0, "button");
+                                builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+                                // builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createAssetsOffCanvas.SetAsset(item)));
+
+                                // Edit Icon
+                                builder.OpenElement(3, "i");
+                                builder.AddAttribute(4, "class", "ti ti-edit");
+                                builder.CloseElement();
+
+                                builder.AddContent(5, " Edit");
+                                builder.CloseElement();
+                                // }
+                            };
+    public async Task HandleValidSubmit()
+    {
+        await GetRoles();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SetCustomFragments();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetRoles();
+    }
+
+    private void ToggleRoleCreateUpdateCanvas()
+    {
+        rolesCreateUpdateOffCanvas?.ToggleOffCanvas();
+    }
+
+    private async Task GetRoles()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new RolesGetRequest
+            {
+                Name = string.IsNullOrWhiteSpace(rolesName) ? null : rolesName, //NULL for no filter
+                StartDate = startDate ?? null,// Send MinValue if not set
+                EndDate = endDate ?? DateTime.UtcNow,// Default to today if empty
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var response = await SystemService.GetRoles(request.Name, request.StartDate, request.EndDate, request.PageNumber, request.PageSize);
+            
+            if (response != null && response.IsSuccess)
+            {
+               roles = response.Data;
+               SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        rolesName = string.Empty;
+        startDate = default;
+        endDate = default;
+
+        await GetRoles();
+    }
+
+
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<RoleModel>>
+                {
+                    ["RoleName"] = item => new RenderFragment(builder =>
+                {
+                    builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/roles/{item.RoleId}")>
+        <span class="link-primary text-blue">@item.RoleName</span>
+    </NavLink>);
+            }),
+        };
+    }
+}

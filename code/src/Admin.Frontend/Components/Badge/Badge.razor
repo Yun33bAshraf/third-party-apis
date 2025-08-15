@@ -1,0 +1,12 @@
+﻿<span class="badge @BackgroundColor @TextColor">@Text</span>
+
+@code {
+    [Parameter]
+    public string Text { get; set; }
+
+    [Parameter]
+    public string BackgroundColor { get; set; } = "bg-primary";
+
+    [Parameter]
+    public string TextColor { get; set; } = "text-white";
+}

@@ -1,0 +1,83 @@
+﻿<div class="stepper-container-horizontal">
+    <ul class="stepper-horizontal">
+        @if (Steps != null)
+        {
+            foreach (var step in Steps)
+            {
+                <li class="step @(step.IsActive ? "active" : "") @(step.IsCompleted ? "completed" : "")">
+                    <div class="step-indicator"></div>
+                    <div class="step-label">@step.Label</div>
+                </li>
+            }
+        }
+    </ul>
+    <div class="stepper-content ">
+        @if (ActiveStep != null)
+        {
+            <div>
+                @ActiveStep.Content
+            </div>
+            <div class="stepper-controls mt-3">
+                <button class="btn btn-secondary" @onclick="Previous" disabled="@(CurrentStepIndex == 0)">Previous</button>
+                <button class="btn btn-primary" @onclick="Next"
+                    disabled="@(CurrentStepIndex == Steps?.Count - 1)">Next</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<StepperStep>? Steps { get; set; }
+
+    private int CurrentStepIndex { get; set; } = 0;
+
+    private StepperStep? ActiveStep => Steps?[CurrentStepIndex];
+
+    protected override void OnParametersSet()
+    {
+        if (Steps != null && Steps.Any())
+        {
+            foreach (var step in Steps)
+            {
+                step.IsActive = false;
+                step.IsCompleted = false;
+            }
+            Steps[CurrentStepIndex].IsActive = true;
+        }
+    }
+
+    private void Next()
+    {
+        if (Steps == null || CurrentStepIndex >= Steps.Count - 1) return;
+
+        Steps[CurrentStepIndex].IsActive = false;
+        Steps[CurrentStepIndex].IsCompleted = true;
+
+        CurrentStepIndex++;
+        Steps[CurrentStepIndex].IsActive = true;
+
+        StateHasChanged();
+    }
+
+    private void Previous()
+    {
+        if (Steps == null || CurrentStepIndex <= 0) return;
+
+        Steps[CurrentStepIndex].IsActive = false;
+
+        CurrentStepIndex--;
+        Steps[CurrentStepIndex].IsCompleted = false;
+        Steps[CurrentStepIndex].IsActive = true;
+
+        StateHasChanged();
+    }
+
+    public class StepperStep
+    {
+        public string Label { get; set; } = string.Empty;
+        public RenderFragment? Content { get; set; }
+        public bool IsActive { get; set; } = false;
+        public bool IsCompleted { get; set; } = false;
+    }
+}

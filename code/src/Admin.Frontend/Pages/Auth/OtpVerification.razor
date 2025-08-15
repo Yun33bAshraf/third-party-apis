@@ -1,0 +1,134 @@
+﻿@page "/otp-verification"
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using IApply.Frontend.Common.Constants
+@using IApply.Frontend.Models.Auth.Otp
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Auth
+@layout IApply.Frontend.Layout.AuthLayout
+@inject HttpClient httpClient
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@using Microsoft.JSInterop
+@using IApply.Frontend.Models.Auth.Login
+@using IApply.Frontend.Common.Utilities
+@inject IAuthService accountService
+@inject NavigationManager _navigationManager
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+@inject IJSRuntime js
+@inject AuthResponseService authResponceService
+@inject AlertService _alertService;
+
+@rendermode InteractiveServer
+
+<PageTitle>Verify - Mishwar</PageTitle>
+
+<div class="container">
+    <div class="text-center mb-4">
+        <a href="." class="navbar-brand navbar-brand-autodark">
+            <img src="tabler/static/logo.svg" height="36" alt="">
+        </a>
+    </div>
+    <div class="card card-lg card-borderless">
+        <div class="card-header d-flex justify-content-center">
+            <div class="card-title">Verify your identity</div>
+        </div>
+        <div class="card-body pt-0 px-5">
+            @if (!hasOtp)
+            {
+                <div class="mt-3 text-center">
+                    <span class="text-secondary fw-bold">Send verification code to your email.</span>
+                    <button class="btn custom-btn mt-4 w-75" @onclick="SendOtpVerification">Send Otp</button>
+                </div>
+            }
+            else
+            {
+                <div>
+                    <EditForm method="post" Model="verifyOtpModel" OnValidSubmit="HandleVerification"
+                              FormName="otpVerificationForm" Enhance>
+                        <DataAnnotationsValidator />
+                        <div class="row">
+                            <span class="text-secondary fw-bold">Enter verification code recieved in your email to prove your identity.</span>
+                            <div class="mb-1 mt-2">
+                                <label for="code" class="form-label fw-bold">Verification Code:</label>
+                                <div class="position-relative d-flex align-items-center">
+                                    <InputText id="code" name="code" autocomplete="off"
+                                               type="text" placeholder="Enter verification code"
+                                               @bind-Value="verifyOtpModel.Code" class="form-control mb-1" />
+                                </div>
+                                <ValidationMessage For="()=> verifyOtpModel.Code" class="text-danger" />
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <button type="submit" class="btn custom-btn w-75">Verify</button>
+                        </div>
+                    </EditForm>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool hasOtp = false;
+    private int twoFactorMethod = 2003;
+    public SendOtpRequest sendOtpRequest { get; set; } = new();
+
+
+    [SupplyParameterFromForm(FormName = "otpVerificationForm")]
+    public VerifyOtpRequest verifyOtpModel { get; set; } = new();
+    //Send Verification
+    private async Task SendOtpVerification()
+    {
+        try
+        {
+            sendOtpRequest.TwoFactorMethod = twoFactorMethod;
+            LoadingService.Show();
+            // var token = await sessionStorage.GetItemAsync<string>("Token");
+            // httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            var responseFromApi = await accountService.SendOtp(sendOtpRequest);
+            if (responseFromApi != null && responseFromApi.IsSuccess)
+            {
+                @* await js.InvokeVoidAsync("alert", "Password Changed!"); *@
+                hasOtp = true;
+            }
+            else
+            {
+                string errorMessage = responseFromApi?.ErrorCode != null ? ErrorService.GetErrorMessage(responseFromApi.ErrorCode) : "An unknown error occurred.";
+                _alertService.ShowError(errorMessage);
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            _alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    //Verification
+    private async Task HandleVerification()
+    {
+        try
+        {
+            verifyOtpModel.TwoFactorMethod = twoFactorMethod;
+            LoadingService.Show();
+            var response = await accountService.OtpVerification(verifyOtpModel);
+
+        }
+        catch (Exception ex)
+        {
+            _alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}

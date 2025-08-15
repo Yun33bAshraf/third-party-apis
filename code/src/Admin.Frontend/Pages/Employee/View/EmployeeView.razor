@@ -1,0 +1,773 @@
+﻿@page "/employee/{Id}"
+
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Pages.Employee.Components
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject LoadingService LoadingService
+@inject IEmployeeService EmployeeService
+@inject ISystemService SystemService
+@inject AlertService alertService
+<PageTitle>Employee Information</PageTitle>
+<!-- Employee Information Section -->
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body p-0 mb-2">
+            <div class="d-flex align-items-center">
+                <!-- Link -->
+                <div class="bd-highlight mb-0">
+                    <a href="/employee-detail" class="btn btn-link text-decoration-none mb-0 pb-0 pe-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56">
+                            <path fill="currentColor" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.875-23.906-23.93-23.906C14.899 4.094 4.095 14.945 4.095 28c0 13.078 10.828 23.906 23.906 23.906m6.351-13.828c-.445 0-.82-.094-1.171-.305l-14.672-7.617c-1.031-.515-1.43-1.148-1.43-2.156c0-.914.469-1.617 1.43-2.156l14.672-7.922a2.6 2.6 0 0 1 1.242-.281c1.148 0 1.969.867 1.969 1.945c0 .89-.422 1.477-1.407 1.992l-12.47 6.282V28l12.47 6.14c1.03.47 1.406 1.055 1.406 1.97c0 1.1-.844 1.968-2.04 1.968" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Heading -->
+                <div class="bd-highlight ms-1 mb-0 mt-2">
+                     @if (Employees != null)
+                     {
+                    <h3 class="mb-0 pb-0">@Employees.EmployeeName</h3>
+                     }
+                </div>
+
+                <!-- Button -->
+                <div class="ms-auto bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1 mt-2 me-2" @onclick="ToggleCreateEmployeesOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Details Section -->
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body py-2">
+            @if (Employees != null)
+            {
+                <div class="datagrid">
+                    <!-- Display Employee Information -->
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Employee Name</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.EmployeeName) ? Employees.EmployeeName : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Email</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.Email) ? Employees.Email : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Father / Husband Name</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.FatherHusbandName) ? Employees.FatherHusbandName : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Cnic</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.CNIC) ? Employees.CNIC : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Personal Email</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.PersonalEmail) ? Employees.PersonalEmail : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Mobile Number</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.MobileNumber) ? Employees.MobileNumber : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Date of Birth</div>
+                        <div class="datagrid-content">@((Employees.DateOfBirth.HasValue ? Employees.DateOfBirth.Value.ToString("dd/MM/yyyy") : "___"))</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Gender</div>
+                        @* <div class="datagrid-content">@(!string.IsNullOrEmpty(Utils.GetDescription((GenderType)Employees.GenderId)) ? Utils.GetDescription((GenderType)Employees.GenderId) : "___")</div> *@
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Marital Status</div>
+                        @* <div class="datagrid-content">@(!string.IsNullOrEmpty(Utils.GetDescription((MaritalStatus)Employees.MaritalStatusId)) ? Utils.GetDescription((MaritalStatus)Employees.MaritalStatusId) : "___")</div> *@
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Status</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Utils.GetDescription((EmployeeStatus)Employees.StatusId)) ? Utils.GetDescription((EmployeeStatus)Employees.StatusId) : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Designation</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.Designation) ? Employees.Designation : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Created Date</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.CreatedAt?.ToString()) ? Employees.CreatedAt.ToString() : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Permanent Address</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.PermanentAddress) ? Employees.PermanentAddress : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Current Address</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.CurrentAddress) ? Employees.CurrentAddress : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Land Line Number</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.LandLineNumber) ? Employees.LandLineNumber : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">City</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Utils.GetDescription((Common.Enums.City)Employees.CityId)) ? Utils.GetDescription((Common.Enums.City)Employees.CityId) : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Resignation Date</div>
+                        <div class="datagrid-content">@((Employees.ResignDate.HasValue ? Employees.ResignDate.Value.ToString("dd/MM/yyyy") : "___"))</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Last Working Date</div>
+                        <div class="datagrid-content">@((Employees.LastWorkingDate.HasValue ? Employees.LastWorkingDate.Value.ToString("dd/MM/yyyy") : "___"))</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Updated Date</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.UpdatedDate?.ToString()) ? Employees.UpdatedDate.ToString() : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Created By</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.CreatedBy) ? Employees.CreatedBy : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Updated By</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.UpdatedBy) ? Employees.UpdatedBy : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Comment</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Employees.Comment) ? Employees.Comment : "___")</div>
+                    </div>
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+<!-- OffCanvas for Employee Creation -->
+<CreateEmployeeOffCanvas @ref="createEmployeeOffCanvas" GetEmployee="EmployeeGetById" EditEmployee="Employees" IsEditMode="true" />
+
+<!-- Employee File Upload Section -->
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body">
+
+            <h3>Employee Files (optional)</h3>
+
+            <!-- SSC/O-Level Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>SSC/O-Levels (Certificate)</strong></label>
+                        @if (Doc1File != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(Doc1File)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (Doc1File != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @Doc1File.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @Doc1File.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(Doc1File.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @Doc1File.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @Doc1File.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="doc1File" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.Document1))" multiple />
+                        <label class="btn btn-primary" for="doc1File">Upload</label>
+                        <span class="ms-2">
+                            @(selectedFileNames.TryGetValue(EmployeeFilesEnum.Document1, out var doc1) ? doc1 : "No file chosen")
+                        </span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- HSSC/A-Level Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>HSSC/A-Level (Certificate)</strong></label>
+                        @if (Doc2File != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(Doc2File)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (Doc2File != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @Doc2File.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @Doc2File.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(Doc2File.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @Doc2File.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @Doc2File.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="doc2File" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.Document2))" multiple />
+                        <label class="btn btn-primary" for="doc2File">Upload</label>
+                        <span class="ms-2">
+                            @(selectedFileNames.TryGetValue(EmployeeFilesEnum.Document2, out var doc2Name) ? doc2Name : "No file chosen")
+                        </span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- Last Degree Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>Last Degree (Transcript/Certificate)</strong></label>
+                        @if (LastDegree != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(LastDegree)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (LastDegree != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @LastDegree.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @LastDegree.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(LastDegree.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @LastDegree.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @LastDegree.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="lastDegreeFile" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.LastDegree))" multiple />
+                        <label class="btn btn-primary" for="lastDegreeFile">Upload</label>
+                        <span class="ms-2">@(selectedFileNames.TryGetValue(EmployeeFilesEnum.LastDegree, out var lastDegree) ? lastDegree : "No file chosen")</span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- CV Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>CV/Resume</strong></label>
+                        @if (CV != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(CV)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (CV != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @CV.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @CV.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(CV.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @CV.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @CV.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="cvFile" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.CV))" multiple />
+                        <label class="btn btn-primary" for="cvFile">Upload</label>
+                        <span class="ms-2">@(selectedFileNames.TryGetValue(EmployeeFilesEnum.CV, out var cv) ? cv : "No file chosen")</span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- CNIC FRONT Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>CNIC Front Side</strong></label>
+                        @if (CNICFrontSide != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(CNICFrontSide)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (CNICFrontSide != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @CNICFrontSide.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @CNICFrontSide.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(CNICFrontSide.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @CNICFrontSide.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @CNICFrontSide.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="cnicFrontFile" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.CNICFront))" multiple />
+                        <label class="btn btn-primary" for="cnicFrontFile">Upload</label>
+                        <span class="ms-2">@(selectedFileNames.TryGetValue(EmployeeFilesEnum.CNICFront, out var cnicFrontSide) ? cnicFrontSide : "No file chosen")</span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- CNIC BACK Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>CNIC Back Side</strong></label>
+                        @if (CNICBackSide != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(CNICBackSide)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (CNICBackSide != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @CNICBackSide.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @CNICBackSide.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(CNICBackSide.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @CNICBackSide.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @CNICBackSide.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="cnicBackFile" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.CNICBack))" multiple />
+                        <label class="btn btn-primary" for="cnicBackFile">Upload</label>
+                        <span class="ms-2">@(selectedFileNames.TryGetValue(EmployeeFilesEnum.CNICBack, out var cnicBackSide) ? cnicBackSide : "No file chosen")</span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            <!-- Experience Letter Upload -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="d-flex align-items-center">
+                        <!-- Title & View Icon -->
+                        <label class="form-label me-2 mb-0"><strong>Experience Letter (If any)</strong></label>
+                        @if (ExperienceLetter != null)
+                        {
+                            <button @onclick="() => OpenFileInModal(ExperienceLetter)" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 ms-1" title="View File" style="width: 28px; height: 28px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+                @if (ExperienceLetter != null)
+                {
+                    <!-- File exists - Show details in one line -->
+                    <div class="p-2 bg-light rounded">
+                        <small>
+                            <strong>Name:</strong> @ExperienceLetter.FileName &nbsp;|&nbsp;
+                            <strong>Type:</strong> @ExperienceLetter.FileType &nbsp;|&nbsp;
+                            <strong>Size:</strong> @(ExperienceLetter.FileSize / 1024) KB &nbsp;|&nbsp;
+                            <strong>Uploaded By:</strong> @ExperienceLetter.UploadedBy &nbsp;|&nbsp;
+                            <strong>Uploaded Date:</strong> @ExperienceLetter.UploadedDate
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-file">
+                        <InputFile class="d-none" id="expLetterFile" OnChange="@(e => OnFileSelected(e, EmployeeFilesEnum.ExperienceLetter))" multiple />
+                        <label class="btn btn-primary" for="expLetterFile">Upload</label>
+                        <span class="ms-2">@(selectedFileNames.TryGetValue(EmployeeFilesEnum.ExperienceLetter, out var expLetter) ? expLetter : "No file chosen")</span>
+                    </div>
+                }
+            </div>
+            <hr>
+
+            @* <button type="button" class="btn btn-success" @onclick="UploadEmployeeFiles">Upload Files</button> *@
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal for file preview -->
+@if (isModalVisible)
+{
+    <div class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="modalLabel" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content border">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title" id="modalLabel">Preview</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (fileType.Contains("image"))
+                    {
+                        <img src="@fileUrl" class="img-fluid" alt="Image Preview" />
+                    }
+                    else if (fileType.Contains("pdf"))
+                    {
+                        <embed src="@fileUrl" type="application/pdf" class="w-100" style="height: 600px;" />
+                    }
+                    else if (fileType.Contains("text") || fileType.Contains("plain"))
+                    {
+                        <iframe src="@fileUrl" class="w-100" style="height: 400px;" title="Text Preview"></iframe>
+                    }
+                    else if (fileType.Contains("word") || fileType.Contains("excel") || fileType.Contains("officedocument"))
+                    {
+                        <div class="text-center">
+                            <p class="mb-2">This file type is not supported for preview in browser.</p>
+                            <a href="@fileUrl" download class="btn btn-outline-primary">
+                                Download File
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <p class="mb-2">Unsupported file type.</p>
+                            <a href="@fileUrl" download class="btn btn-outline-secondary">
+                                Download File
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // Fields and properties
+    [Parameter] public string Id { get; set; }
+    public CreateEmployeeOffCanvas? createEmployeeOffCanvas { get; set; }
+    public Models.Employee.Employee? Employees { get; set; }
+    public EmployeeCreateRequest createEmployeeRequest { get; set; } = new();
+
+    // Methods
+
+    // Toggle OffCanvas visibility
+    private void ToggleCreateEmployeesOffCanvas() => createEmployeeOffCanvas?.ToggleOffCanvas();
+
+    // Initialize the employee details on page load
+    protected override async Task OnInitializedAsync() => await EmployeeGetById();
+
+    // Fetch employee details by ID
+    private async Task EmployeeGetById()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int employeeId))
+            {
+                alertService.ShowError("Invalid Employee ID.");
+                return;
+            }
+
+            var request = new EmployeeGetRequest { EmployeeId = employeeId, PageNumber = 1, PageSize = 1 };
+            var response = await EmployeeService.GetEmployees(request);
+
+            if (response != null && response.IsSuccess && response.Data?.Count > 0)
+            {
+                var employee = response.Data[0];
+                Employees = new Models.Employee.Employee
+                {
+                    EmployeeId = employee.EmployeeId,
+                    EmployeeName = employee.EmployeeName,
+                    Email = employee.Email,
+                    PermanentAddress = employee.PermanentAddress,
+                    DateOfBirth = employee.DateOfBirth,
+                    MobileNumber = employee.MobileNumber,
+                    CreatedAt = employee.CreatedAt,
+                    PersonalEmail = employee.PersonalEmail,
+                    CurrentAddress = employee.CurrentAddress,
+                    LandLineNumber = employee.LandLineNumber,
+                    DateOfJoining = employee.DateOfJoining,
+                    GenderId = employee.GenderId,
+                    CityId = employee.CityId ?? 0,
+                    MaritalStatusId = employee.MaritalStatusId ?? 0,
+                    StatusId = employee.StatusId ?? 0,
+                    Designation = employee.Designation,
+                    FatherHusbandName = employee.FatherHusbandName ?? string.Empty,
+                    CNIC = employee.CNIC ?? string.Empty,
+                    ResignDate = employee.ResignDate,
+                    LastWorkingDate = employee.LastWorkingDate,
+                    CreatedBy = employee.CreatedBy,
+                    UpdatedDate = employee.UpdatedDate,
+                    UpdatedBy = employee.UpdatedBy,
+                    Comment = employee.Comment,
+                    Files = employee.Files ?? new List<EmployeeFileGet>()
+                };
+
+                Doc1File = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.Document1);
+                Doc2File = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.Document2);
+                LastDegree = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.LastDegree);
+                CV = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.CV);
+                CNICFrontSide = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.CNICFront);
+                CNICBackSide = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.CNICBack);
+                ExperienceLetter = Employees.Files.FirstOrDefault(f => f.CategoryId == (int)EmployeeFilesEnum.ExperienceLetter);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    // File Upload Implementations
+
+    // Used to change the label and view for the upload button
+    private string fileName = "No file chosen";
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        fileName = file != null ? file.Name : "No file chosen";
+    }
+
+    [Parameter] public int? SubCategoryId { get; set; }  // Employee ID as a parameter
+
+    // Dictionary to store selected file names dynamically
+    private Dictionary<EmployeeFilesEnum, string> selectedFileNames = new();
+    private Dictionary<EmployeeFilesEnum, List<IBrowserFile>> uploadedFiles = new();
+
+    private const long MaxFileSize = 5 * 1024 * 1024; // 5MB file size limit
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e, EmployeeFilesEnum categoryId, int? subCategoryId = null)
+    {
+        var files = e.GetMultipleFiles().ToList();
+        var oversizedFiles = files.Where(f => f.Size > MaxFileSize).ToList();
+
+        if (oversizedFiles.Any())
+        {
+            alertService.ShowError($"The following files exceed 5MB: {string.Join(", ", oversizedFiles.Select(f => f.Name))}");
+            files.RemoveAll(f => f.Size > MaxFileSize);
+        }
+
+        if (files.Count == 0)
+        {
+            selectedFileNames[categoryId] = "No file chosen";
+            uploadedFiles.Remove(categoryId);
+        }
+        else
+        {
+            selectedFileNames[categoryId] = string.Join(", ", files.Select(f => f.Name));
+            uploadedFiles[categoryId] = files;
+
+            await UploadEmployeeFiles();
+        }
+    }
+
+    // og code
+    // private async Task OnFileSelected(InputFileChangeEventArgs e, EmployeeFilesEnum categoryId, int? subCategoryId = null)
+    // {
+    //     var files = e.GetMultipleFiles().ToList();
+    //     // Filter out files that exceed the 5MB limit
+    //     var oversizedFiles = files.Where(f => f.Size > MaxFileSize).ToList();
+    //     if (oversizedFiles.Any())
+    //     {
+    //         alertService.ShowError($"The following files exceed 5MB: {string.Join(", ", oversizedFiles.Select(f => f.Name))}");
+    //         files.RemoveAll(f => f.Size > MaxFileSize); // Remove oversized files from list
+    //     }
+
+    //     if (files.Count == 0)
+    //     {
+    //         selectedFileNames[categoryId] = "No file chosen"; // Show default text when no file is selected
+    //         uploadedFiles.Remove(categoryId);
+    //     }
+    //     else
+    //     {
+    //         selectedFileNames[categoryId] = string.Join(", ", files.Select(f => f.Name)); // Show selected file names
+    //         uploadedFiles[categoryId] = files;
+    //     }
+    // }
+
+    // Upload function
+
+    private async Task UploadEmployeeFiles()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int employeeId))
+            {
+                alertService.ShowError("Invalid Employee ID.");
+                return;
+            }
+
+            var fileUploadRequest = new EmployeeFileUploadRequest
+            {
+                EmployeeId = employeeId, // Using the passed EmployeeId
+                EmployeeFile = uploadedFiles.Select(kv => new EmployeeFileModel
+                {
+                    CategoryId = (int)kv.Key,
+                    SubCategoryId = SubCategoryId ?? null, // Modify as needed
+                    Files = kv.Value.FirstOrDefault()
+                }).ToList()
+            };
+
+            var response = await EmployeeService.EmployeeFileUpload(fileUploadRequest);
+            if (response != null && response.IsSuccess)
+            {
+                alertService.Show("File Uploaded Successfully.");
+                ResetFileInputs(); // **Call Reset Method Here**
+                await EmployeeGetById();
+            }
+            else
+            {
+                alertService.ShowError("File Failed to Upload.");
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    private void ResetFileInputs()
+    {
+        uploadedFiles.Clear();
+        selectedFileNames = selectedFileNames.ToDictionary(k => k.Key, v => "No file chosen");
+        StateHasChanged(); // Refresh UI
+    }
+
+    public EmployeeFileGet? Doc1File { get; set; }
+    public EmployeeFileGet? Doc2File { get; set; }
+    public EmployeeFileGet? LastDegree { get; set; }
+    public EmployeeFileGet? CV { get; set; }
+    public EmployeeFileGet? CNICFrontSide { get; set; }
+    public EmployeeFileGet? CNICBackSide { get; set; }
+    public EmployeeFileGet? ExperienceLetter { get; set; }
+
+    private bool isModalVisible = false;
+    private string fileUrl;
+    private string fileType;
+
+    private void OpenFileInModal(EmployeeFileGet file)
+    {
+        fileUrl = file.FileUrl;
+        fileType = file.FileType;
+
+        isModalVisible = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalVisible = false;
+    }
+}
+
+@* <!-- View File Button -->
+                            <a href="@Doc1File.FileUrl"
+                               target="_blank"
+                               class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center p-0"
+                               title="View File" style="width: 32px; height: 32px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                    <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" d="M9 4.46A9.8 9.8 0 0 1 12 4c4.182 0 7.028 2.5 8.725 4.704C21.575 9.81 22 10.361 22 12c0 1.64-.425 2.191-1.275 3.296C19.028 17.5 16.182 20 12 20s-7.028-2.5-8.725-4.704C2.425 14.192 2 13.639 2 12c0-1.64.425-2.191 1.275-3.296A14.5 14.5 0 0 1 5 6.821" />
+                                        <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" />
+                                    </g>
+                                </svg>
+                            </a> *@

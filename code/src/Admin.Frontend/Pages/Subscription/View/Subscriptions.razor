@@ -1,0 +1,85 @@
+﻿@page "/subscriptions"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Models.Subscription
+@using IApply.Frontend.Services.ApiService.Subscription
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject LoadingService LoadingService
+@inject ISubscriptionService SubscriptionService
+@inject AuthenticationStateProvider authStateProvider
+@inject AlertService AlertService
+
+@layout Subscriptions
+
+<PageTitle>Subscriptions</PageTitle>
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="row">
+            @foreach (var sub in subscriptions)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@sub.Name</h5>
+                            <p class="card-text">@sub.Description</p>
+                            <p class="card-text">@sub.Price.ToString("F2")</p>
+                            <button class="btn btn-primary" @onclick="() => HandleAddButtonClick(sub.Id)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private List<SubscriptionListing> subscriptions { get; set; } = new();
+    private ClaimsPrincipal? UserState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetSubscriptionsList();
+
+    }
+    private void HandleAddButtonClick(int subscriptionId)
+    {
+        NavigationManager.NavigateTo($"/add-subscriptions/{subscriptionId}");
+
+    }
+
+    private async Task GetSubscriptionsList()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new GetSubscriptionListingRequest
+                {
+                    PageNo = CurrentPage,
+                    PageSize = CurrentPageSize,
+                    SubscriptionId = 0
+                };
+
+            var response = await SubscriptionService.GetSubscriptionListing(request);
+            if (response != null && response.Status)
+            {
+                subscriptions = response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}

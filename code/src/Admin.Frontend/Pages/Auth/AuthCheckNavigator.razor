@@ -1,0 +1,53 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using IApply.Frontend.Models.Auth.Login
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Services
+@inject NavigationManager NavigationManager
+
+@* @if(loading)
+{
+<div class="page page-center my-5 py-5">
+<div class="container container-slim py-5 my-5">
+<div class="row">
+<div class="col-4 mx-auto">
+<div class="text-center">
+<div class="text-secondary mb-3">Loading application</div>
+<div class="progress progress-sm">
+<div class="progress-bar progress-bar-indeterminate" />
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+} *@
+
+@code {
+    // private bool loading = true;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var userSession = await LocalStorage.ReadItemEncryptedAsync<LoginRequest>("UserSession");
+
+            if (userSession != null)
+            {
+                // Redirect to the home page
+                NavigationManager.NavigateTo("home");
+                // loading = false;
+            }
+            else
+            {
+                // Redirect to the login page
+                NavigationManager.NavigateTo("/");
+                // loading = false;
+            }
+        }
+        // loading = false;
+        // Call StateHasChanged to re-render the component
+        // StateHasChanged();
+    }
+
+}

@@ -1,0 +1,132 @@
+﻿@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Profile.AddExperience
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService loadingService
+@inject NavigationManager navigationManager
+@inject AlertService alertService
+@inject IUserService userService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Experiences</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @foreach (var exp in Experiences)
+                    {
+                        <div class="border rounded p-2 mb-3" style="font-size: 0.9rem;">
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Company Name" @bind="exp.CompanyName" />
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Position" @bind="exp.Position" />
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Location" @bind="exp.Location" />
+                            </div>
+                            <div class="mb-2">
+                                <input type="date" class="form-control" @bind="exp.StartDate" />
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="exp.IsCurrent" />
+                                <label class="form-check-label">Currently Working</label>
+                            </div>
+                            @if (!exp.IsCurrent)
+                            {
+                                <div class="mb-2">
+                                    <input type="date" class="form-control" @bind="exp.EndDate" />
+                                </div>
+                            }
+                        </div>
+
+                        @if (exp != Experiences.Last())
+                        {
+                            <hr class="my-3" />
+                        }
+                    }
+
+                    <button class="btn btn-outline-primary" @onclick="AddExperience">
+                        <i class="bi bi-plus-lg"></i> Add More Experience
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="Close">Close</button>
+                    <button class="btn btn-primary" @onclick="SaveExperiences">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSaveComplete { get; set; } // 👈 Notify parent to reload
+
+    private List<ExperienceDto> Experiences { get; set; } = new();
+
+    private int CurrentUserId { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+
+        loadingService.OnChange += StateHasChanged;
+
+        AddExperience(); // Start with one experience by default
+    }
+
+    private void AddExperience()
+    {
+        Experiences.Add(new ExperienceDto
+            {
+                StartDate = DateTime.UtcNow
+            });
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        Experiences = new List<ExperienceDto>(); // Reset form
+        AddExperience();
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task SaveExperiences()
+    {
+        var request = new ExperienceCreateRequest
+            {
+                Experiences = Experiences
+            };
+
+        loadingService.Show();
+        try
+        {
+            var result = await userService.AddExperiencesAsync(request);
+            alertService.Show("Experiences saved!");
+            Experiences = new List<ExperienceDto>();
+            AddExperience(); // Add one empty form again
+            await OnSaveComplete.InvokeAsync(); // 👈 Notify parent to refresh data
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError("Failed to save experiences.");
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

@@ -1,0 +1,120 @@
+﻿@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Business
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Services.ApiService.System
+
+@inject LoadingService LoadingService
+@inject IBusinessService BusinessService
+@inject AlertService alertService
+
+<!-- Offcanvas for Employee Creation/Update -->
+<Offcanvas Width="50" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Business</div>
+    </OffCanvasHeader>
+
+    <OffCanvasBody>
+        <CreateBusiness @ref="createBusiness" AddBusiness="AddBusiness" EditBusiness="EditBusiness" />
+    </OffCanvasBody>
+
+    <OffCanvasFooter>
+                <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveEmployee">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    // Parameters
+    [Parameter] public EventCallback<(int PageNumber, int PageSize)> GetBusiness { get; set; }
+    [Parameter] public bool IsEditMode { get; set; } = false;
+    [Parameter] public Models.Business.BusinessListing? EditBusiness { get; set; }
+
+    // Private fields
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateBusiness? createBusiness { get; set; }
+    public CreateBusinessRequest createBusinessRequest { get; set; } = new();
+
+    // Lifecycle methods
+  
+
+    // Methods
+
+    // Toggles the visibility of the offcanvas and resets form if necessary
+    public void ToggleOffCanvas()
+    {
+        createBusiness?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    // Closes the offcanvas and resets the form
+    private void CloseOffCanvas()
+    {
+        createBusiness?.ResetForm();
+    }
+
+    // Handles form submission (Save/Update)
+    private void HandleSaveEmployee()
+    {
+        createBusiness?.HandleValidSubmit();
+    }
+
+    // Sets employee details in Edit mode
+    public void SetEmployee(Models.Business.BusinessListing item)
+    {
+        EditBusiness = item;
+        Offcanvas?.Open();
+    }
+
+    // Employee handling methods
+
+    // Adds or updates the employee details
+    private async Task AddBusiness(CreateBusinessRequest employee)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse<CreateBusinessResponse>();
+
+            if (employee.Id > 0)
+            {
+                response = await BusinessService.CreateUpdateBusiness(employee);
+            }
+
+            if (response != null && response.Status)
+            {
+                await GetBusiness.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+
+                if (employee.Id > 0)
+                {
+                    alertService.Show("Business Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Business Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.Error != null
+                    ? response.Error
+                    : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

@@ -1,0 +1,56 @@
+﻿@using Microsoft.AspNetCore.Components
+
+<div class="row-cards px-2">
+    <div class="col-md-12">
+        <div class="card border-0" style="overflow: hidden;">
+            <div class="card-header pt-1" style="border-bottom: 1px solid #eee;">
+                <ul class="nav nav-tabs card-header-tabs border-bottom mt-1" role="tablist">
+                    @foreach (var tab in Tabs)
+                    {
+                        <li class="nav-item @(tab.Id == 1 ? "ms-3" : "")" role="presentation">
+                            <a href="javascript:void(0);" class="nav-link @(ActiveTab == tab.Id ? "active" : "")"
+                                @onclick="() => HandleClick(tab.Id)" aria-selected="@(ActiveTab == tab.Id)" role="tab">
+                                @((MarkupString)tab.Icon)
+                                @tab.Title
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="card-body px-0 pb-0 pt-0">
+                <div class="tab-content">
+                    @foreach (var tab in Tabs)
+                    {
+                        <div class="tab-pane @(ActiveTab == tab.Id ? "active show" : "")" id="@tab.Id" role="tabpanel">
+                            @if (ActiveTab == tab.Id)
+                            {
+                                @tab.Content
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<TabItem> Tabs { get; set; }
+    [Parameter] public EventCallback<int> OnTabClick { get; set; }
+
+    private int ActiveTab { get; set; } = 1;
+
+    private void HandleClick(int tabId)
+    {
+        ActiveTab = tabId;
+        OnTabClick.InvokeAsync(tabId);
+    }
+
+    public class TabItem
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? Icon { get; set; }
+        public RenderFragment? Content { get; set; }
+    }
+}

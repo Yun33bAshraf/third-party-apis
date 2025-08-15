@@ -1,0 +1,262 @@
+﻿@using System.Security.Claims
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Lead
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.Leads
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.CInput
+@using static IApply.Frontend.Pages.Lead.View.LeadListing
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject ILeadService LeadService
+@inject ICategoryService CategoryService
+
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleValidSubmit" FormName="LeadForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <!-- Full Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Full Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Placeholder="Full Name"
+                        @bind-Value="createLeadRequest.FullName"
+                        Validate="() => createLeadRequest.FullName" />
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Email <span class="text-danger">*</span></label>
+                <CInput Type="text" Placeholder="Email"
+                        @bind-Value="createLeadRequest.Email"
+                        Validate="() => createLeadRequest.Email" />
+            </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Phone Number <span class="text-danger">*</span></label>
+                <CInput Type="text" Placeholder="Phone Number"
+                        @bind-Value="createLeadRequest.PhoneNumber"
+                        Validate="() => createLeadRequest.PhoneNumber" />
+            </div>
+        </div>
+
+        <!-- Company Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Company Name</label>
+                <CInput Type="text" Placeholder="Company Name"
+                        @bind-Value="createLeadRequest.CompanyName"
+                        Validate="() => createLeadRequest.CompanyName" />
+            </div>
+        </div>
+
+        <!-- Job Title Role -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Job Title Role</label>
+                <CInput Type="text" Placeholder="Job Title Role"
+                        @bind-Value="createLeadRequest.JobTitleRole"
+                        Validate="() => createLeadRequest.JobTitleRole" />
+            </div>
+        </div>
+
+        <!-- Lead Source -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Lead Source <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" @bind-Value="createLeadRequest.LeadSourceId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => createLeadRequest.LeadSourceId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Lead Status -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Lead Status <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" @bind-Value="createLeadRequest.LeadStatusId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories2)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => createLeadRequest.LeadStatusId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Lead Industry -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label>Lead Industry <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" @bind-Value="createLeadRequest.IndustryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories3)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => createLeadRequest.IndustryId" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Comment -->
+        <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label>Comment</label>
+                <InputTextArea class="form-control h-100" rows="8" placeholder="Comment"
+                               @bind-Value="createLeadRequest.Comment" autocomplete="off" />
+                <ValidationMessage For="() => createLeadRequest.Comment" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm(FormName = "LeadForm")]
+    public LeadCreateRequest createLeadRequest { get; set; } = new();
+
+    private EditContext editContext;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    [Parameter]
+    public Models.Lead.Lead? EditLead { get; set; }
+
+    public Models.Lead.Lead? prevEditLead { get; set; }
+
+    public List<GetCategory> AvailableCategories { get; set; } = new();
+    public List<GetCategory> AvailableCategories2 { get; set; } = new();
+    public List<GetCategory> AvailableCategories3 { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<LeadCreateRequest> AddLead { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+            await LoadCategorySource();
+            await LoadCategoryStatus();
+            await LoadCategoryIndustry();
+        
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditLead != null && EditLead != prevEditLead)
+        {
+            prevEditLead = EditLead;
+            await GetLead();
+            SetEditContext();
+        }
+    }
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(createLeadRequest);
+    }
+
+    public void ResetForm()
+    {
+        createLeadRequest = new();
+        EditLead = null;
+        prevEditLead = null;
+        SetEditContext();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddLead.InvokeAsync(createLeadRequest);
+        }
+    }
+
+    private async Task LoadCategorySource()
+    {
+        var request = new GetCategory { EntityTypeId = 4 };
+        var response = await CategoryService.GetCategory(request);
+        if (response?.Data != null)
+        {
+            AvailableCategories = response.Data;
+        }
+    }
+
+    private async Task LoadCategoryStatus()
+    {
+        var request = new GetCategory { EntityTypeId = 5 };
+        var response = await CategoryService.GetCategory(request);
+        if (response?.Data != null)
+        {
+            AvailableCategories2 = response.Data;
+        }
+    }
+
+    private async Task LoadCategoryIndustry()
+    {
+        var request = new GetCategory { EntityTypeId = 6 };
+        var response = await CategoryService.GetCategory(request);
+        if (response?.Data != null)
+        {
+            AvailableCategories3 = response.Data;
+        }
+    }
+
+    private async Task GetLead()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new LeadGetRequest { LeadId = EditLead.LeadId };
+            var response = await LeadService.GetLead(request);
+
+            if (response != null && response.IsSuccess)
+            {
+                var lead = response.Data.FirstOrDefault();
+                if (lead != null)
+                {
+                    createLeadRequest = new LeadCreateRequest
+                        {
+                            LeadId = lead.LeadId,
+                            FullName = lead.FullName,
+                            Email = lead.Email,
+                            PhoneNumber = lead.PhoneNumber,
+                            CompanyName = lead.CompanyName,
+                            JobTitleRole = lead.JobTitleRole,
+                            LeadSourceId = lead.LeadSourceId,
+                            LeadStatusId = lead.LeadStatusId,
+                            IndustryId = lead.IndustryId,
+                            Comment = lead.Comment
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

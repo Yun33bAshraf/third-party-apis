@@ -1,0 +1,127 @@
+﻿@typeparam TModel
+
+<div class="list-container">
+    <div class="list" ondragover="event.preventDefault()" @ondrop="(_) => OnDrop(List1)">
+        <h3>List 1</h3>
+        @if (List1.Any())
+        {
+            @for (int i = 0; i < List1.Count; i++)
+            {
+                var index = i;
+                var item = List1[index];
+                <div class="item card mb-2 p-1" draggable="true" @ondragstart="(_) => OnDragStart(item, index)"
+                    @ondragover="(_) => OnDragOver(index)" @ondrop="(_) => OnReorder(List1, index)">
+                    @foreach (var property in typeof(TModel).GetProperties())
+                    {
+                        <div><strong>@property.Name:</strong> @property.GetValue(item)</div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <p>No items in List 1</p>
+        }
+    </div>
+
+    <div class="list" ondragover="event.preventDefault()" @ondrop="(_) => OnDrop(List2)">
+        <h3>List 2</h3>
+        @if (List2.Any())
+        {
+            @for (var i = 0; i < List2.Count; i++)
+            {
+                var index = i;
+                var item = List2[index];
+                <div class="item card mb-2" draggable="true" @ondragstart="(_) => OnDragStart(item, index)"
+                    @ondragover="(_) => OnDragOver(index)" @ondrop="(_) => OnReorder(List2, index)">
+                    @foreach (var property in typeof(TModel).GetProperties())
+                    {
+                        <div><strong>@property.Name:</strong> @property.GetValue(item)</div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <p>No items in List 2</p>
+        }
+    </div>
+</div>
+
+@code {
+    private TModel? draggedItem;
+    private int? draggedIndex;
+    private int? draggedOverIndex;
+
+    [Parameter] public List<TModel> List1 { get; set; } = [];
+
+    [Parameter] public List<TModel> List2 { get; set; } = [];
+
+    private void OnDragStart(TModel item, int index)
+    {
+        draggedItem = item;
+        draggedIndex = index;
+    }
+
+    private void OnDragOver(int index)
+    {
+        draggedOverIndex = index;
+    }
+
+    private void OnDrop(List<TModel> targetList)
+    {
+        if (draggedItem == null || draggedOverIndex == null)
+            return;
+
+        // Remove from the source list
+        if (List1.Contains(draggedItem))
+        {
+            List1.Remove(draggedItem);
+        }
+        else if (List2.Contains(draggedItem))
+        {
+            List2.Remove(draggedItem);
+        }
+
+        // Add to the target list at the correct position
+        if (targetList.Count == 0)
+        {
+            targetList.Add(draggedItem);
+        }
+        else
+        {
+            targetList.Insert(draggedOverIndex.Value, draggedItem);
+        }
+
+        draggedItem = default;
+        draggedIndex = null;
+        draggedOverIndex = null;
+    }
+
+    private void OnReorder(List<TModel> targetList, int targetIndex)
+    {
+        if (draggedItem == null || draggedIndex == null || draggedOverIndex == null)
+            return;
+
+        if (draggedIndex.Value != targetIndex)
+        {
+            // Remove the item from its original position
+            if (List1.Contains(draggedItem))
+            {
+                List1.Remove(draggedItem);
+            }
+            else if (List2.Contains(draggedItem))
+            {
+                List2.Remove(draggedItem);
+            }
+
+            // Insert the item at the target position
+            targetList.Insert(targetIndex, draggedItem);
+        }
+
+        draggedItem = default;
+        draggedIndex = null;
+        draggedOverIndex = null;
+    }
+
+}

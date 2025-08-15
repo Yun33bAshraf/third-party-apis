@@ -1,0 +1,221 @@
+﻿@page "/asset-detail"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Pages.Assets.Components
+@using IApply.Frontend.Services.ApiService.System
+@inject AlertService AlertService
+@inject IJSRuntime JS
+@inject LoadingService LoadingService
+@inject IAssetService AssetService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Asset Management</PageTitle>
+
+<div class="col-12">
+    <FilterCard Title="Asset Filters" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddAssets))" ExecApi="true" BtnTitle="Add" IsFilter="true"
+                HandleBtnClick="ToggleCreateAssetsOffCanvas">
+        <EditForm Model="assets" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+                    <!-- Asset Name -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                                    @bind-Value="assetsName" />
+                        </div>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Start Date</label>
+                            <input type="date" class="form-control" id="start-date" autocomplete="off" @bind="startDate"
+                                   onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>End Date</label>
+                            <input type="date" class="form-control" id="end-date" autocomplete="off" @bind="endDate"
+                                   onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer m-0 px-2  py-1 border-0 ">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<CreateAssetsOffCanvas @ref="createAssetsOffCanvas" GetAssets="GetAssets" />
+@if (Utils.HasUserRight(UserState, UserRights.CanEditAssets))
+{
+    <div class="col-12">
+        <CTable Items="assets" TotalCountFromServer="assetsCount" Action="MyAction"
+        ActionRequired="false" CustomRenderFragments="customRenderFragments" BackendPagination="true" BackendSorting="true"
+        OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+    </div>
+}
+
+@code {
+    private List<Assets>? assets = new();
+    private int assetsCount = 0;
+    private Dictionary<string, RenderFragment<Assets>>? customRenderFragments { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+    public CreateAssetsOffCanvas? createAssetsOffCanvas { get; set; }
+    private string assetsName { get; set; } = string.Empty;
+    private DateTime? startDate { get; set; } = null;
+    private DateTime? endDate { get; set; } = null;
+    private int? categoryId { get; set; } = null;
+    private int? subCategoryId { get; set; } = null;
+    private int? statusId { get; set; } = null;
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    private void ToggleCreateAssetsOffCanvas()
+    {
+        createAssetsOffCanvas?.ToggleOffCanvas();
+    }
+
+    private RenderFragment<Assets> MyAction => item => builder =>
+        {
+                // You can add action buttons or links here (e.g., edit, delete)
+                builder.OpenElement(0, "button");
+                builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+                builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createAssetsOffCanvas.SetAsset(item)));
+
+                builder.OpenElement(3, "i");
+                builder.AddAttribute(4, "class", "ti ti-edit");
+                builder.CloseElement();
+
+                builder.AddContent(5, " Edit");
+                builder.CloseElement();
+        };
+
+    public async Task HandleValidSubmit()
+    {
+        await GetAssets();
+    }
+
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetAssets();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetAssets();
+    }
+
+    private async Task GetAssets()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new AssetsRequest
+                {
+                    AssetName = string.IsNullOrWhiteSpace(assetsName) ? null : assetsName, // NULL for no filter
+                    StartDate = startDate ?? null, // Send MinValue if not set
+                    EndDate = endDate ?? DateTime.UtcNow, // Default to today if empty
+                    PageNumber = CurrentPage,
+                    PageSize = CurrentPageSize,
+                    CategoryId = categoryId,
+                    SubCategoryId = subCategoryId,
+                    StatusId = statusId
+                };
+
+            var response = await AssetService.GetAssets(request);
+            if (response != null && response.IsSuccess)
+            {
+                assets = response.Data;
+                assetsCount = response.Pagination.TotalCount;
+                @* if(assets != null){
+                    foreach(var item in assets){
+                        item.CreatedAtFormatted =  await Utils.ConvertToLocalTimeWithZoneAbbreviation(item.CreatedAt, JS);
+                    }
+                } *@
+
+                SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Assets>>
+        {
+            ["Name"] = item => new RenderFragment(builder =>
+            {
+                builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/assets/{item.AssetId}")>
+        <span class="link-primary text-blue">@item.Name</span>
+    </NavLink>);
+                }),
+            ["PurchasePrice"] = item => new RenderFragment(builder =>
+            {
+                builder.AddContent(0, @<span>@Decimal.ToInt32(item.PurchasePrice ?? 0)</span>);
+            }),
+            ["Status"] = item => new RenderFragment(builder =>
+        {
+            builder.AddContent(0, @<div class="text-center">
+        <Badge Text="@(item.Status)" BackgroundColor="@GetBackgroundColor(item.Status)" />
+    </div>);
+        }),
+        };
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "Operational" => "bg-success",
+            "Maintenance" => "bg-warning",
+            "Retired" => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+
+    private async Task ResetFilters()
+    {
+        assetsName = string.Empty;
+        startDate = null;
+        endDate = null;
+
+        await GetAssets();
+    }
+}

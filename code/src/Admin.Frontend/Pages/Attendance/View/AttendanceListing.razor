@@ -1,0 +1,89 @@
+﻿@page "/attendance"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Models.Attendances
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IAttendenceService AttendenceService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Attendance</PageTitle>
+
+    <CTable Items="attendance" TotalCountFromServer="(attendance == null ? 0 : attendance.Count)"
+             Action="MyAction" CustomRenderFragments="customRenderFragments" />
+
+@code {
+    private List<Attendance>? attendance = new();
+    private Dictionary<string, RenderFragment<Attendance>> customRenderFragments;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    private RenderFragment<Attendance> MyAction => item => builder =>
+                            {
+                                // if (Utils.HasRight(UserState, SystemRights.ModifyCities))
+                                // {
+                                // Edit Button with Icon
+                                builder.OpenElement(0, "button");
+                                builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+                                // builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => CreateUpdateCityOffCanvas?.Edit(item)));
+
+                                // Edit Icon
+                                builder.OpenElement(3, "i");
+                                builder.AddAttribute(4, "class", "ti ti-edit");
+                                builder.CloseElement();
+
+                                builder.AddContent(5, " Edit");
+                                builder.CloseElement();
+                                // }
+                            };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // SetCustomFragments();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetAttendance();
+    }
+    private void ToggleCreateUpdateCityOffCanvas()
+    {
+        // CreateUpdateCityOffCanvas?.ToggleOffCanvas();
+    }
+
+    private async Task GetAttendance()
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await AttendenceService.GetAttendance();
+            if (response != null && response.IsSuccess)
+            {
+                attendance = response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-success",
+            "InActive" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

@@ -1,0 +1,62 @@
+﻿<div class="accordion @(AccordionClass)" id="@AccordionId">
+    @if (Items != null && Items.Any())
+    {
+        foreach (var item in Items)
+        {
+            <div class="accordion-item">
+                <div class="row m-0 p-0 border boreder-bottom mb-2">
+                    <div class="col-11">
+                        <h2 class="accordion-header m-0 p-1" id="@($"heading-{item.Id}")">
+                            @item.Header
+                        </h2>
+                    </div>
+                    <div class="col-1 text-end m-0 p-1">
+                        <button class="btn p-0 border btn-light rounded-3 @(item.IsCollapsed ? "collapsed" : "")" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#@($"collapse-{item.Id}")"
+                                aria-expanded="@(item.IsCollapsed ? "false" : "true")" aria-controls="@($"collapse-{item.Id}")"
+                                @onclick="() => ToggleItem(item)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m7 10l5 5l5-5z" /></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="@($"collapse-{item.Id}")" class="accordion-collapse collapse @(item.IsCollapsed ? "" : "show")"
+                     aria-labelledby="@($"heading-{item.Id}")" data-bs-parent="#@AccordionId">
+                    <div class="accordion-body">
+                        @item.Body
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string AccordionId { get; set; } = $"accordion-{Guid.NewGuid()}";
+
+    [Parameter]
+    public string AccordionClass { get; set; } = "";
+
+    [Parameter]
+    public List<AccordionItem>? Items { get; set; }
+
+    private void ToggleItem(AccordionItem item)
+    {
+        foreach (var accItem in Items)
+        {
+            if (accItem != item)
+                accItem.IsCollapsed = true;
+        }
+
+        item.IsCollapsed = !item.IsCollapsed;
+        StateHasChanged();
+    }
+
+    public class AccordionItem
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Header { get; set; } = string.Empty;
+        public RenderFragment? Body { get; set; }
+        public bool IsCollapsed { get; set; } = true;
+    }
+}

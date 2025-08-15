@@ -1,0 +1,257 @@
+﻿@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Profile.ProfileUpdate
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using System.ComponentModel
+@using System.Reflection
+
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService loadingService
+@inject NavigationManager navigationManager
+@inject AlertService alertService
+@inject IUserService userService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Profile</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    @* Contact Information *@
+                    <h5 class="mt-1 mb-2 fw-bold text-secondary border-bottom pb-2">Contact Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputText @bind-Value="profile.MobileNumber" class="form-control" placeholder="Mobile Number" />
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputText @bind-Value="profile.Address" class="form-control" placeholder="Address" />
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputText @bind-Value="profile.PostalCode" class="form-control" placeholder="Postal Code" />
+                        </div>
+                    </div>
+
+                    @* Location Information *@
+                    <h5 class="mt-2 mb-2 fw-bold text-secondary border-bottom pb-2">Location</h5>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputSelect @bind-Value="profile.CountryId" class="form-control">
+                                <option value="">Select Country</option>
+                                @foreach (Country country in Enum.GetValues(typeof(Country)))
+                                {
+                                    var member = typeof(Country).GetMember(country.ToString()).First();
+                                    var descriptionAttr = member.GetCustomAttribute<DescriptionAttribute>();
+                                    var displayName = descriptionAttr?.Description ?? country.ToString();
+
+                                    <option value="@( (int)country )">@displayName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputSelect @bind-Value="profile.StateId" class="form-control">
+                                <option value="">Select State/Province</option>
+                                @foreach (StateProvince stateProvince in Enum.GetValues(typeof(StateProvince)))
+                                {
+                                    var member = typeof(StateProvince).GetMember(stateProvince.ToString()).First();
+                                    var descriptionAttr = member.GetCustomAttribute<DescriptionAttribute>();
+                                    var displayName = descriptionAttr?.Description ?? stateProvince.ToString();
+
+                                    <option value="@( (int)stateProvince )">@displayName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputSelect @bind-Value="profile.CityId" class="form-control">
+                                <option value="">Select City</option>
+                                @foreach (City city in Enum.GetValues(typeof(City)))
+                                {
+                                    var member = typeof(City).GetMember(city.ToString()).First();
+                                    var descriptionAttr = member.GetCustomAttribute<DescriptionAttribute>();
+                                    var displayName = descriptionAttr?.Description ?? city.ToString();
+
+                                    <option value="@( (int)city )">@displayName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    @* Personal Information *@
+                    <h5 class="mt-2 mb-2 fw-bold text-secondary border-bottom pb-2">Personal Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputDate @bind-Value="profile.DateOfBirth" class="form-control" placeholder="Date of Birth" />
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputSelect @bind-Value="profile.GenderId" class="form-control">
+                                <option value="">Select Gender</option>
+                                @foreach (Gender gender in Enum.GetValues(typeof(Gender)))
+                                {
+                                    var member = typeof(Gender).GetMember(gender.ToString()).First();
+                                    var descriptionAttr = member.GetCustomAttribute<DescriptionAttribute>();
+                                    var displayName = descriptionAttr?.Description ?? gender.ToString();
+
+                                    <option value="@( (int)gender )">@displayName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputSelect @bind-Value="profile.MaritalStatusId" class="form-control">
+                                <option value="">Select Marital Status</option>
+                                @foreach (MaritalStatus maritalStatus in Enum.GetValues(typeof(MaritalStatus)))
+                                {
+                                    var member = typeof(MaritalStatus).GetMember(maritalStatus.ToString()).First();
+                                    var descriptionAttr = member.GetCustomAttribute<DescriptionAttribute>();
+                                    var displayName = descriptionAttr?.Description ?? maritalStatus.ToString();
+
+                                    <option value="@( (int)maritalStatus )">@displayName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    @* Professional, Social & Other Info *@
+                    <h5 class="mt-2 mb-2 fw-bold text-secondary border-bottom pb-2">Professional, Social & Other Info</h5>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputText @bind-Value="profile.Occupation" class="form-control" placeholder="Occupation" />
+                        </div>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <InputText @bind-Value="profile.LinkedInProfile" class="form-control" placeholder="LinkedIn Profile" />
+                        </div>
+                        <div class="col-12">
+                            <InputTextArea @bind-Value="profile.UserBio" class="form-control" rows="3" placeholder="Bio" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="Close">Cancel</button>
+                    <button class="btn btn-primary" @onclick="Submit">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private ProfileUpdateRequest profile = new();
+
+    private int CurrentUserId { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // private ProfileUpdateModel updateProfile = new();
+
+    // private string? DateOfBirthString
+    // {
+    //     get => profile.DateOfBirth?.ToString("yyyy-MM-dd");
+    //     set
+    //     {
+    //         if (DateOnly.TryParse(value, out var date))
+    //             profile.DateOfBirth = date;
+    //         else
+    //             profile.DateOfBirth = null;
+    //     }
+    // }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+
+        loadingService.OnChange += StateHasChanged;
+
+        await LoadUserProfile();
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        IsVisible = false;
+        OnClose.InvokeAsync();
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await userService.UpdateProfile(profile);
+            if (response.Status is true)
+            {
+                alertService.Show("Profile updated successfully.");
+                Close();
+            }
+            else if (response?.Error is not null)
+            {
+                alertService.ShowError(response.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task LoadUserProfile()
+    {
+        var result = await userService.ProfileGet();
+        if (result?.Data != null)
+        {
+            var data = result.Data;
+
+            profile = new ProfileUpdateRequest
+            {
+                MobileNumber = data.MobileNumber,
+                Address = data.Address,
+                PostalCode = data.PostalCode,
+                CountryId = data.CountryId,
+                StateId = data.StateId,
+                CityId = data.CityId,
+                DateOfBirth = data.DateOfBirth,
+                GenderId = data.GenderId ?? 0,
+                MaritalStatusId = data.MaritalStatusId,
+                NationalId = data.NationalId,
+                Occupation = data.Occupation,
+                LinkedInProfile = data.LinkedInProfile,
+                UserBio = data.UserBio
+            };
+        }
+    }
+
+
+    public class ProfileUpdateModel
+    {
+        public string MobileNumber { get; set; } = string.Empty;
+        public string? Address { get; set; } = string.Empty;
+        public string? PostalCode { get; set; } = string.Empty;
+        public int? CountryId { get; set; }
+        public int? StateId { get; set; }
+        public int? CityId { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public int? GenderId { get; set; }
+        public int? MaritalStatusId { get; set; }
+        public string? NationalId { get; set; }
+        public string? Occupation { get; set; }
+        public string? LinkedInProfile { get; set; }
+        public string? UserBio { get; set; }
+    }
+
+}

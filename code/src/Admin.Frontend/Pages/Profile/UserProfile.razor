@@ -1,0 +1,32 @@
+﻿@page "/profile"
+@using IApply.Frontend.Components.CardTabs
+@using IApply.Frontend.Pages.Auth
+<CardTabs Tabs="tabs" OnTabClick="HandleTabClick" />
+
+@code {
+    private List<CardTabs.TabItem> tabs = new()
+{
+new CardTabs.TabItem
+{
+Id = 1,
+Title = "Account Information",
+Content = @<div class="my-2">
+        <AccountInformation />
+    </div>
+},
+new CardTabs.TabItem
+{
+Id = 2,
+Title = "Change Password",
+Content = @<div class="my-2">
+        <ChangePassword/>
+    </div>
+},
+};
+
+    private void HandleTabClick(int tabId)
+    {
+        Console.WriteLine($"Tab {tabId} clicked");
+    }
+
+}

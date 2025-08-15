@@ -1,0 +1,120 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Services.ApiService.System
+
+@inject AlertService AlertService
+@inject IAttendenceService AttendenceService
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+@* <div class="col-12">
+    <FilterCard Title="Attendance Daily Summary" IsBtn="true" ExecApi="true" IsFilter="true">
+        <div class="row mt-3 m-2">
+            <div class="col">
+                <EditForm Model="attendancesummary" OnValidSubmit="HandleValidSubmit" Enhance>
+                    <DataAnnotationsValidator />
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="floating-input" autocomplete="off" />
+                                    <label class="form-label">Date</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer m-0 p-2">
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-secondary me-2" type="button">Reset</button>
+                            <button class="btn btn-primary" type="submit">Filter</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </FilterCard>
+</div> *@
+<div class="col-12">
+<CTable Items="attendancesummary" TotalCountFromServer="(attendancesummary == null ? 0 : attendancesummary.Count)"
+        Action="MyAction" />
+        </div>
+
+@code {
+    private List<AttendenceDailySummary>? attendancesummary = new();
+
+    // private List<AttendenceMonthlySummary? attendenceMonthly = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    [Parameter]
+    public int? EmployeeId { get; set;}
+
+
+
+    public async Task HandleValidSubmit()
+    {
+        // Apply the selected filter when the form is submitted
+        await GetAttendanceSummary(); // Fetch filtered data based on the selected date
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        // Set the SelectedDate to the current date
+        // SelectedDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Fetch attendance summary for the current date by default
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EmployeeId != null)
+        {
+            await GetAttendanceSummary();
+        }
+    }
+
+    private async Task GetAttendanceSummary()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request=new AttendanceGetDailyReq
+            {
+                EmployeeId=(int)EmployeeId,
+                StartDate = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, 1),
+                EndDate = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)) 
+            };
+
+            var response = await AttendenceService.GetAttendanceDailySummary(request);
+            if (response != null && response.IsSuccess)
+            {
+                attendancesummary = response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+    private RenderFragment<AttendenceDailySummary> MyAction => item => builder =>
+    {
+        builder.OpenElement(0, "button");
+        builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+        builder.OpenElement(3, "i");
+        builder.AddAttribute(4, "class", "ti ti-edit");
+        builder.CloseElement();
+
+        builder.AddContent(5, " Edit");
+        builder.CloseElement();
+    };
+
+}

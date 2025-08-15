@@ -1,0 +1,92 @@
+﻿@page "/register"
+
+@using System.ComponentModel.DataAnnotations
+@using IApply.Frontend.Models.Auth.Register
+@using IApply.Frontend.Services.ApiService.Auth
+
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject IAuthService authService
+
+@layout AccountLayout
+
+<EditForm Model="@registerModel" OnValidSubmit="@CreateAccount">
+    <DataAnnotationsValidator />
+
+    <div class="d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card card-md w-100" style="max-width: 600px;">
+            <div class="card-body p-4">
+                <h2 class="h3 text-center mb-4">Create Account</h2>
+
+                <div class="mb-2">
+                    <label class="form-label">First Name</label>
+                    <div class="input-group">
+                        @* <span class="input-group-text"><i class="fa fa-user"></i></span> *@
+                        <InputText @bind-Value="registerModel.FirstName" class="form-control" placeholder="First Name" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.FirstName)" class="text-danger" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Last Name</label>
+                    <div class="input-group">
+                        @* <span class="input-group-text"><i class="fa fa-user"></i></span> *@
+                        <InputText @bind-Value="registerModel.LastName" class="form-control" placeholder="Last Name" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.LastName)" class="text-danger" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-group">
+                        @* <span class="input-group-text"><i class="fa fa-envelope"></i></span> *@
+                        <InputText @bind-Value="registerModel.Email" class="form-control" placeholder="Email" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.Email)" class="text-danger" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        @* <span class="input-group-text"><i class="fa fa-lock"></i></span> *@
+                        <InputText @bind-Value="registerModel.Password" type="@(ShowPassword ? "text" : "password")" class="form-control" placeholder="Password" />
+                        <span class="input-group-text pe-2" @onclick="() => ShowPassword = !ShowPassword">
+                            <iconify-icon icon="@(ShowPassword ? "mdi:eye-off" : "mdi:eye")" class="fs-5"></iconify-icon>
+                        </span>
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.Password)" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary rounded-5 w-100 fw-bold">
+                    Create Account <i class="fa fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private RegisterRequest registerModel { get; set; } = new();
+    private bool ShowPassword = false;
+
+    private async Task CreateAccount()
+    {
+        try
+        {
+            loadingService.Show();
+            var response = await authService.RegisterAsync(registerModel);
+            if (response is not null && response.Status is true && response.Message is not null)
+            {
+                alertService.Show(response.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

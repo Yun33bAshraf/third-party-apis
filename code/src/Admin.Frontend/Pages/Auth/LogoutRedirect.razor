@@ -1,0 +1,31 @@
+﻿@page "/logout"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Constants
+@using IApply.Frontend.Services
+@using IApply.Frontend.Models
+@using IApply.Frontend.Models.Auth.Login
+@layout AuthLayout
+
+@inject IHttpContextAccessor httpContextAccessor
+@inject NavigationManager _navigationManager
+@inject LoadingService LoadingService
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await RemoveAuthStateAsync();
+    }
+
+    private async Task RemoveAuthStateAsync()
+    {
+        LoadingService.Show();
+        await httpContextAccessor.HttpContext.SignOutAsync(Constants.AUTH_SCHEME);
+        await InvokeAsync(StateHasChanged);
+
+        _navigationManager.NavigateTo("./");
+    }
+}

@@ -1,0 +1,558 @@
+﻿@page "/business-detail/{Id}"
+
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Components.Accordian
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Pages.Business.Components
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Business
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Pages.Employee.Components
+@using System.Globalization
+@using System.Text.Json
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject LoadingService LoadingService
+@inject IBusinessService BusinessService
+@inject ISystemService SystemService
+@inject AlertService alertService
+
+<PageTitle>Business Information</PageTitle>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body p-0 mb-2">
+            <div class="d-flex align-items-center">
+                <!-- Link -->
+                <div class="bd-highlight mb-0">
+                    <a href="/business-listing" class="btn btn-link text-decoration-none mb-0 pb-0 pe-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56">
+                            <path fill="currentColor" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.875-23.906-23.93-23.906C14.899 4.094 4.095 14.945 4.095 28c0 13.078 10.828 23.906 23.906 23.906m6.351-13.828c-.445 0-.82-.094-1.171-.305l-14.672-7.617c-1.031-.515-1.43-1.148-1.43-2.156c0-.914.469-1.617 1.43-2.156l14.672-7.922a2.6 2.6 0 0 1 1.242-.281c1.148 0 1.969.867 1.969 1.945c0 .89-.422 1.477-1.407 1.992l-12.47 6.282V28l12.47 6.14c1.03.47 1.406 1.055 1.406 1.97c0 1.1-.844 1.968-2.04 1.968" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Heading -->
+                <div class="bd-highlight ms-1 mb-0 mt-2">
+                    @if (Business != null)
+                    {
+                        <h3 class="mb-0 pb-0">@Business.Name</h3>
+                    }
+                </div>
+
+                <!-- Button -->
+                <div class="ms-auto bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1 mt-2 me-2" @onclick="ToggleCreateBusinessOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Details Section -->
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body py-2">
+            @if (Business != null)
+            {
+                <div class="datagrid">
+                    <!-- Display Employee Information -->
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Business Name</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Business.Name) ? Business.Name : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Currency</div>
+                        <div class="datagrid-content">
+                            @(Business.Currency != null && Business.Currency.CurrencyName != null
+                                    ? $"{Business.Currency.CurrencyName}, {Business.Currency.Symbol}"
+                                    : "___")
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Start Date</div>
+                        <div class="datagrid-content">@(Business.StartDate != null ? Business.StartDate.ToString("dd-MMM-yyyy").ToUpper() : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">TimeZone</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Business.TimeZone) ? Business.TimeZone : "___")</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">FyStartMonth</div>
+                        <div class="datagrid-content">@(Business.FyStartMonth > 0 ? CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Business.FyStartMonth) : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Default Profit Percent</div>
+                        <div class="datagrid-content">@(Business.DefaultProfitPercent > 0 ? Business.DefaultProfitPercent.ToString() : "0")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Default Shipping Percent</div>
+                        <div class="datagrid-content">@(Business.DefaultShippingPercent > 0 ? Business.DefaultShippingPercent.ToString() : "0")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Active</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.IsActive.ToString())" BackgroundColor="@GetBackgroundColor(Business.IsActive.ToString())" />
+                        </div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Product Expiry</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnableProductExpiry.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnableProductExpiry.ToString())" />
+                        </div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Brand</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnableBrand.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnableBrand.ToString())" />
+                        </div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Category</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnableCategory.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnableCategory.ToString())" />
+                        </div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">SubCategory</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnableSubCategory.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnableSubCategory.ToString())" />
+                        </div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Price Tax</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnablePriceTax.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnablePriceTax.ToString())" />
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Purchase Status</div>
+                        <div class="datagrid-content">
+                            <Badge Text="@(Business.EnablePurchaseStatus.ToString())" BackgroundColor="@GetBackgroundColor(Business.EnablePurchaseStatus.ToString())" />
+                        </div>
+                    </div>
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+@if (accordionItems.Count > 0)
+{
+    <div class="col-12 mt-2">
+        <div class="card">
+            <div class="card-body py-2">
+                <div class="mt-2">
+                    <Accordion AccordionId="myAccordion"
+                    AccordionClass=""
+                    Items="accordionItems" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- OffCanvas for Employee Creation -->
+<CreateBusinessOffCanvas @ref="createBusinessOffCanvas" GetBusiness="BusinessGetById" EditBusiness="Business" IsEditMode="true" />
+
+@code {
+    // Fields and properties
+    [Parameter] public string Id { get; set; }
+    public CreateBusinessOffCanvas? createBusinessOffCanvas { get; set; }
+    public Models.Business.BusinessListing? Business { get; set; }
+    public CreateBusinessRequest createBusinessRequest { get; set; } = new();
+
+    public RefNoPrefixes? refNoPrefixes { get; set; }
+    public KeyboardShortcuts? keyboardShortcutsConfig { get; set; }
+    public PosSettings? posSettingsConfig { get; set; }
+    public WeighingScaleSetting? weighingScaleSettingsConfig { get; set; }
+
+    // Methods
+
+    // Toggle OffCanvas visibility
+    private void ToggleCreateBusinessOffCanvas() => createBusinessOffCanvas?.ToggleOffCanvas();
+
+    // Initialize the employee details on page load
+    protected override async Task OnInitializedAsync()
+    {
+        await BusinessGetById();
+
+    }
+
+    protected override void OnInitialized()
+    {
+        InitializeAccordionItems();
+    }
+
+
+
+    // Fetch employee details by ID
+    private async Task BusinessGetById()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int businessId))
+            {
+                alertService.ShowError("Invalid Business ID.");
+                return;
+            }
+
+            var request = new GetBusinessListingRequest { BusinessId = businessId, PageNo = 0, PageSize = 0 };
+            var response = await BusinessService.GetBusinessListing(request);
+
+            if (response != null && response.Status && response.Data?.Count > 0)
+            {
+                var business = response.Data[0];
+                Business = new Models.Business.BusinessListing
+                        {
+                            Id = business.Id,
+                            Name = business.Name,
+                            CurrencyId = business.CurrencyId,
+                            StartDate = business.StartDate,
+                            TimeZone = business.TimeZone,
+                            FyStartMonth = business.FyStartMonth,
+                            IsActive = business.IsActive,
+                            DefaultProfitPercent = business.DefaultProfitPercent,
+                            DefaultShippingPercent = business.DefaultShippingPercent,
+                            EnableProductExpiry = business.EnableProductExpiry,
+                            EnableCategory = business.EnableCategory,
+                            EnableBrand = business.EnableBrand,
+                            EnableSubCategory = business.EnableSubCategory,
+                            EnablePriceTax = business.EnablePriceTax,
+                            EnablePurchaseStatus = business.EnablePurchaseStatus,
+                        };
+                if (business.RefNoPrefixes != "null" && business.RefNoPrefixes != null)
+                {
+                    refNoPrefixes = JsonSerializer.Deserialize<RefNoPrefixes>(business.RefNoPrefixes) ?? null;
+                }
+                if (business.KeyboardShortcuts != "null" && business.KeyboardShortcuts != null)
+                {
+                    keyboardShortcutsConfig = JsonSerializer.Deserialize<KeyboardShortcuts>(business.KeyboardShortcuts) ?? null;
+                }
+                if (business.PosSettings != "null" && business.PosSettings != null)
+                {
+                    posSettingsConfig = JsonSerializer.Deserialize<PosSettings>(business.PosSettings) ?? null;
+                }
+                if (business.WeighingScaleSetting != "null" && business.WeighingScaleSetting != null)
+                {
+                    weighingScaleSettingsConfig = JsonSerializer.Deserialize<WeighingScaleSetting>(business.WeighingScaleSetting) ?? null;
+                }
+                if (business != null && business.CurrencyId != null)
+                {
+                    var currencyList = await BusinessService.GetAllCurrency(business.CurrencyId);
+
+                    if (currencyList != null && currencyList.Status)
+                    {
+                        Business.Currency = currencyList?.Data?.FirstOrDefault();
+                    }
+
+                }
+    ;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "True" => "bg-success",
+            "False" => "bg-danger",
+            _ => "bg-light"
+        };
+    }
+
+    private List<Accordion.AccordionItem> accordionItems = new();
+
+    private void InitializeAccordionItems()
+    {
+        if (posSettingsConfig != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Pos Settings Config",
+                        Body = @<div class="datagrid">
+        <div class="datagrid-item">
+            <div class="datagrid-title">Cmmsn Calculation Type</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.CmmsnCalculationType) ? posSettingsConfig.CmmsnCalculationType : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Amount Rounding Method</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.AmountRoundingMethod) ? posSettingsConfig.AmountRoundingMethod : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Allow Overselling</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.AllowOverselling) ? posSettingsConfig.AllowOverselling : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Razor Pay Key Id</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.RazorPayKeyId) ? posSettingsConfig.RazorPayKeyId : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Razor Pay Key Secret</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.RazorPayKeySecret) ? posSettingsConfig.RazorPayKeySecret : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Stripe Public Key</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.StripePublicKey) ? posSettingsConfig.StripePublicKey : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Stripe Secret Key</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.StripeSecretKey) ? posSettingsConfig.StripeSecretKey : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Cash Denominations</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(posSettingsConfig.CashDenominations) ? posSettingsConfig.CashDenominations : "___")</div>
+        </div>
+
+        <div class="datagrid-item">
+            <div class="datagrid-title">Disable Pay Checkout</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.DisablePayCheckout.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.DisablePayCheckout.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Disable Draft</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.DisableDraft.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.DisableDraft.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Disable Express Checkout</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.DisableExpressCheckout.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.DisableExpressCheckout.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Hide Product Suggestion</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.HideProductSuggestion.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.HideProductSuggestion.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Disable Discount</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.DisableDiscount.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.DisableDiscount.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Disable Order Tax</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.DisableOrderTax.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.DisableOrderTax.ToString())" />
+            </div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Is POS Subtotal Editable</div>
+            <div class="datagrid-content">
+                <Badge Text="@(posSettingsConfig.IsPosSubtotalEditable.ToString())" BackgroundColor="@GetBackgroundColor(posSettingsConfig.IsPosSubtotalEditable.ToString())" />
+            </div>
+        </div>
+    </div>,
+                    IsCollapsed = true
+                });
+        }
+
+        if (keyboardShortcutsConfig != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Keyboard Shortcuts Config",
+                        Body = @<div class="datagrid">
+        <div class="datagrid-item">
+            <div class="datagrid-title">Express Checkout</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.ExpressCheckout) ? keyboardShortcutsConfig.ExpressCheckout : "___")</div>
+        </div>
+
+        <div class="datagrid-item">
+            <div class="datagrid-title">Draft</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.Draft) ? keyboardShortcutsConfig.Draft : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Cancel</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.Cancel) ? keyboardShortcutsConfig.Cancel : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Quotation</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.Quotation) ? keyboardShortcutsConfig.Quotation : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Checkout Multi Pay</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.CheckoutMultiPay) ? keyboardShortcutsConfig.CheckoutMultiPay : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Recent Transactions</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.RecentTransactions) ? keyboardShortcutsConfig.RecentTransactions : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Recent Product Quantity</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.RecentProductQuantity) ? keyboardShortcutsConfig.RecentProductQuantity : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Weighing Scale</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.WeighingScale) ? keyboardShortcutsConfig.WeighingScale : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Edit Discount</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.EditDiscount) ? keyboardShortcutsConfig.EditDiscount : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Edit Order Tax</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.EditOrderTax) ? keyboardShortcutsConfig.EditOrderTax : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Add Payment Row</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.AddPaymentRow) ? keyboardShortcutsConfig.AddPaymentRow : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Finalize Payment</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.FinalizePayment) ? keyboardShortcutsConfig.FinalizePayment : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Add New Product</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(keyboardShortcutsConfig.AddNewProduct) ? keyboardShortcutsConfig.AddNewProduct : "___")</div>
+        </div>
+    </div>
+        ,
+                IsCollapsed = true
+            });
+        }
+
+        if (weighingScaleSettingsConfig != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                {
+                    Header = "Weighing Scale Settings Config",
+                    Body =@<div class="datagrid">
+        <div class="datagrid-item">
+            <div class="datagrid-title">Label Prefix</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(weighingScaleSettingsConfig.LabelPrefix) ? weighingScaleSettingsConfig.LabelPrefix : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Product SKU Length</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(weighingScaleSettingsConfig.ProductSkuLength) ? weighingScaleSettingsConfig.ProductSkuLength : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Qty Length</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(weighingScaleSettingsConfig.QtyLength) ? weighingScaleSettingsConfig.QtyLength : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Qty Length Decimal</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(weighingScaleSettingsConfig.QtyLengthDecimal) ? weighingScaleSettingsConfig.QtyLengthDecimal : "___")</div>
+        </div>
+    </div>
+                        ,
+                    IsCollapsed = true
+                });
+        }
+        if (refNoPrefixes != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Ref No Prefixes",
+                        Body = @<div class="datagrid">
+        <div class="datagrid-item">
+            <div class="datagrid-title">Purchase</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.Purchase) ? refNoPrefixes.Purchase : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Purchase Return</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.PurchaseReturn) ? refNoPrefixes.PurchaseReturn : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Purchase Order</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.PurchaseOrder) ? refNoPrefixes.PurchaseOrder : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Stock Transfer</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.StockTransfer) ? refNoPrefixes.StockTransfer : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Stock Adjustment</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.StockAdjustment) ? refNoPrefixes.StockAdjustment : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Sale Return</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.SaleReturn) ? refNoPrefixes.SaleReturn : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Expense</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.Expense) ? refNoPrefixes.Expense : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Contacts</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.Contacts) ? refNoPrefixes.Contacts : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Purchase Payment</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.PurchasePayment) ? refNoPrefixes.PurchasePayment : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Sale Payment</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.SalePayment) ? refNoPrefixes.SalePayment : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Expense Payment</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.ExpensePayment) ? refNoPrefixes.ExpensePayment : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Business Location</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.BusinessLocation) ? refNoPrefixes.BusinessLocation : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Draft</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.Draft) ? refNoPrefixes.Draft : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Sales Order</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.SalesOrder) ? refNoPrefixes.SalesOrder : "___")</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Transfer</div>
+            <div class="datagrid-content">@(!string.IsNullOrEmpty(refNoPrefixes.Transfer) ? refNoPrefixes.Transfer : "___")</div>
+        </div>
+    </div>,
+                IsCollapsed = true
+            });
+
+
+        }
+
+    }
+
+
+}
+

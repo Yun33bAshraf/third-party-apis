@@ -1,0 +1,182 @@
+﻿@page "/lead/{id}"
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Leads
+@using IApply.Frontend.Models.Lead
+@using IApply.Frontend.Pages.Lead.Components
+
+@inject LoadingService LoadingService
+@inject ILeadService LeadService
+@inject AlertService alertService
+
+<PageTitle>Lead Information</PageTitle>
+
+<!-- Header Section -->
+<div class="col-12">
+    <div class="card">
+        <div class="card-body p-0 mb-2">
+            <div class="d-flex align-items-center">
+
+                <!-- Back Link -->
+                <div class="bd-highlight mb-0">
+                    <a href="/lead-detail" class="btn btn-link text-decoration-none mb-0 pb-0 pe-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56">
+                            <path fill="currentColor"
+                                  d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.875-23.906-23.93-23.906C14.899 4.094 4.095 14.945 4.095 28c0 13.078 10.828 23.906 23.906 23.906m6.351-13.828c-.445 0-.82-.094-1.171-.305l-14.672-7.617c-1.031-.515-1.43-1.148-1.43-2.156c0-.914.469-1.617 1.43-2.156l14.672-7.922a2.6 2.6 0 0 1 1.242-.281c1.148 0 1.969.867 1.969 1.945c0 .89-.422 1.477-1.407 1.992l-12.47 6.282V28l12.47 6.14c1.03.47 1.406 1.055 1.406 1.97c0 1.1-.844 1.968-2.04 1.968" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Heading -->
+                <div class="bd-highlight ms-1 mb-0 mt-2">
+                    @if (Leads != null)
+                    {
+                        <h3 class="mb-0 pb-0">@Leads.FullName</h3>
+                    }
+                </div>
+
+                <!-- Edit Button -->
+                <div class="ms-auto bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1 mt-2 me-2" @onclick="ToggleCreateEmployeesOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Information Grid -->
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body py-2">
+            @if (Leads != null)
+            {
+                <div class="datagrid">
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Lead Name</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.FullName) ? Leads.FullName : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Lead Email</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.Email) ? Leads.Email : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Phone Number</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.PhoneNumber) ? Leads.PhoneNumber : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Company Name</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.CompanyName) ? Leads.CompanyName : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Job Title / Role</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.JobTitleRole) ? Leads.JobTitleRole : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Lead Source</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.LeadSource) ? Leads.LeadSource : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Lead Status</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.LeadStatus) ? Leads.LeadStatus : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Industry</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.Industry) ? Leads.Industry : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Comment</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.Comment) ? Leads.Comment : "___")</div>
+                    </div>
+
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Created Date</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.CreatedAt) ? Leads.CreatedAt : "___")</div>
+                    </div>
+                    @if (Leads.UpdatedAt != null)
+                    {
+                        <div class="datagrid-item">
+                            <div class="datagrid-title">Updated Date</div>
+                            <div class="datagrid-content">@(!string.IsNullOrEmpty(Leads.UpdatedAt) ? Leads.UpdatedAt : "___")</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- OffCanvas Component -->
+<CreateLeadOffCanvas @ref="createLeadOffCanvas" GetLead="LeadGetById" EditLead="Leads" IsEditMode="true" />
+
+@code {
+    [Parameter] public string Id { get; set; }
+
+    public CreateLeadOffCanvas? createLeadOffCanvas { get; set; }
+    public Models.Lead.Lead? Leads { get; set; }
+
+    private void ToggleCreateEmployeesOffCanvas() =>
+        createLeadOffCanvas?.ToggleLeadOffCanvas();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LeadGetById();
+    }
+
+    private async Task LeadGetById()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int leadId))
+            {
+                alertService.ShowError("Invalid lead ID");
+                return;
+            }
+
+            var request = new LeadGetRequest
+                {
+                    LeadId = leadId,
+                    PageNumber = 1,
+                    PageSize = 1
+                };
+
+            var response = await LeadService.GetLead(request);
+
+            if (response != null && response.IsSuccess && response.Data?.Count > 0)
+            {
+                Leads = response.Data[0];
+                StateHasChanged();
+            }
+            else
+            {
+                alertService.ShowError("Lead not found");
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError($"Error fetching Lead: {ex.Message}");
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+}

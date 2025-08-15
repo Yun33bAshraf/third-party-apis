@@ -1,0 +1,445 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Project
+@using IApply.Frontend.Models.Project.UserProject
+@using IApply.Frontend.Models.User.UserProfile
+@using IApply.Frontend.Models.Workspace
+@using IApply.Frontend.Services.ApiService.Project
+@using IApply.Frontend.Services.ApiService.User
+@using IApply.Frontend.Services.ApiService.Workspace
+
+@inject NavigationManager navigation
+@inject IHttpContextAccessor httpContextAccessor
+@inject IConfiguration _configuration
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService loadingService
+@inject IWorkspaceService workspaceService
+@inject IProjectService projectService
+@inject IUserService userService
+@inject AlertService alertService
+
+
+@rendermode InteractiveServer
+@* <AuthorizeView>
+    <Authorized> *@
+<!-- Sidebar -->
+<style>
+    .nav-link.active {
+        background: var(--tblr-navbar-active-bg);
+        border-radius: 0% !important;
+    }
+</style>
+<!-- Sidebar -->
+<aside class="navbar navbar-vertical navbar-expand-lg overflow-y-auto navbar-transparent overflow-x-hidden @(SidebarClass ?? "")">
+    <div class="container-fluid">
+        @if (SidebarClass == "")
+        {
+            <div class="d-flex align-items-center w-100">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+                        aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <h1 class="navbar-brand navbar-brand-autodark d-flex justify-content-center align-items-center text-center w-100">
+                    <a class="border-0 text-decoration-none" @onclick="ReloadPage">
+                        <div class="d-flex justify-content-center align-items-center">
+                            @* Work space icon comes here *@
+                            <span class="fw-bold">@CurrentUserWorkspaceName</span>
+                        </div>
+                    </a>
+                </h1>
+            </div>
+        }
+        @if (SidebarClass != "")
+        {
+            <h1 class="navbar-brand navbar-brand-autodark">
+                <a class="border-0 d-flex justify-content-center px-2" @onclick="ReloadPage">
+
+                    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="50" height="50"
+                         viewBox="0 0 600.000000 600.000000">
+                        <g transform="translate(0.000000,600.000000) scale(0.100000,-0.100000)" fill="#000000"
+                           stroke="none">
+                            <path fill="#b12c2d" d="M1600 4245 l0 -325 1400 0 1400 0 0 325 0 325 -1400 0 -1400 0 0
+                                                        -325z" />
+                            <path d="M2650 2455 l0 -995 330 0 330 0 0 995 0 995 -330 0 -330 0 0 -995z" />
+                        </g>
+                    </svg>
+                </a>
+            </h1>
+        }
+
+        <div class="collapse navbar-collapse @(SidebarClass == "" ? SidebarClass : "show")" id="sidebar-menu">
+            @* apply role filter here *@
+            @if (Utils.HasRole(UserState, ApplicationRole.WorkspaceAdmin))
+            {
+                <ul class="navbar-nav">
+                    <li class="nav-item ">
+                        <NavLink class="nav-link nav-items" href="home" Match="NavLinkMatch.All">
+                            <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">Dashboard</span>
+                            </div>
+
+                        </NavLink>
+                    </li>
+
+                    <!-- Show project links outside the dropdown -->
+                    @if (UserWorkspace != null)
+                    {
+                        @foreach (var workspace in UserWorkspace)
+                        {
+
+                            @foreach (var project in workspace.WorkspaceProjects)
+                            {
+                                <li class="nav-item dropdown ">
+
+                                    <a class="nav-link nav-items  @(SidebarClass=="" ? "dropdown-toggle":"")" data-bs-auto-close="false"
+                                       role="button" aria-expanded="true" @onclick="@(() => OnChangeToggle($"{project.ProjectName}"))">
+                                        <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                            <span class="nav-link-icon d-md-none d-lg-inline-block ">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                     stroke-linejoin="round" class="icon icon-tabler icon-tabler-box">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M12 3l8 4l-8 4l-8 -4z" />
+                                                    <path d="M4 12l8 4l8 -4" />
+                                                    <path d="M4 16l8 4l8 -4" />
+                                                </svg>
+                                            </span>
+                                            <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">
+                                                @project.ProjectName
+                                            </span>
+                                        </div>
+                                    </a>
+                                    <div class="dropdown-menu @(IsDropdownOpen($"{project.ProjectName}") ? "show" : "")">
+                                        <div class="dropdown-menu-columns">
+                                            <div class="@(SidebarClass == "" ? SidebarClass : "d-none")">
+                                                <NavLink class="dropdown-item py-1  nav-items nav-link"
+                                                         href="@($"project-details/{project.ProjectId}")">
+                                                    <span class="nav-link-title">Detail / Issue View</span>
+                                                </NavLink>
+                                                <NavLink class="dropdown-item"
+                                                         href="@($"project-board/{project.ProjectId}")">
+                                                    Board View
+                                                </NavLink>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        }
+                    }
+
+                    <li class="nav-item ">
+                        <NavLink class="nav-link nav-items" href="projects-listing">
+                            <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1024 1024" fill="currentColor">
+                                        <path d="M280 752h80c4.4 0 8-3.6 8-8V280c0-4.4-3.6-8-8-8h-80c-4.4 0-8 3.6-8 8v464c0 4.4 3.6 8 8 8m192-280h80c4.4 0 8-3.6 8-8V280c0-4.4-3.6-8-8-8h-80c-4.4 0-8 3.6-8 8v184c0 4.4 3.6 8 8 8m192 72h80c4.4 0 8-3.6 8-8V280c0-4.4-3.6-8-8-8h-80c-4.4 0-8 3.6-8 8v256c0 4.4 3.6 8 8 8m216-432H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V144c0-17.7-14.3-32-32-32m-40 728H184V184h656z" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">
+                                    Projects
+                                </span>
+                            </div>
+
+                        </NavLink>
+                    </li>
+
+                    <li class="nav-item ">
+                        <NavLink class="nav-link nav-items" href="users-listing">
+                            <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2m1-17.87a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85" /></svg>
+                                </span>
+                                <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">
+                                    Users
+                                </span>
+                            </div>
+
+                        </NavLink>
+                    </li>
+
+                    <li class="nav-item dropdown ">
+                        <a class="nav-link nav-items  @(SidebarClass=="" ? "dropdown-toggle":"")" data-bs-auto-close="false"
+                           role="button" aria-expanded="true" @onclick="@(() => OnChangeToggle("settings"))">
+                            <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block ">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="m19.59 15.5l-1.82-1.3c.3-1.08.32-2.25 0-3.42l1.82-1.28L18.14 7l-2.03.92c-.79-.8-1.79-1.42-2.96-1.71L12.95 4h-2.9l-.2 2.21c-1.17.29-2.17.91-2.96 1.71L4.86 7L3.41 9.5l1.82 1.28c-.32 1.17-.3 2.34 0 3.42l-1.82 1.3L4.86 18l2.03-.93c.79.79 1.79 1.39 2.96 1.7l.2 2.23h2.9l.2-2.23c1.17-.31 2.17-.91 2.96-1.7l2.03.93zM13.5 3c.27 0 .5.2.5.46l.18 2.04c.76.28 1.44.69 2.05 1.18l1.85-.87c.23-.12.52-.04.66.19l2 3.5c.14.21.06.5-.16.65l-1.67 1.17c.13.8.12 1.59 0 2.36l1.67 1.17c.22.15.3.44.16.65l-2 3.5c-.14.21-.43.29-.66.17l-1.85-.86c-.61.49-1.29.89-2.05 1.19l-.18 2c0 .29-.23.5-.5.5h-4a.5.5 0 0 1-.5-.5l-.18-2c-.76-.3-1.44-.7-2.05-1.19l-1.85.86c-.23.12-.52.04-.66-.17l-2-3.5c-.14-.21-.06-.5.16-.65l1.67-1.17c-.12-.77-.13-1.56 0-2.36l-1.67-1.17c-.22-.15-.3-.44-.16-.65l2-3.5c.14-.23.43-.31.66-.19l1.85.87c.61-.49 1.29-.9 2.05-1.18L9 3.46c0-.26.23-.46.5-.46zm-2 6a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8 12.5A3.5 3.5 0 0 1 11.5 9m0 1A2.5 2.5 0 0 0 9 12.5a2.5 2.5 0 0 0 2.5 2.5a2.5 2.5 0 0 0 2.5-2.5a2.5 2.5 0 0 0-2.5-2.5" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">
+                                    Settings
+                                </span>
+                            </div>
+                        </a>
+
+                        <div class="dropdown-menu @(IsDropdownOpen("settings") ? "show" : "")">
+                            <div class="dropdown-menu-columns">
+                                <div class="@(SidebarClass == "" ? SidebarClass : "d-none")">
+                                    <NavLink class="dropdown-item py-1  nav-items nav-link"
+                                             href="auth-policy">
+                                        <span class="nav-link-title">Auth Policy</span>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </div>
+
+                    </li>
+                </ul>
+            }
+
+
+            @if (Utils.HasRole(UserState, ApplicationRole.ProjectAdmin) || Utils.HasRole(UserState, ApplicationRole.ProjectMember))
+            {
+                <ul class="navbar-nav">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <NavLink class="nav-link nav-items" href="home" Match="NavLinkMatch.All">
+                            <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">Dashboard</span>
+                            </div>
+                        </NavLink>
+                    </li>
+
+                    @if (UserProject != null && UserProject?.ProjectId != null)
+                    {
+                        <!-- Detail / Issue View -->
+                        <li class="nav-item">
+                            <NavLink class="nav-link nav-items" href="@($"project-details/{UserProject.ProjectId}")">
+                                <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list"
+                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                             fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <line x1="9" y1="6" x2="20" y2="6" />
+                                            <line x1="9" y1="12" x2="20" y2="12" />
+                                            <line x1="9" y1="18" x2="20" y2="18" />
+                                            <line x1="5" y1="6" x2="5" y2="6.01" />
+                                            <line x1="5" y1="12" x2="5" y2="12.01" />
+                                            <line x1="5" y1="18" x2="5" y2="18.01" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">
+                                        Detail / Issue View
+                                    </span>
+                                </div>
+                            </NavLink>
+                        </li>
+
+                        <!-- Board View -->
+                        <li class="nav-item">
+                            <NavLink class="nav-link nav-items" href="@($"project-board/{UserProject.ProjectId}")">
+                                <div class="d-flex align-items-center @(SidebarClass == "" ? "" : "w-100 justify-content-end")">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-kanban"
+                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                             fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <rect x="4" y="4" width="6" height="16" rx="2" />
+                                            <rect x="14" y="4" width="6" height="10" rx="2" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title @(SidebarClass == "" ? SidebarClass : "d-none")">Board View</span>
+                                </div>
+                            </NavLink>
+                        </li>
+                    }
+                </ul>
+            }
+
+        </div>
+    </div>
+</aside>
+@*  </Authorized>
+</AuthorizeView> *@
+
+
+@code {
+    // Properties
+    [Parameter]
+    public string? SidebarClass { get; set; } = "";
+    [Parameter]
+    public EventCallback ToggleSidebar { get; set; }
+    private Dictionary<string, bool> DropDownStates = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    public List<UserWorkspaces> UserWorkspace { get; set; } = new();
+    private int WorkspaceCount = 0;
+    private int ProjectCount = 0;
+    private string? OpenWorkspaceId;
+    private UserProjectGetResponse UserProject { get; set; } = new();
+    private string? CurrentUserWorkspaceName { get; set; }
+    private int CurrentUserId { get; set; }
+    private UserProfileGetResponse CurrentUserProfile { get; set; } = new();
+
+    //Events
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await GetUserProfile();
+
+        if (Utils.HasRole(UserState, ApplicationRole.WorkspaceAdmin))
+        {
+            await GetUserWorkspace();
+        }
+        else if (Utils.HasRole(UserState, ApplicationRole.ProjectAdmin) ||
+                 Utils.HasRole(UserState, ApplicationRole.ProjectMember))
+        {
+            await GetUserProject();
+        }
+    }
+
+    private void ReloadPage()
+    {
+        navigation.NavigateTo(navigation.Uri, forceLoad: true);
+    }
+
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+
+    private void OnChangeToggle(string name)
+    {
+        if (!DropDownStates.ContainsKey(name))
+        {
+            DropDownStates[name] = false;
+        }
+
+        if (SidebarClass != "")
+        {
+            DropDownStates[name] = true;
+            ToggleSidebar.InvokeAsync();
+        }
+        else
+        {
+            DropDownStates[name] = !DropDownStates[name];
+        }
+    }
+
+    private void ToggleWorkspace(int workspaceId)
+    {
+        var idStr = workspaceId.ToString();
+        OpenWorkspaceId = (OpenWorkspaceId == idStr) ? null : idStr;
+    }
+
+    private Dictionary<int, bool> projectDropdowns = new();
+
+    private void ToggleDropdown(int projectId)
+    {
+        if (projectDropdowns.ContainsKey(projectId))
+            projectDropdowns[projectId] = !projectDropdowns[projectId];
+        else
+            projectDropdowns[projectId] = true;
+    }
+
+    private bool IsDropdownOpen(int projectId) =>
+        projectDropdowns.TryGetValue(projectId, out var isOpen) && isOpen;
+    private bool IsDropdownOpen(string name) => DropDownStates.ContainsKey(name) && DropDownStates[name];
+
+    // Data
+    private async Task GetUserWorkspace()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var request = new UserWorkspaceGetRequest
+            {
+                PageNumber = CurrentPage,
+                PageSize = CurrentPageSize,
+            };
+
+            var response = await workspaceService.UserWorkspaceGet(request.PageNumber, request.PageSize);
+            if (response.Data != null && response.Status == true && response.Pagination != null)
+            {
+                UserWorkspace = response.Data.UserWorkspaces.ToList();
+                WorkspaceCount = response.Pagination.TotalCount;
+
+                // SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task GetUserProject()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await projectService.GetUserProjectAsync(1, 1);
+            if (response != null && response.Status == true && response.Pagination != null)
+            {
+                UserProject = response.Data.FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task GetUserProfile()
+    {
+        try
+        {
+            loadingService.Show();
+
+            CurrentUserId = Utils.GetUserId(UserState);
+
+            var response = await userService.GetUserProfileAsync(CurrentUserId, string.Empty, 1, 1);
+            if (response != null && response.Status == true && response.Pagination != null)
+            {
+                CurrentUserProfile = response.Data.FirstOrDefault();
+                CurrentUserWorkspaceName = CurrentUserProfile.WorkspaceName;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

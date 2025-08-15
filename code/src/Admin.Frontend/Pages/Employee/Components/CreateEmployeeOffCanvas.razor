@@ -1,0 +1,122 @@
+﻿@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Services.ApiService.System
+
+@inject LoadingService LoadingService
+@inject IEmployeeService EmployeeService
+@inject AlertService alertService
+
+<!-- Offcanvas for Employee Creation/Update -->
+<Offcanvas Width="50" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Employee</div>
+    </OffCanvasHeader>
+
+    <OffCanvasBody>
+        <CreateEmployee @ref="createEmployee" AddEmployee="AddEmployee" EditEmployee="EditEmployee" />
+    </OffCanvasBody>
+
+    <OffCanvasFooter>
+                <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveEmployee">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    // Parameters
+    [Parameter] public EventCallback<(int PageNumber, int PageSize)> GetEmployee { get; set; }
+    [Parameter] public bool IsEditMode { get; set; } = false;
+    [Parameter] public Models.Employee.Employee? EditEmployee { get; set; }
+
+    // Private fields
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateEmployee? createEmployee { get; set; }
+    public EmployeeCreateRequest createEmployeeRequest { get; set; } = new();
+
+    // Lifecycle methods
+  
+
+    // Methods
+
+    // Toggles the visibility of the offcanvas and resets form if necessary
+    public void ToggleOffCanvas()
+    {
+        createEmployee?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    // Closes the offcanvas and resets the form
+    private void CloseOffCanvas()
+    {
+        createEmployee?.ResetForm();
+    }
+
+    // Handles form submission (Save/Update)
+    private void HandleSaveEmployee()
+    {
+        createEmployee?.HandleValidSubmit();
+    }
+
+    // Sets employee details in Edit mode
+    public void SetEmployee(Models.Employee.Employee item)
+    {
+        EditEmployee = item;
+        Offcanvas?.Open();
+    }
+
+    // Employee handling methods
+
+    // Adds or updates the employee details
+    private async Task AddEmployee(EmployeeCreateRequest employee)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+
+            if (employee.EmployeeId > 0)
+            {
+                response = await EmployeeService.UpdateEmployee(employee);
+            }
+            else
+            {
+                response = await EmployeeService.CreateBackendEmployee(employee);
+            }
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetEmployee.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+
+                if (employee.EmployeeId > 0)
+                {
+                    alertService.Show("Employee Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Employee Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null
+                    ? ErrorService.GetErrorMessage(response.ErrorCode)
+                    : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

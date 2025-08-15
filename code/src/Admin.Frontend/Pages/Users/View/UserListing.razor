@@ -1,0 +1,76 @@
+﻿@page "/users-listing"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Models.Project
+@using IApply.Frontend.Models.User.UserProfile
+@using IApply.Frontend.Services.ApiService.User
+
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject AuthenticationStateProvider authStateProvider
+@inject IUserService userService
+
+<PageTitle>Users Listing</PageTitle>
+
+<div class="col-12">
+    <CTable Items="UsersListingResponse"
+            TotalCountFromServer="UsersCount"
+            ActionRequired="false"
+            BackendPagination="true"
+            BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged"
+            InitialPageNumber="CurrentPageNumber"
+            InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    // Properties
+    private List<UserProfileGetResponse> UsersListingResponse { get; set; } = new();
+    private int UsersCount { get; set; }
+    private int CurrentPageNumber { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // Events
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await GetUserListing();
+    }
+
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPageNumber = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetUserListing();
+    }
+
+    // Data
+    private async Task GetUserListing()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await userService.GetUserProfileAsync(0, string.Empty, CurrentPageNumber, CurrentPageSize);
+            if (response != null && response.Data != null && response.Status == true && response.Pagination != null)
+            {
+                UsersListingResponse = response.Data;
+                UsersCount = response.Pagination.TotalCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

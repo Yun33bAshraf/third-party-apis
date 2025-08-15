@@ -1,0 +1,204 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.User.UserProfile
+@using IApply.Frontend.Models.User.UserProfileUpdate
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.User
+@using IApply.Frontend.Services.ApiService.Me
+
+@inject IJSRuntime JS
+@inject LoadingService loadingService
+@inject AlertService alertService
+@inject IMeService MeService
+@inject IUserService userService
+@inject AuthenticationStateProvider authStateProvider
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<PageTitle>Profile</PageTitle>
+
+<div class="card card-borderless">
+    <div class="card-body">
+        <EditForm method="post" Model="@ChangeProfile" OnValidSubmit="HandleSubmit" FormName="ProfileForm" Enhance>
+            <div class="row">
+                <DataAnnotationsValidator />
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputText disabled="@disableEdit" id="firstName" name="firstName" type="text"
+                                   placeholder="Enter First Name" @bind-Value="ChangeProfile.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.FirstName)" class="text-danger" />
+                        <label for="firstName" class="form-label text-muted">
+                            @* @(Utils.GetDisplayName<UserProfileGetResponse>(nameof(UserProfileGetResponse.FirstName))) *@
+                            First Name
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputText disabled="@disableEdit" id="lastName" name="lastName" type="text"
+                                   placeholder="Enter Last Name" @bind-Value="ChangeProfile.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.LastName)" class="text-danger" />
+                        <label for="lastName" class="form-label text-muted">
+                            Last Name
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputText disabled="@disableEdit" id="email" name="email" type="email"
+                                   placeholder="Enter Email" @bind-Value="ChangeProfile.Email" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.Email)" class="text-danger" />
+                        <label for="email" class="form-label text-muted">
+                            Email
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputText disabled="@disableEdit" id="phone" name="phone" type="text"
+                                   placeholder="Enter Phone Number" @bind-Value="ChangeProfile.PhoneNumber" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.PhoneNumber)" class="text-danger" />
+                        <label for="phone" class="form-label text-muted">
+                            Phone Number
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputText disabled="@disableEdit" id="address" name="address" type="text"
+                                   placeholder="Enter Address" @bind-Value="ChangeProfile.Address" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.Address)" class="text-danger" />
+                        <label for="address" class="form-label text-muted">
+                            Address
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-2 col-6">
+                    <div class="form-floating">
+                        <InputDate disabled="@disableEdit" id="dob" name="dob"
+                                   @bind-Value="ChangeProfile.DateOfBirth" class="form-control" />
+                        <ValidationMessage For="@(() => ChangeProfile.DateOfBirth)" class="text-danger" />
+                        <label for="dob" class="form-label text-muted">Date of Birth</label>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 text-end">
+                    <button type="button" class="btn mt-4 btn-light border" @onclick="() => disableEdit = !disableEdit">
+                        @(disableEdit ? "Edit" : "Cancel")
+                    </button>
+                    <button disabled="@disableEdit" type="submit" class="btn mt-4 custom-btn">Update</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private bool disableEdit = true;
+
+    [SupplyParameterFromForm(FormName = "ProfileForm")]
+
+    private ClaimsPrincipal? UserState { get; set; }
+    private int CurrentUserId { get; set; }
+
+    private UserProfileGetResponse CurrentUserProfile { get; set; } = new();
+    private UserProfileUpdateRequest ChangeProfile { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+        // await LoadProfileData();
+    }
+
+    private async Task LoadProfileData()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await userService.GetUserProfileAsync(CurrentUserId, string.Empty, 1, 1);
+            if (response != null && response.Status)
+            {
+                var userProfile = response.Data.FirstOrDefault();
+                if (userProfile != null)
+                {
+                    ChangeProfile = new UserProfileUpdateRequest
+                    {
+                        Id = CurrentUserId,
+                        FirstName = userProfile.FirstName,
+                        LastName = userProfile.LastName,
+                        Email = userProfile.Email,
+                        PhoneNumber = userProfile.MobileNumber ?? string.Empty,
+                        Address = userProfile.Address,
+                        DateOfBirth = userProfile.DateOfBirth
+                    };
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.Error != null ? response.Error : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var request = new UserProfileUpdateRequest()
+            {
+                Id = CurrentUserId,
+                FirstName = ChangeProfile.FirstName,
+                LastName = ChangeProfile.LastName,
+                Email = ChangeProfile.Email,
+                PhoneNumber = ChangeProfile.PhoneNumber,
+                Address = ChangeProfile.Address,
+                DateOfBirth = ChangeProfile.DateOfBirth
+            };
+
+            // var response = await userService.UserProfileUpdate(request);
+            // if (response != null && response.Status)
+            // {
+            //     alertService.Show("Profile Updated Successfully");
+            //     disableEdit = true;
+            //     await LoadProfileData();
+            // }
+            // else if (response != null)
+            // {
+            //     string errorMessage = response?.Error != null ? response.Error : "An unknown error occurred.";
+            //     alertService.ShowError(errorMessage);
+            // }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+}

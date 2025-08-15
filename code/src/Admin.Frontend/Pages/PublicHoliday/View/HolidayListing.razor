@@ -1,0 +1,288 @@
+﻿@page "/holiday-detail"
+@using System.Security.Claims
+@using System.Text.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.PublicHoliday
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Holiday
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Pages.PublicHoliday.Components
+@using IApply.Frontend.Services.ApiService.System
+@inject IJSRuntime JSRuntime
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IHolidayService HolidayService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Holiday Management</PageTitle>
+
+<!-- Filter Card -->
+<div class="col-12">
+    <FilterCard Title="Holiday Filters" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddHoliday))" HandleBtnClick="ToggleHolidayOffCanvas" ExecApi="true" IsFilter="true">
+        <EditForm Model="holidayFilter" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+                    <div class="col-md-4 col-sm-12">
+                        <div class="mb-2">
+                            <label for="floating-firstname">Holiday Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                                    @bind-Value="holidayFilter.Name" />
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12">
+                        <div class="mb-2">
+                            <label>Holiday Date</label>
+                            <InputDate class="form-control" @bind-Value="holidayFilter.HolidayDate" />
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12">
+                        <span class="col p-1">Is Working Day</span>
+                        <label class="form-check form-check-single form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" @bind="holidayFilter.IsWorkingDay" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1" type="button" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<!-- Off Canvas for Create Holiday -->
+<CreateHolidayOffCanvas @ref="createHolidayOffCanvas" GetHoliday="GetHolidays" />
+
+<!-- Table of Holidays -->
+        <div class="col-12">
+            <CTable Items="holidays" TotalCountFromServer="holidayCount" Action="MyAction"
+            ActionRequired="false" CustomRenderFragments="customRenderFragments" BackendPagination="true"
+            BackendSorting="true" OnPaginationChanged="HandlePaginationChanged"
+            InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+        </div>
+@code {
+    // State properties
+    private CreateHolidayOffCanvas? createHolidayOffCanvas { get; set; }
+    private List<Holidays>? holidays = new();
+    public HolidayCreate createholiday { get; set; } = new();
+    private int holidayCount = 0;
+    private Dictionary<string, RenderFragment<Holidays>>? customRenderFragments { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+    private HolidayFilter holidayFilter = new HolidayFilter();
+    private string holidayName { get; set; } = string.Empty;
+    private DateTime startDate { get; set; }
+    private DateTime holidayDate { get; set; }
+    private bool isWorkingday { get; set; }
+    private DateTime? endDate { get; set; } = null;
+
+    // Pagination properties
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private string Name { get; set; } = string.Empty;
+
+    // Lifecycle Methods
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetHolidays();
+    }
+
+    // Handlers
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetHolidays();
+    }
+
+    private async Task ResetFilters()
+    {
+        holidayFilter = new HolidayFilter(); // Reset all filters to their default state
+        CurrentPage = 1;
+        CurrentPageSize = 20;  // Reset pagination to default
+
+        // Optionally, clear custom filters like holidayName, if needed
+        holidayName = string.Empty;
+        holidayDate = DateTime.MinValue;
+        isWorkingday = false;
+
+        // Call GetHolidays to refresh the data without any filters
+        await GetHolidays();
+
+        // Ensure that the component re-renders immediately after reset
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // private void SaveFiltersToSessionStorage()
+    // {
+    //     var filters = new Dictionary<string, string>
+    //         {
+    //         { "HolidayName", holidayName },
+    //         };
+
+    //     var jsonFilters = JsonSerializer.Serialize(filters);
+    //     JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userFilters", jsonFilters);
+    // }
+
+    public async Task HandleValidSubmit()
+    {
+        holidayName = holidayFilter.Name;
+        holidayDate = holidayFilter.HolidayDate ?? DateTime.MinValue;
+        isWorkingday = holidayFilter.IsWorkingDay;
+
+        await GetHolidays();
+    }
+
+    private void ToggleHolidayOffCanvas()
+    {
+        createHolidayOffCanvas?.ToggleOffCanvas();
+    }
+
+    // Data Fetching Method
+    private async Task GetHolidays()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            // Prepare request based on filters
+            var request = new HolidayGet
+                    {
+                        HolidayName = string.IsNullOrWhiteSpace(holidayName) ? string.Empty : holidayName,
+                        HolidayDate = holidayDate,
+                        IsWorkingDay = isWorkingday,
+                        PageNumber = CurrentPage,
+                        PageSize = CurrentPageSize,
+                    };
+
+            var response = await HolidayService.GetHolidays(request);
+            if (response != null && response.IsSuccess)
+            {
+                holidays = response.Data;
+                holidayCount = response.Pagination.TotalCount;
+                SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    // Custom Rendering for Table
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Holidays>>();
+
+        if (!Utils.HasUserRole(UserState, RoleEnum.Employee))
+        {
+            customRenderFragments["HolidayName"] = item => new RenderFragment(builder =>
+    {
+        builder.AddContent(0,@<NavLink class="link-opacity-100" href=@($"/holiday/{item.HolidayId}")>
+        <span class="link-primary text-blue">@item.HolidayName</span>
+    </NavLink>
+    );
+    });
+        }
+
+        customRenderFragments["WorkingDayDisplay"] = item => new RenderFragment(builder =>
+    {
+        builder.AddContent(0,@<div class="text-center">
+        <Badge Text="@(item.WorkingDayDisplay)" BackgroundColor="@GetBackgroundColor(item.WorkingDayDisplay)" />
+    </div>
+    );
+    });
+    }
+    
+
+    //     customRenderFragments["LeaveType"] = item => new RenderFragment(builder =>
+    // {
+    //     builder.AddContent(0, @<div class="text-center">
+    //     <Badge Text="@(item.LeaveType)" BackgroundColor="@GetBackgroundColor(item.LeaveType)" />
+    // </div>);
+    // });
+    
+
+//   private void SetCustomFragments()
+// {
+//     customRenderFragments = new Dictionary<string, RenderFragment<Holidays>>
+//     {
+//         ["HolidayName"] = item => new RenderFragment(builder =>
+//         {
+//             builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/holiday/{item.HolidayId}")>
+//                 <span class="link-primary text-blue">@item.HolidayName</span>
+//             </NavLink>);
+//         }),
+
+//         ["WorkingDayDisplay"] = item => new RenderFragment(builder =>
+//         {
+//             builder.AddContent(0, @<div class="text-center">
+//                 <Badge Text="@(item.WorkingDayDisplay)" BackgroundColor="@GetBackgroundColor(item.WorkingDayDisplay)" />
+//             </div>);
+//         }),
+//     };
+// }
+
+private string GetBackgroundColor(string status)
+{
+    return status switch
+    {
+        "Yes" => "bg-success",
+        "No" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+
+    // Render Action for each item
+    private RenderFragment<Holidays> MyAction => item => builder =>
+    {
+        builder.OpenElement(0, "button");
+        builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+        builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createHolidayOffCanvas.SetHoliday(item)));
+        builder.OpenElement(3, "i");
+        builder.AddAttribute(4, "class", "ti ti-edit");
+        builder.CloseElement();
+        builder.AddContent(5, " Edit");
+        builder.CloseElement();
+    };
+
+    // Filter Model
+    public class HolidayFilter
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsWorkingDay { get; set; }
+        public DateTime? HolidayDate { get; set; }
+    }
+
+    // Request Model
+    public class HolidayRequest
+    {
+        public int HolidayId { get; set; }
+        public string HolidayName { get; set; } = string.Empty;
+        public DateTime HolidayDate { get; set; }
+        public bool IsWorkingDay { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalRecords { get; set; }
+    }
+}

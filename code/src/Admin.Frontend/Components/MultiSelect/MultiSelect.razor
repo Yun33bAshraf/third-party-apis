@@ -1,0 +1,222 @@
+﻿@inject IJSRuntime JsRuntime
+@typeparam TItem
+
+@* <div class="btn-group w-100 simple-dropdown @(Class ?? "")" style="@(Style ?? "")">
+    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-truncate text-start" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+        @if (SelectedOptions.Count == 0)
+        {
+            @DefaultText
+        }
+        else if (SelectedOptionsRenderer == null)
+        {
+            @string.Join(", ", SelectedOptions.Select(item => GetLabel(item)))
+        }
+        else
+        {
+            @SelectedOptionsRenderer(SelectedOptions)
+        }
+    </button>
+    <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton">
+        @if (CanFilter)
+        {
+            <div class="filter-container">
+                <div>
+                    <input type="text" class="form-control" placeholder="Filter..." @bind="_filterText" @bind:event="oninput" />
+                </div>
+            </div>
+        }
+
+        @if (Virtualize)
+        {
+            <Virtualize Items="FilteredOptions().ToList()" Context="option">
+                @RenderItem(option)
+            </Virtualize>
+        }
+        else
+        {
+            foreach (var option in FilteredOptions())
+            {
+                @RenderItem(option)
+            }
+        }
+    </div>
+</div> *@
+
+
+<div class="dropdown w-100 @(Class ?? "")" style="@(Style ?? "")">
+    <a class="btn dropdown-toggle w-100 text-start" data-bs-toggle="dropdown">
+        @if (SelectedOptions.Count == 0)
+        {
+            @DefaultText
+        }
+        else if (SelectedOptionsRenderer == null)
+        {
+            if (IsMultiSelect)
+            {
+                <div class="d-flex justify-content-between overflow-x-hidden px-4">
+                    <div class="badges-list">
+                        @* @string.Join(", ", SelectedOptions.Select(item => GetLabel(item))) *@
+                        @foreach (var item in SelectedOptions)
+                        {
+                            <span class="badge badge-pill badge-outline text-blue">
+                                @GetLabel(item)
+                                <span @onclick="() => ToggleOption(item, true)"><iconify-icon icon="mdi:remove" class="fs-4"></iconify-icon></span>
+                                
+                                @* <i class="ti ti-circle-x-filled" @onclick="() => ToggleOption(item, true)"></i> *@
+
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                @string.Join(", ", SelectedOptions.Select(GetLabel))
+            }
+        }
+        else
+        {
+            @SelectedOptionsRenderer(SelectedOptions)
+        }
+    </a>
+    <div class="dropdown-menu w-100 py-0 overflow-auto" style="max-height: 300px;">
+        @if (CanFilter)
+        {
+            <div class="filter-container p-1 sticky-top bg-white">
+                <div>
+                    <input type="text" class="form-control" placeholder="@SearchPlaceHolder" @bind="_filterText"
+                           @bind:event="oninput"/>
+                </div>
+            </div>
+        }
+
+        @if (Virtualize)
+        {
+            <Virtualize Items="FilteredOptions().ToList()" Context="option">
+                @RenderItem(option)
+            </Virtualize>
+        }
+        else
+        {
+            foreach (var option in FilteredOptions())
+            {
+                @RenderItem(option)
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    private string _filterText = "";
+
+    private bool IsOptionSelected(TItem option)
+    {
+        // Get the value of the specified ValueProperty for the given option
+        var optionValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(option);
+
+        // Check if any item in SelectedOptions has the same value for the ValueProperty
+        return SelectedOptions.Any(selectedOption =>
+        {
+            var selectedOptionValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(selectedOption);
+            return Equals(optionValue, selectedOptionValue);
+        });
+    }
+
+
+    private async Task ToggleOption(TItem option, bool remove = false)
+    {
+        var optionValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(option);
+
+        var selectedOption = SelectedOptions.FirstOrDefault(selected =>
+        {
+            var selectedValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(selected);
+            return Equals(optionValue, selectedValue);
+        });
+
+        if (IsMultiSelect)
+        {
+            if (selectedOption != null)
+            {
+                if (remove)
+                {
+                    SelectedOptions.Remove(selectedOption);
+                }
+            }
+            else
+            {
+                SelectedOptions.Add(option);
+            }
+        }
+        else
+        {
+            SelectedOptions.Clear();
+            SelectedOptions.Add(option);
+        }
+
+
+        await SelectedOptionsChanged.InvokeAsync(SelectedOptions);
+    }
+
+    // private async Task ToggleOption(TItem option)
+    // {
+    //     var optionValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(option);
+
+    //     var selectedOption = SelectedOptions.FirstOrDefault(selected =>
+    //     {
+    // var selectedValue = typeof(TItem).GetProperty(ValueProperty)?.GetValue(selected);
+    // return Equals(optionValue, selectedValue);
+    //     });
+
+    //     if (selectedOption != null)
+    //     {
+    //         SelectedOptions.Remove(selectedOption);
+    //     }
+    //     else
+    //     {
+    //         if (!IsMultiSelect)
+    //         {
+    //             SelectedOptions.Clear();
+    //         }
+    //         SelectedOptions.Add(option);
+    //     }
+
+    //     await SelectedOptionsChanged.InvokeAsync(SelectedOptions);
+    // }
+
+
+    private IEnumerable<TItem> FilteredOptions()
+    {
+        foreach (var option in Options)
+        {
+            if (!CanFilter)
+            {
+                yield return option;
+                continue;
+            }
+
+            var predicate = FilterPredicate ?? DefaultFilterPredicate;
+
+            if (predicate(option, _filterText))
+            {
+                yield return option;
+            }
+        }
+    }
+
+    private string GetLabel(TItem item)
+    {
+        return typeof(TItem).GetProperty(LabelProperty)?.GetValue(item)?.ToString() ?? string.Empty;
+    }
+
+    private object GetValue(TItem item)
+    {
+        return typeof(TItem).GetProperty(ValueProperty)?.GetValue(item);
+    }
+
+    private RenderFragment<TItem> RenderItem => item =>
+        @<div class="dropdown-item @(IsOptionSelected(item) ? "active" : "")" @onclick="() => ToggleOption(item)">
+            @GetLabel(item)
+        </div>;
+
+}

@@ -1,0 +1,208 @@
+﻿@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.AuthPolicies
+@using IApply.Frontend.Models.AuthPolicies.GetAuthPolicies
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService
+
+@inject ApiService ApiService
+@inject LoadingService LoadingService
+@inject IJSRuntime js
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="AuthForm" Enhance>
+
+    <DataAnnotationsValidator />
+
+    <div class="row mb-2">
+        <div class="col">
+            <div class="form-floating">
+                <input class="form-control" type="number" @bind="AuthPolicyRequest.BaseTokenDurationMinutes" disabled="@(!CanEdit)">
+                <ValidationMessage For="@(() => AuthPolicyRequest.BaseTokenDurationMinutes)" class="text-danger" />
+                <label>
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.BaseTokenDurationMinutes)))
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <div class="form-floating">
+                <input class="form-control" type="number" @bind="AuthPolicyRequest.FullTokenDurationMinutes" disabled="@(!CanEdit)">
+                <ValidationMessage For="@(() => AuthPolicyRequest.FullTokenDurationMinutes)" class="text-danger" />
+                <label>
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.FullTokenDurationMinutes)))
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <div class="form-floating">
+                <input class="form-control" type="number" @bind="AuthPolicyRequest.RefreshTokenDurationMinutes" disabled="@(!CanEdit)">
+                <ValidationMessage For="@(() => AuthPolicyRequest.RefreshTokenDurationMinutes)" class="text-danger" />
+                <label>
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.RefreshTokenDurationMinutes)))
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.Enforce2FactorVerification)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.Enforce2FactorVerification" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.Enforce2FactorVerification)" class="text-danger" />
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.EnforcePasswordChangeOnFirstLogin)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.EnforcePasswordChangeOnFirstLogin" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.EnforcePasswordChangeOnFirstLogin)" class="text-danger" />
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.EnforceBackendActivation)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.EnforceBackendActivation" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.EnforceBackendActivation)" class="text-danger" />
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.EnforceEmailConfirmation)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.EnforceEmailConfirmation" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.EnforceEmailConfirmation)" class="text-danger" />
+
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.EnforceMobileConfirmation)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.EnforceMobileConfirmation" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.EnforceMobileConfirmation)" class="text-danger" />
+
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <label class="form-check form-switch">
+                <span class="form-check-label d-flex align-items-center justify-content-end flex-row-reverse gap-2">
+                    @(Utils.GetDisplayName<AuthPolicy>(nameof(AuthPolicy.EnforceProfileCompletion)))
+                    <input class="form-check-input" type="checkbox" @bind="AuthPolicyRequest.EnforceProfileCompletion" disabled="@(!CanEdit)">
+                    <ValidationMessage For="@(() => AuthPolicyRequest.EnforceProfileCompletion)" class="text-danger" />
+
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="text-end">
+        @if (CanEdit)
+        {
+            <button type="button" class="btn btn-light border" @onclick="() => HandleEdit.InvokeAsync(0)">Reset</button>
+        }
+        else{
+            <button type="button" class="btn btn-light border" @onclick="() => HandleEdit.InvokeAsync(AuthPolicyRequest.UserType)">Edit</button>
+        }
+        @if (CanEdit)
+        {
+            <button type="submit" class="btn custom-btn ms-2">Save</button>
+        }
+    </div>
+
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm(FormName = "AuthForm")]
+    public AuthPolicy AuthPolicyRequest { get; set; } = new();
+    [Parameter]
+    public EventCallback<AuthPolicy> Update { get; set; }
+    [Parameter]
+    public AuthPolicy? AuthPolicyById { get; set; }
+    
+    [Parameter]
+    public GetAuthPoliciesResponse? AuthPolicyByUserTypeId { get; set; }
+
+
+    [Parameter]
+    public bool CanEdit { get; set; } = false;
+    [Parameter]
+    public EventCallback<UserType> HandleEdit { get; set; }
+    private EditContext editContext;
+    private AuthPolicy? previousAuthPolicyById;
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (AuthPolicyById != null)
+        {
+            if (AuthPolicyById != previousAuthPolicyById)
+            {
+                AuthPolicyRequest = AuthPolicyById;
+                previousAuthPolicyById = AuthPolicyById;
+                SetEditContext();
+            }
+        }
+        else
+        {
+            ResetForm();
+        }
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            if (AuthPolicyById != null)
+            {
+                await Update.InvokeAsync(AuthPolicyRequest);
+            }
+        }
+    }
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(AuthPolicyRequest);
+    }
+
+    public void ResetForm()
+    {
+        AuthPolicyRequest = new();
+        previousAuthPolicyById = null;
+        SetEditContext();
+    }
+}
+
+

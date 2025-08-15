@@ -1,0 +1,45 @@
+﻿@using IApply.Frontend.Services
+@inject AlertService alertService
+
+@if (isVisible)
+{
+    <div class="alert text-white alert-important @(AlertClass)" role="alert"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 1050; white-space:pre-line">
+        @Message
+    </div>
+}
+
+@code {
+    private string Message { get; set; }
+    private bool isVisible;
+    private bool Error { get; set; }
+    private string AlertClass { get; set; } = "alert-success";
+
+    protected override void OnInitialized()
+    {
+        alertService.OnShow += ShowAlert;
+    }
+
+    private async Task ShowAlert(string message, string alertClass)
+    {
+        Message = message;
+        isVisible = true;
+        AlertClass = alertClass;
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        CloseAlert();
+    }
+
+    private void CloseAlert()
+    {
+        isVisible = false;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        alertService.OnShow -= ShowAlert;
+    }
+}

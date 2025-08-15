@@ -1,0 +1,116 @@
+﻿@using IApply.Frontend.Models.Lead
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Leads
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Offcanvas
+
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject ILeadService LeadService
+@inject AlertService alertService
+
+<Offcanvas Width="50" @ref="Offcanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Lead</div>
+    </OffCanvasHeader>
+
+    <OffCanvasBody>
+        <CreateLead @ref="createLead" AddLead="AddLead" EditLead="EditLead" />
+    </OffCanvasBody>
+
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveLead">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetLead { get; set; }
+
+    private Offcanvas? Offcanvas { get; set; }
+
+    [Parameter]
+    public Models.Lead.Lead? EditLead { get; set; }
+
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    private CreateLead? createLead { get; set; }
+
+    public void ToggleLeadOffCanvas()
+    {
+        createLead?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    private void CloseOffCanvas()
+    {
+        createLead?.ResetForm();
+    }
+
+    private void HandleSaveLead()
+    {
+        createLead?.HandleValidSubmit();
+    }
+
+    public void SetLead(Models.Lead.Lead item)
+    {
+        EditLead = item;
+        Offcanvas?.Open();
+    }
+
+    private async Task AddLead(LeadCreateRequest lead)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+
+            if (lead.LeadId > 0)
+            {
+                response = await LeadService.UpdateLead(lead);
+            }
+            else
+            {
+                response = await LeadService.CreateLead(lead);
+            }
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetLead.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+
+                if (lead.LeadId > 0)
+                {
+                    alertService.Show("Lead Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Lead Created Successfully");
+                }
+
+                StateHasChanged();
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null
+                    ? ErrorService.GetErrorMessage(response.ErrorCode)
+                    : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+}

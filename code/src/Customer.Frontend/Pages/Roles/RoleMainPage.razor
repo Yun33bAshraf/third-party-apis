@@ -1,0 +1,274 @@
+﻿@* @page "/roles" *@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Role
+@using IApply.Frontend.Common.Constants
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.CustomModal
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Pages.Roles.Component
+
+
+@inject LoadingService LoadingService
+@inject AlertService alertService
+@inject IRoleService roleService
+@inject IHttpContextAccessor httpContextAccessor
+@inject AuthenticationStateProvider authStateProvider
+
+
+@attribute [Authorize]
+
+<PageTitle>Roles</PageTitle>
+
+@* <div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Roles
+                </h2>
+            </div>
+            <!-- Page title actions -->
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <button @onclick="ToggleOffCanvas" class="btn btn-primary d-none d-sm-inline-block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 5l0 14" />
+                            <path d="M5 12l14 0" />
+                        </svg>
+                        Create new role
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> *@
+<div class="page-body ms-3 me-1 mt-1">
+<FilterCard Title="Roles" IsBtn="Utils.HasRight(UserState, SystemRights.CreateRoles)" ExecApi="true" HandleBtnClick="ToggleCreateUpdateRoleOffCanvas"/>
+
+
+@* Create and Update Role OffCanvas *@
+<CreateUpdateRoleOffCanvas @ref="CreateUpdateRoleOffCanvas" GetRoles="GetRoles" />
+
+@* Role Rights OffCanvas *@
+        @if (Utils.HasRight(UserState, SystemRights.ReadRoleRights))
+{
+    <RoleRightsOffCanvas @ref="RoleRightsOffCanvas" />
+}
+
+
+<CustomModal ModalSize="25" @ref="CustomModal" Title="false" CloseFunc="CloseCustomModal">
+    <Body>
+        <div class="modal-body text-center py-4">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="link-danger iconify iconify--tabler" stroke-width="1" width="64" height="64" viewBox="0 0 24 24">
+                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m-1.637-9.409L2.257 17.125a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87L13.637 3.59a1.914 1.914 0 0 0-3.274 0zM12 16h.01">
+
+                </path>
+            </svg>
+            <h3>Are you sure to delete this Role?</h3>
+            <div class="text-muted">This action cannot be undone.</div>
+        </div>
+    </Body>
+    <Footer>
+        <div class="w-100">
+            <div class="row">
+                <div class="col">
+                    <button class="btn w-100" data-bs-dismiss="modal" @onclick="() => CustomModal?.Close()">No</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-danger w-100" data-bs-dismiss="modal" @onclick="HandleDeleteRole">Yes</button>
+                </div>
+            </div>
+        </div>
+    </Footer>
+</CustomModal>
+
+@* <div class="page-body"> *@
+<CTable Items="Roles" TotalCountFromServer="Roles.Count" Action="MyAction" CustomRenderFragments="customRenderFragments" />
+
+</div>
+
+@code {
+    private List<Role> Roles = new();
+    private CreateUpdateRoleOffCanvas? CreateUpdateRoleOffCanvas { get; set; }
+    private RoleRightsOffCanvas? RoleRightsOffCanvas { get; set; }
+    private CustomModal? CustomModal { get; set; }
+    private Guid? DeleteRoleId;
+    private bool CanCreateRole = false;
+    private ClaimsPrincipal? UserState { get; set; }
+    private Dictionary<string, RenderFragment<Role>> customRenderFragments;
+    private RenderFragment<Role> MyAction => item => builder =>
+                            {
+                                if (Utils.HasRight(UserState, SystemRights.UpdateRoles))
+                                {
+                                    // Edit Button with Icon
+                                    builder.OpenElement(0, "button");
+                                    builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+                                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => CreateUpdateRoleOffCanvas?.Edit(item)));
+
+                                    // Edit Icon
+                                    builder.OpenElement(3, "i");
+                                    builder.AddAttribute(4, "class", "ti ti-edit");
+                                    builder.CloseElement();
+
+                                    builder.AddContent(5, " Edit");
+                                    builder.CloseElement();
+                                }
+
+                                if (Utils.HasRight(UserState, SystemRights.UnassignRightsToRoles)
+                                    && Utils.HasRight(UserState, SystemRights.AssignRightsToRoles)
+                                    && Utils.HasRight(UserState, SystemRights.ReadRoleRights))
+                                {
+                                    //Rights Button
+                                    builder.OpenElement(12, "button");
+                                    builder.AddAttribute(13, "class", "btn btn-secondary btn-sm me-2");
+                                    builder.AddAttribute(14, "onclick", EventCallback.Factory.Create(this, () => RoleRightsOffCanvas?.SetRightRole(item)));
+
+                                    // Edit Icon
+                                    builder.OpenElement(15, "i");
+                                    builder.AddAttribute(16, "class", "ti ti-edit");
+                                    builder.CloseElement();
+
+                                    builder.AddContent(17, "Rights");
+                                    builder.CloseElement();
+                                }
+
+                                if (Utils.HasRight(UserState, SystemRights.DeleteRoles))
+                                {
+
+                                    // Delete Button with Icon
+                                    builder.OpenElement(6, "button");
+                                    builder.AddAttribute(7, "class", "btn btn-danger btn-sm me-2");
+                                    builder.AddAttribute(8, "onclick", EventCallback.Factory.Create(this, () => Delete(item)));
+
+                                    // Delete Icon
+                                    builder.OpenElement(9, "i");
+                                    builder.AddAttribute(10, "class", "ti ti-trash");
+                                    builder.CloseElement();
+
+                                    builder.AddContent(11, " Delete");
+                                    builder.CloseElement();
+                                }
+                            };
+
+    protected override async Task OnInitializedAsync()
+    {
+        SetCustomFragments();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetRoles();
+    }
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Role>>
+            {
+                ["Name"] = item => new RenderFragment(builder =>
+                {
+                    builder.AddContent(0,@<a class="cursor-pointer"
+                                                  @onclick="() => CreateUpdateRoleOffCanvas?.Edit(item)">
+        @item.Name
+    </a>
+    );
+                }),
+                ["IsActive"] = item => new RenderFragment(builder =>
+            {
+            builder.AddContent(0,@<Badge Text="@(item.IsActive?"Active":"InActive")" BackgroundColor="@GetBackgroundColor(item.IsActive?"Active":"InActive")" />
+    );
+            })
+            };
+    }
+
+    private void ToggleCreateUpdateRoleOffCanvas()
+    {
+        CreateUpdateRoleOffCanvas?.ToggleOffCanvas();
+    }
+
+    private void CloseCustomModal()
+    {
+        DeleteRoleId = null;
+    }
+
+    private async Task HandleDeleteRole()
+    {
+
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.DeleteRole((Guid)DeleteRoleId);
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetRoles();
+                alertService.ShowError("Role Deleted Successfully");
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            CustomModal?.Close();
+            LoadingService.Hide();
+        }
+
+    }
+
+    private void Delete(Role role)
+    {
+        DeleteRoleId = role.Id;
+        CustomModal?.Open();
+
+    }
+
+    private async Task GetRoles()
+    {
+
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.GetRoles();
+
+            if (response != null && response.IsSuccess)
+            {
+                Roles = response.Roles;
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-success",
+            "InActive" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

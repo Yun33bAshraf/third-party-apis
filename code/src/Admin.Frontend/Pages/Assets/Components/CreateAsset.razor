@@ -1,0 +1,282 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Models.User
+@inject AlertService AlertService
+@inject ISystemService SystemService
+@inject IAssetService AssetService
+@inject ICategoryService CategoryService
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="AssetForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        @* Name *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="floating-firstname" >Asset Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                        @bind-Value="CreateBackendAssetRequest.Name" Validate="() => CreateBackendAssetRequest.Name" />
+            </div>
+        </div>
+
+        @* Purchase Date *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label>Purchase Date <span class="text-danger">*</span></label>
+                <InputDate class="form-control" @bind-Value="CreateBackendAssetRequest.PurchaseDate" />
+                <ValidationMessage For="@(() => CreateBackendAssetRequest.PurchaseDate)" class="text-danger" />
+            </div>
+        </div>
+
+        @* Purchase Price *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="purchasePrice">Purchase Price <span class="text-danger">*</span></label>
+                <CInput Type="number" Id="purchasePrice" Name="Name" Placeholder="Purchase Price"
+                        @bind-Value="CreateBackendAssetRequest.PurchasePrice" Validate="@(() => CreateBackendAssetRequest.PurchasePrice)" />
+            </div>
+        </div>
+
+        @* Asset Number *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="AssetNumber">Asset Number</label>
+                <CInput Type="text" Id="purchasePrice" Name="Name" Placeholder="Asset Number"
+                        @bind-Value="CreateBackendAssetRequest.AssetNumber" Validate="@(() => CreateBackendAssetRequest.AssetNumber)" />
+            </div>
+        </div>
+
+        @* Asset Category *@
+       
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-city">Asset Category <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-city" @bind-Value="CreateBackendAssetRequest.CategoryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => CreateBackendAssetRequest.CategoryId" class="text-danger" />
+            </div>
+        </div> 
+        
+       
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="select-city">Sub-Category </label>
+                <InputSelect class="form-select" id="select-city" @bind-Value="CreateBackendAssetRequest.SubCategoryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in AvailableCategories2)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => CreateBackendAssetRequest.SubCategoryId" class="text-danger" />
+            </div>
+        </div>
+        
+     @*    <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="select-status" >Asset Category <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-status" @bind-Value="CreateBackendAssetRequest.CategoryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var category in Enum.GetValues(typeof(AssetCategory)))
+                    {
+                        <option value="@((int)category)">@Utils.GetDescription((Enum)category)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => CreateBackendAssetRequest.CategoryId" class="text-danger" />
+            </div>
+        </div> *@
+
+        @* Sub-Category *@
+       @*  <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="select-status">Sub-Category <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-status" @bind-Value="CreateBackendAssetRequest.SubCategoryId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var subCategory in Enum.GetValues(typeof(AssetSubCategory)))
+                    {
+                        <option value="@((int)subCategory)">@Utils.GetDescription((Enum)subCategory)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => CreateBackendAssetRequest.SubCategoryId" class="text-danger" />
+            </div>
+        </div> *@
+
+        @* Asset Status *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="select-status">Asset Status <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-status" @bind-Value="CreateBackendAssetRequest.StatusId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var status in Enum.GetValues(typeof(AssetStatus)))
+                    {
+                        <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => CreateBackendAssetRequest.StatusId" class="text-danger" />
+            </div>
+        </div>
+
+        @* Comment *@
+        <div class="col-md-12 col-sm-12 ">
+            <div class="mb-2">
+                <label >Comment</label>
+                <InputTextArea class="form-control h-100" id="floating-input" @bind-Value="CreateBackendAssetRequest.Comment" autocomplete="off" rows="8" placeholder="Comment" />
+                <ValidationMessage For="() => CreateBackendAssetRequest.Comment" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback<CreateAssetRequest> AddAsset { get; set; }
+    [Parameter]
+    public Assets? EditAsset { get; set; }
+    public Assets? prevEditAsset { get; set; }
+    public List<GetCategory> AvailableCategories { get; set; } = new();
+    public List<GetCategory> AvailableCategories2 { get; set; } = new();
+    private EditContext editContext;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    [SupplyParameterFromForm(FormName = "AssetForm")]
+    public CreateAssetRequest CreateBackendAssetRequest { get; set; } = new();
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddAsset.InvokeAsync(CreateBackendAssetRequest);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditAsset != null)
+        {
+            if (EditAsset != prevEditAsset)
+            {
+                prevEditAsset = EditAsset;
+                await GetAsset();
+                SetEditContext();
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        
+            await LoadCategories();
+            await SubCategory();
+        
+    }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    private async Task LoadCategories()
+    {
+        GetCategory request = new()
+            {
+                EntityTypeId = 2,
+            };
+
+        var response = await CategoryService.GetCategory(request);
+
+        if (response?.Data != null)
+        {
+            AvailableCategories = response.Data;
+
+        }
+    }
+    private async Task SubCategory()
+    {
+        GetCategory request = new()
+            {
+                EntityTypeId = 3,
+            };
+
+        var response = await CategoryService.GetCategory(request);
+
+        if (response?.Data != null)
+        {
+            AvailableCategories2 = response.Data;
+
+        }
+    }
+
+    private async Task GetAsset()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new AssetsRequest
+                {
+                    AssetId = EditAsset.AssetId,
+                };
+            var response = await AssetService.GetAssets(request);
+            if (response != null && response.IsSuccess)
+            {
+                var asset = response.Data.FirstOrDefault();
+                if (asset != null)
+                {
+                    CreateBackendAssetRequest = new CreateAssetRequest
+                        {
+                            AssetId = asset.AssetId,
+                            Name = asset.Name,
+                            PurchaseDate = asset.PurchaseDate,
+                            CategoryId = asset.CategoryId,
+                            SubCategoryId = asset.SubCategoryId,
+                            StatusId = asset.StatusId,
+                            PurchasePrice = (int)response.Data[0].PurchasePrice,
+                            AssetNumber = asset.AssetNumber,
+                            Comment = asset.Comment,
+                            CreatedAt = asset.CreatedAt,
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public void ResetForm()
+    {
+        CreateBackendAssetRequest = new();
+        EditAsset = null;
+        prevEditAsset = null;
+        SetEditContext();
+    }
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(CreateBackendAssetRequest);
+    }
+}

@@ -1,0 +1,213 @@
+﻿@page "/auth-policy"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.AuthPolicies
+@using IApply.Frontend.Models.AuthPolicies.GetAuthPolicies
+@using IApply.Frontend.Models.AuthPolicies.UpdateAuthPolicy
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService
+@using IApply.Frontend.Services.ApiService.System
+
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject ISystemService systemService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Auth Policies</PageTitle>
+
+<div class="page-body ms-3 me-1 mt-1">
+    <div class="row">
+        @if (AuthPoliciesResponse != null && AuthPoliciesResponse.Count > 0)
+        {
+            @foreach (var item in AuthPoliciesResponse)
+            {
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">@item.UserType</h5>
+                        </div>
+                        <div class="card-body">
+
+                            <!-- Editable Switches -->
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="item.Enforce2FactorVerification">
+                                <label class="form-check-label">2FA Enforced</label>
+                            </div>
+
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="item.EnforcePasswordChangeOnFirstLogin">
+                                <label class="form-check-label">Password Change on First Login</label>
+                            </div>
+
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="item.EnforceEmailConfirmation">
+                                <label class="form-check-label">Email Confirmation</label>
+                            </div>
+
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="item.EnforceMobileConfirmation">
+                                <label class="form-check-label">Mobile Confirmation</label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" @bind="item.EnforceProfileCompletion">
+                                <label class="form-check-label">Profile Completion</label>
+                            </div>
+
+                            <!-- Editable Durations -->
+                            <div class="mb-2">
+                                <label class="form-label">Base Token Duration (mins)</label>
+                                <input type="number" class="form-control" @bind="item.BaseTokenDurationMinutes" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Full Token Duration (mins)</label>
+                                <input type="number" class="form-control" @bind="item.FullTokenDurationMinutes" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Refresh Token Duration (mins)</label>
+                                <input type="number" class="form-control" @bind="item.RefreshTokenDurationMinutes" />
+                            </div>
+
+                            <!-- Save Button -->
+                            <div class="text-end">
+                                <button class="btn btn-secondary py-1 rounded-5 me-2"
+                                        @onclick="@(() => ResetPolicy((UserType)item.UserTypeId))">
+                                    Reset
+                                </button>
+                                <button class="btn btn-primary py-1 rounded-5" @onclick="() => SaveAuthPolicy(item)">
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    public List<GetAuthPoliciesResponse>? AuthPoliciesResponse { get; set; } = new();
+    private Dictionary<int, GetAuthPoliciesResponse> OriginalPolicies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAuthPolicies();
+    }
+
+    private async Task GetAuthPolicies()
+    {
+        try
+        {
+            loadingService.Show();
+            var response = await systemService.AuthPolicyGet(0, 0, 1, 100);
+            if (response != null && response.Status is true)
+            {
+                AuthPoliciesResponse = response.Data;
+
+                if (AuthPoliciesResponse != null)
+                {
+                    OriginalPolicies = AuthPoliciesResponse.ToDictionary(
+                        policy => policy.UserTypeId,
+                        policy => new GetAuthPoliciesResponse
+                        {
+                            UserTypeId = policy.UserTypeId,
+                            Enforce2FactorVerification = policy.Enforce2FactorVerification,
+                            EnforcePasswordChangeOnFirstLogin = policy.EnforcePasswordChangeOnFirstLogin,
+                            EnforceBackendActivation = policy.EnforceBackendActivation,
+                            EnforceEmailConfirmation = policy.EnforceEmailConfirmation,
+                            EnforceMobileConfirmation = policy.EnforceMobileConfirmation,
+                            EnforceProfileCompletion = policy.EnforceProfileCompletion,
+                            BaseTokenDurationMinutes = policy.BaseTokenDurationMinutes,
+                            FullTokenDurationMinutes = policy.FullTokenDurationMinutes,
+                            RefreshTokenDurationMinutes = policy.RefreshTokenDurationMinutes
+                        }
+                    );
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task SaveAuthPolicy(GetAuthPoliciesResponse item)
+    {
+        try
+        {
+            loadingService.Show();
+
+            var updateRequest = new UpdateAuthPolicyRequest
+                {
+                    UserTypeId = (int)item.UserTypeId,
+                    Enforce2FactorVerification = item.Enforce2FactorVerification,
+                    EnforcePasswordChangeOnFirstLogin = item.EnforcePasswordChangeOnFirstLogin,
+                    EnforceBackendActivation = item.EnforceBackendActivation,
+                    EnforceEmailConfirmation = item.EnforceEmailConfirmation,
+                    EnforceMobileConfirmation = item.EnforceMobileConfirmation,
+                    EnforceProfileCompletion = item.EnforceProfileCompletion,
+                    BaseTokenDurationMinutes = item.BaseTokenDurationMinutes,
+                    FullTokenDurationMinutes = item.FullTokenDurationMinutes,
+                    RefreshTokenDurationMinutes = item.RefreshTokenDurationMinutes
+                };
+
+            var response = await systemService.AuthPolicyUpdate(updateRequest);
+
+            if (response?.Status == true)
+            {
+                alertService.Show($"{item.UserType}'s Auth Policy updated successfully.");
+                await GetAuthPolicies();
+            }
+            else
+            {
+                alertService.ShowError(response?.Message ?? "Failed to update.");
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private void ResetPolicy(UserType userType)
+    {
+        if (AuthPoliciesResponse != null)
+        {
+            var index = AuthPoliciesResponse.FindIndex(p => p.UserTypeId == (int)userType);
+            if (index >= 0 && OriginalPolicies.TryGetValue((int)userType, out var original))
+            {
+                var current = AuthPoliciesResponse[index];
+
+                current.Enforce2FactorVerification = original.Enforce2FactorVerification;
+                current.EnforcePasswordChangeOnFirstLogin = original.EnforcePasswordChangeOnFirstLogin;
+                current.EnforceBackendActivation = original.EnforceBackendActivation;
+                current.EnforceEmailConfirmation = original.EnforceEmailConfirmation;
+                current.EnforceMobileConfirmation = original.EnforceMobileConfirmation;
+                current.EnforceProfileCompletion = original.EnforceProfileCompletion;
+                current.BaseTokenDurationMinutes = original.BaseTokenDurationMinutes;
+                current.FullTokenDurationMinutes = original.FullTokenDurationMinutes;
+                current.RefreshTokenDurationMinutes = original.RefreshTokenDurationMinutes;
+
+                StateHasChanged();
+            }
+        }
+    }
+}

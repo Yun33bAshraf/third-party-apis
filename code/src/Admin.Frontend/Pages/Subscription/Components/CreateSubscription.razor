@@ -1,0 +1,176 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Subscription
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.Subscription
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Attendances
+@using IApply.Frontend.Models.User
+@inject AlertService AlertService
+@inject ISubscriptionService SubscriptionService
+@inject LoadingService LoadingService
+@inject AuthenticationStateProvider authStateProvider
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="SubscriptionForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        @* Name *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="floating-name" >Subscription Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                        @bind-Value="CreateSubscriptionRequest.Name" Validate="() => CreateSubscriptionRequest.Name" />
+            </div>
+        </div>
+
+        @* Purchase Price *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="durationInDays">Duration In Days <span class="text-danger">*</span></label>
+                <CInput Type="number" Id="durationInDays" Name="durationInDays" Placeholder="Duration In Days"
+                        @bind-Value="CreateSubscriptionRequest.DurationInDays" Validate="@(() => CreateSubscriptionRequest.DurationInDays)" />
+            </div>
+        </div>
+
+        @* Asset Number *@
+        <div class="col-md-4 col-sm-12 ">
+            <div class="mb-2">
+                <label for="price">Price</label>
+                <CInput Type="number" Id="price" Name="price" Placeholder="price" 
+                         @bind-Value="CreateSubscriptionRequest.Price" Validate="@(() => CreateSubscriptionRequest.Price)" />
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="status"
+                       @bind="CreateSubscriptionRequest.Status" />
+                <label class="form-check-label" for="status">
+                    Active
+                </label>
+            </div>
+        </div>
+
+
+        @* Comment *@
+        <div class="col-md-12 col-sm-12 ">
+            <div class="mb-2">
+                <label >Description </label>
+                <InputTextArea class="form-control h-100" id="floating-input" @bind-Value="CreateSubscriptionRequest.Description" autocomplete="off" rows="8" placeholder="Comment" />
+                <ValidationMessage For="() => CreateSubscriptionRequest.Description" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback<CreateSubscriptionRequest> AddSubscription { get; set; }
+    [Parameter]
+    public SubscriptionListing? EditSubscription { get; set; }
+    public SubscriptionListing? prevEditSubscription { get; set; }
+    private EditContext editContext;
+    private ClaimsPrincipal? UserState { get; set; }
+
+    [SupplyParameterFromForm(FormName = "SubscriptionForm")]
+    public CreateSubscriptionRequest CreateSubscriptionRequest { get; set; } = new();
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddSubscription.InvokeAsync(CreateSubscriptionRequest);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditSubscription != null)
+        {
+            if (EditSubscription != prevEditSubscription)
+            {
+                prevEditSubscription = EditSubscription;
+                await GetSubscription();
+                SetEditContext();
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        
+    }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+
+    private async Task GetSubscription()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new GetSubscriptionListingRequest
+                {
+                    SubscriptionId = EditSubscription.Id,
+                    PageNo = 0,
+                    PageSize = 0
+
+                };
+            var response = await SubscriptionService.GetSubscriptionListing(request);
+            if (response != null && response.Status)
+            {
+                var subscription = response.Data.FirstOrDefault();
+                if (subscription != null)
+                {
+                    CreateSubscriptionRequest = new CreateSubscriptionRequest
+                        {
+                            Id = subscription.Id,
+                            Name = subscription.Name,
+                            Description = subscription.Description,
+                            Price = Math.Round(subscription.Price, 2),
+                            DurationInDays = subscription.DurationInDays,
+                            Status = subscription.Status
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public void ResetForm()
+    {
+        CreateSubscriptionRequest = new();
+        EditSubscription = null;
+        prevEditSubscription = null;
+        SetEditContext();
+    }
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(CreateSubscriptionRequest);
+    }
+}

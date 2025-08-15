@@ -1,0 +1,261 @@
+﻿@page "/profile"
+
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.CardTabs
+@using IApply.Frontend.Models.Profile.GetProfile
+@using IApply.Frontend.Pages.Auth
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService loadingService
+@inject NavigationManager navigationManager
+@inject AlertService alertService
+@inject IUserService userService
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card-header p-2">
+            <h3 class="card-title ms-3"><strong>My Profile</strong></h3>
+        </div>
+        <div class="card-body p-1 mx-1">
+            <div class="row row-cards d-block">
+
+                <!-- Me Section -->
+                <div class="card mb-2 p-0" style="min-height: 160px;">
+                    <div class="card-header py-2 bg-light text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><strong>Me</strong></h5>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="cursor: pointer;" @onclick="ShowProfileUpdateModal" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path stroke-dasharray="20" stroke-dashoffset="20" d="M3 21h18">
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" dur="0.2s" values="20;0" />
+                                </path>
+                                <path stroke-dasharray="48" stroke-dashoffset="48" d="M7 17v-4l10 -10l4 4l-10 10h-4">
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.2s" dur="0.6s" values="48;0" />
+                                </path>
+                                <path stroke-dasharray="8" stroke-dashoffset="8" d="M14 6l4 4">
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="8;0" />
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="card-body py-2">
+                        @if (ProfileResponse != null)
+                        {
+                            <h4 class="mb-0">@ProfileResponse.DisplayName</h4>
+                            @if (!string.IsNullOrWhiteSpace(ProfileResponse.Occupation))
+                            {
+                                <small class="text-muted d-block mb-0">@ProfileResponse.Occupation</small>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(ProfileResponse.LinkedInProfile))
+                            {
+                                <p class="mb-1">
+                                    <a href="@ProfileResponse.LinkedInProfile" target="_blank" rel="noopener noreferrer"
+                                       class="text-primary text-decoration-none d-inline-flex align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                             class="bi bi-linkedin me-1" viewBox="0 0 16 16">
+                                            <path d="M0 1.146C0 .513.324 0 .725 0h14.55c.401 0 .725.513.725 1.146v13.708c0 .633-.324 1.146-.725 1.146H.725A.723.723 0 0 1 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.357-.554 1.357-1.248 0-.694-.52-1.248-1.357-1.248-.837 0-1.357.554-1.357 1.248 0 .694.52 1.248 1.357 1.248zm4.908 8.212V9.359c0-.214.015-.428.08-.582.174-.428.571-.872 1.238-.872.873 0 1.222.658 1.222 1.623v3.867h2.401V9.236c0-2.22-1.185-3.252-2.767-3.252-1.276 0-1.845.704-2.165 1.2v.034h-.015a5.02 5.02 0 0 1 .015-.034V6.169h-2.4c.03.672 0 7.225 0 7.225h2.4z" />
+                                        </svg>
+                                        LinkedIn
+                                    </a>
+                                </p>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(ProfileResponse.UserBio))
+                            {
+                                <small class="d-block text-muted mb-1">"@ProfileResponse.UserBio"</small>
+                            }
+
+                            <small class="d-block text-muted mb-1">@ProfileResponse.Email, @ProfileResponse.MobileNumber</small>
+
+                            <small class="d-block text-muted mb-1">
+                                @string.Join(", ", new[] { ProfileResponse.City, ProfileResponse.PostalCode, ProfileResponse.State, ProfileResponse.Country }
+                                .Where(x => !string.IsNullOrWhiteSpace(x)))
+                            </small>
+
+                            @if (ProfileResponse.LastLoginDate != null)
+                            {
+                                <small class="text-muted"><strong>Last Login:</strong> @ProfileResponse.LastLoginDate?.ToString("f")</small>
+                            }
+                        }
+                        else
+                        {
+                            <small class="text-muted">User profile not loaded.</small>
+                        }
+                    </div>
+                </div>
+
+                <!-- Experience Section -->
+                <div class="card mb-2 p-0" style="min-height: 140px;">
+                    <div class="card-header py-2 bg-light text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><strong>Experience</strong></h5>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" @onclick="ShowExperienceCreateModal" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z" />
+                        </svg>
+                    </div>
+                    <div class="card-body py-2">
+                        @if (UserExperience != null && UserExperience.Count > 0)
+                        {
+                            @foreach (var exp in UserExperience)
+                            {
+                                <div class="mb-2">
+                                    <strong>@exp.Position</strong> at <strong>@exp.CompanyName</strong><br />
+                                    <small class="text-muted">
+                                        @exp.Location •
+                                        @exp.StartDate.ToString("MMM yyyy") -
+                                        @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy")) •
+                                        <span>@GetDuration(exp.StartDate, exp.IsCurrent ? null : exp.EndDate)</span>
+                                    </small>
+                                </div>
+
+                                @if (exp != UserExperience.Last())
+                                {
+                                    <hr class="my-1" />
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <small class="text-muted">No experience added yet.</small>
+                        }
+                    </div>
+                </div>
+
+                <!-- Education Section -->
+                <div class="card mb-0 p-0" style="min-height: 100px;">
+                    <div class="card-header py-2 bg-light text-dark d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0"><strong>Education</strong></h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" @onclick="ShowEducationCreateModal" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z" />
+                        </svg>
+                    </div>
+                    <div class="card-body py-2">
+                        @if (UserEducation != null && UserEducation.Count > 0)
+                        {
+                            var lastEdu = UserEducation.LastOrDefault();
+                            foreach (var edu in UserEducation)
+                            {
+                                <div class="mb-2">
+                                    <strong>@edu.Degree</strong> in <strong>@edu.FieldOfStudy</strong><br />
+                                    <small class="text-muted">
+                                        @edu.Institution •
+                                        @edu.StartDate.ToString("MMM yyyy") -
+                                        @(edu.EndDate?.ToString("MMM yyyy") ?? "Present") •
+                                        <span>@GetDuration(edu.StartDate, edu.EndDate)</span>
+                                    </small>
+                                </div>
+
+                                @if (edu != lastEdu)
+                                {
+                                    <hr class="my-1" />
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <small class="text-muted">No education added yet.</small>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <IApply.Frontend.Pages.Profile.Modal.ProfileUpdate 
+            IsVisible="@showProfileUpdateModal" 
+            OnClose="@HideProfileUpdateModal" />
+
+        <IApply.Frontend.Pages.Profile.Modal.ExperienceCreate 
+            IsVisible="@showExperienceCreateModal" 
+            OnClose="@HideExperienceCreateModal" 
+            OnSaveComplete="LoadProfileData" />
+
+        <IApply.Frontend.Pages.Profile.Modal.EducationCreate 
+            IsVisible="@showEducationCreateModal" 
+            OnClose="@HideEducationCreateModal" 
+            OnSaveComplete="LoadProfileData" />
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private int CurrentUserId { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+
+    private ProfileGetResponseModel ProfileResponse { get; set; } = new();
+    private List<GetCurrentUserExperience>? UserExperience { get; set; } = [];
+    private List<GetCurrentUserEducation>? UserEducation { get; set; } = [];
+
+    private bool showProfileUpdateModal = false;
+    private void ShowProfileUpdateModal() => showProfileUpdateModal = true;
+    private void HideProfileUpdateModal() => showProfileUpdateModal = false;
+
+    private bool showExperienceCreateModal = false;
+    private void ShowExperienceCreateModal() => showExperienceCreateModal = true;
+    private void HideExperienceCreateModal() => showExperienceCreateModal = false;
+
+    private bool showEducationCreateModal = false;
+    private void ShowEducationCreateModal() => showEducationCreateModal = true;
+    private void HideEducationCreateModal() => showEducationCreateModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+
+        loadingService.OnChange += StateHasChanged;
+
+        await LoadProfileData();
+    }
+
+    private async Task LoadProfileData()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await userService.ProfileGet();
+            if (response is { Status: true, Data: not null })
+            {
+                ProfileResponse = response.Data;
+                UserEducation = response.Data.Educations;
+                UserExperience = response.Data.Experiences;
+            }
+            else if (response?.Error != null)
+            {
+                alertService.ShowError(response.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private string GetDuration(DateTime start, DateTime? end)
+    {
+        var endDate = end ?? DateTime.Now;
+        var duration = endDate - start;
+
+        int years = (int)(duration.Days / 365.25);
+        int months = (int)((duration.Days % 365.25) / 30.44);
+        int days = (int)(duration.Days % 30.44);
+
+        var parts = new List<string>();
+        if (years > 0)
+            parts.Add($"{years} {(years == 1 ? "year" : "years")}");
+        if (months > 0 || (years == 0 && days > 0))
+            parts.Add($"{months} {(months == 1 ? "month" : "months")}");
+        if (years == 0 && months == 0 && days > 0)
+            parts.Add($"{days} {(days == 1 ? "day" : "days")}");
+
+        return string.Join(", ", parts);
+    }
+}

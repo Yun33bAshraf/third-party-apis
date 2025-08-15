@@ -1,0 +1,137 @@
+﻿@page "/projects-listing"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Models.Project
+@using IApply.Frontend.Models.Workspace
+@using IApply.Frontend.Services.ApiService.Project
+@using IApply.Frontend.Services.ApiService.Workspace
+
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject AuthenticationStateProvider authStateProvider
+@inject IProjectService projectService
+@inject IWorkspaceService workspaceService
+
+@attribute [Authorize]
+
+    <div class="col-12">
+        <CTable Items="ProjectResponse"
+        TotalCountFromServer="ProjectCount"
+        ActionRequired="false"
+        BackendPagination="true"
+        BackendSorting="true"
+        OnPaginationChanged="HandlePaginationChanged"
+        InitialPageNumber="CurrentPageNumber"
+        InitialPageSize="CurrentPageSize" />
+    </div>
+
+@code {
+    // Properties
+    [Parameter]
+    public string? Id { get; set; }
+    public int WorkspaceId { get; set; }
+    public int ProjectId { get; set; }
+    public List<ProjectResponse> ProjectResponse { get; set; } = new();
+    public List<ProjectTicketsResponse>? ProjectTickets { get; set; } = new();
+    private int CurrentPageNumber { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private ClaimsPrincipal? UserState { get; set; }
+    private string TicketTitle { get; set; } = string.Empty;
+    private int ProjectCount { get; set; } = 0;
+
+    // Data
+    private async Task GetWorkspaceProjects()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await projectService.GetProjectAsync(WorkspaceId, string.Empty, 0, string.Empty, 0, 0, 0, 0, CurrentPageNumber, CurrentPageSize);
+            if (response != null && response.Data != null && response.Status == true && response.Pagination != null)
+            {
+                ProjectResponse = response.Data;
+                ProjectCount = response.Pagination.TotalCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    private async Task GetUserWorkspace()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var request = new UserWorkspaceGetRequest
+                {
+                    PageNumber = CurrentPageNumber,
+                    PageSize = CurrentPageSize,
+                };
+
+            var response = await workspaceService.UserWorkspaceGet(request.PageNumber, request.PageSize);
+            if (response.Data != null && response.Status == true && response.Pagination != null)
+            {
+                var userWorkspaces = response.Data.UserWorkspaces.FirstOrDefault();
+                if (userWorkspaces != null)
+                {
+                    WorkspaceId = userWorkspaces.WorkspaceId;
+                }
+
+                // SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    // Events
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPageNumber = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetWorkspaceProjects();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        await GetUserWorkspace();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetWorkspaceProjects();
+        StateHasChanged();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetWorkspaceProjects();
+        StateHasChanged();
+    }
+
+    private async Task ResetFilters()
+    {
+        TicketTitle = string.Empty;
+
+        await GetWorkspaceProjects();
+    }
+}

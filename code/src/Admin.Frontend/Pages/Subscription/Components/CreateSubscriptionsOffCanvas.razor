@@ -1,0 +1,119 @@
+﻿@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Models
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Models.Subscription
+@using IApply.Frontend.Models.User
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Services.ApiService.Auth
+@using IApply.Frontend.Services.ApiService.Subscription
+@using IApply.Frontend.Services.ApiService.System
+
+@inject LoadingService LoadingService
+@inject ISubscriptionService SubscriptionService
+@inject AlertService alertService
+
+<Offcanvas Width="50" @ref="Offcanvas">
+    <OffCanvasHeader>
+       <div>@(IsEditMode ? "Update" : "Add") Subscription</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <CreateSubscription @ref="createsubscription" AddSubscription="AddSubscription" EditSubscription="EditSubscription" />
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveUser">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+  
+@code {
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetSubscriptions { get; set; }
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public SubscriptionListing? EditSubscription { get; set; }
+    
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateSubscription? createsubscription { get; set; }
+   
+
+
+    public void ToggleOffCanvas()
+    {
+        createsubscription.ResetForm();
+        // if (!IsEditMode)
+        // {
+        //     EditAsset = new();
+        // }
+        Offcanvas?.Open();
+    }
+
+    private void HandleSaveUser()
+    {
+
+        createsubscription?.HandleValidSubmit();
+
+    }
+    public void SetSubscription(SubscriptionListing item)
+    {
+        EditSubscription = item;
+        Offcanvas?.Open();
+    }
+
+    private void CloseOffCanvas()
+    {
+        createsubscription?.ResetForm();
+    }
+
+    private async Task AddSubscription(CreateSubscriptionRequest request)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse<CreateSubscriptionResponse>();
+
+            if (request.Id > 0)
+            {
+                response = await SubscriptionService.CreateUpdateSubscription(request);
+            }
+            else
+            {
+                response = await SubscriptionService.CreateUpdateSubscription(request);
+            }
+
+            if (response != null && response.Status)
+            {
+                await GetSubscriptions.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+                if (request.Id > 0)
+                {
+                    alertService.Show("Subscription Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Subscription Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.Error != null ? response.Error : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}
+

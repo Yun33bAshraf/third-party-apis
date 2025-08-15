@@ -1,0 +1,101 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Auth
+@using IApply.Frontend.Models.Auth.Login
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Auth
+@layout IApply.Frontend.Layout.AuthLayout
+@inject NavigationManager _navigationManager
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService LoadingService
+@inject AlertService alertService
+@inject IAuthService accountService
+
+
+
+@rendermode InteractiveServer
+
+<PageTitle>Login - ERP</PageTitle>
+
+<div class="container-tight">
+    <div class="card card-md">
+        <div class="card-body">
+            <h2 class="h2 text-center mb-4">Login to your account</h2>
+            <EditForm method="post" Model="loginModel" OnValidSubmit="loginCheck" FormName="LoginForm" Enhance>
+                <DataAnnotationsValidator />
+                <div class="mb-2">
+                    <label for="userName" class="form-label">@(Utils.GetDisplayName<LoginRequest>(nameof(loginModel.Email)))</label>
+                    <InputText id="userName" name="userName" type="text" placeholder="Enter username" @bind-Value="loginModel.Email" class="form-control form-control-new" />
+                    <ValidationMessage For="()=> loginModel.Email" class="text-danger" />
+                </div>
+                <div>
+                    <label for="password" class="form-label">@(Utils.GetDisplayName<LoginRequest>(nameof(loginModel.Password)))</label>
+
+                    <div class="input-group">
+                        <InputText id="password" name="password" type="@(ShowPassword ? "text": "password")" placeholder="Enter password" @bind-Value="loginModel.Password" class="form-control form-control-new" />
+                            <span class="input-group-text pe-2" @onclick="()=> ShowPassword = !ShowPassword">
+                                 <iconify-icon icon="@(ShowPassword ? "mdi:eye-off" : "mdi:eye")" class="fs-2"></iconify-icon>
+                            </span>
+                       
+                    </div>
+                    <ValidationMessage For="()=> loginModel.Password" class="text-danger" />
+                </div>
+                <span class="form-label-description fs-4 mt-1">
+                    <a href="/forgot-password">Forgot Password?</a>
+                </span>
+                <button type="submit" class="btn btn-primary rounded-5 w-100 mt-2 fw-bold">Login</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    bool checkForVerification = false;
+    private bool ShowPassword { get; set; } = false;
+    [SupplyParameterFromForm(FormName = "LoginForm")]
+    public LoginRequest loginModel { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var userState = authState.User;
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            _navigationManager.NavigateTo("home", true);
+        }
+        loginModel = new LoginRequest();
+    }
+
+    private async Task loginCheck()
+    {
+        try
+        {
+            LoadingService.Show();
+            var deviceInfo = await js.InvokeAsync<DeviceInfo>("getClientSystemInfo");
+            string timeZoneInfo = await js.InvokeAsync<string>("getClientTimezone");
+            loginModel.ClientInformation = String.Concat(deviceInfo.Browser, ", ", deviceInfo.OS, ", ", deviceInfo.Language);
+            loginModel.IpAddress = deviceInfo.Ip;
+            // loginModel.UserType = 1;
+            loginModel.CurrentBrowserTimeZone= timeZoneInfo;
+
+            var response = await accountService.Login(loginModel);
+
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

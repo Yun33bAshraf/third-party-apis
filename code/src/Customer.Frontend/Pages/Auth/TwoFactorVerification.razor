@@ -1,0 +1,101 @@
+﻿@page "/2fa-verification"
+@* @page "/2fa-verification?key={key}" *@
+
+@using System.ComponentModel.DataAnnotations
+
+@inject NavigationManager _navigationManager
+@inject AlertService _alertService
+
+<PageTitle>Verification - iApply</PageTitle>
+
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <a href="/" class="navbar-brand navbar-brand-autodark">
+            <img src="tabler/static/logo.svg" height="36" alt="iApply Logo">
+        </a>
+    </div>
+
+    <div class="card card-lg card-borderless shadow">
+        <div class="card-header d-flex justify-content-center">
+            <div class="card-title fs-3">Verify your account</div>
+        </div>
+        <div class="card-body pt-0 px-4">
+            <div class="mb-3 text-center">
+                <p class="text-muted">Enter the verification code sent to your email or phone</p>
+            </div>
+
+            <EditForm Model="@verificationModel" OnValidSubmit="VerifyCodeAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="code" class="form-label">Verification Code</label>
+                    <InputText id="code" class="form-control" @bind-Value="verificationModel.Code" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">@errorMessage</div>
+                }
+
+                <div class="d-grid">
+                    <button class="btn btn-primary" type="submit" disabled="@isVerifying">
+                        @* @if (isVerifying) *@
+                        @* { *@
+                        @*     <span class="spinner-border spinner-border-sm me-2" role="status"></span> *@
+                        @*     Verifying... *@
+                        @* } *@
+                        @* else *@
+                        @* { *@
+                        @*     Verify *@
+                        @*                         } *@
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string key { get; set; }
+
+    private VerificationModel verificationModel = new();
+    private bool isVerifying = false;
+    private string errorMessage;
+
+    private async Task VerifyCodeAsync()
+    {
+        isVerifying = true;
+        errorMessage = null;
+
+        try
+        {
+            // Simulate backend verification
+            if (string.IsNullOrWhiteSpace(verificationModel.Code) || verificationModel.Code != "123456")
+            {
+                _alertService.ShowError("Invalid verification code.");
+                return;
+            }
+
+            // TODO: Call your real verification service with `key` and `verificationModel.Code`
+            // If successful:
+            _navigationManager.NavigateTo($"login?key={key}", forceLoad: true); // Back to login to complete setup
+        }
+        catch (Exception ex)
+        {
+            _alertService.ShowError("Something went wrong. Please try again.");
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isVerifying = false;
+        }
+    }
+
+    public class VerificationModel
+    {
+        [Required(ErrorMessage = "Verification code is required.")]
+        public string Code { get; set; } = string.Empty;
+    }
+}

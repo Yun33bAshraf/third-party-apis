@@ -1,0 +1,271 @@
+﻿@page "/leave/{id}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Leaves
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Pages.Assets.Components
+@using IApply.Frontend.Pages.Leave.Components
+
+
+@inject LoadingService LoadingService
+@inject ILeaveService LeaveService
+@inject ISystemService SystemService
+@inject AlertService alertService
+
+@attribute [Authorize]
+
+<PageTitle>Leave Information</PageTitle>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body p-0 mb-2">
+            <div class="d-flex align-items-center">
+                <!-- Link -->
+                <div class="bd-highlight mb-0">
+                    <a href="/leave-detail" class="btn btn-link text-decoration-none mb-0 pb-0 pe-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56">
+                            <path fill="currentColor" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.875-23.906-23.93-23.906C14.899 4.094 4.095 14.945 4.095 28c0 13.078 10.828 23.906 23.906 23.906m6.351-13.828c-.445 0-.82-.094-1.171-.305l-14.672-7.617c-1.031-.515-1.43-1.148-1.43-2.156c0-.914.469-1.617 1.43-2.156l14.672-7.922a2.6 2.6 0 0 1 1.242-.281c1.148 0 1.969.867 1.969 1.945c0 .89-.422 1.477-1.407 1.992l-12.47 6.282V28l12.47 6.14c1.03.47 1.406 1.055 1.406 1.97c0 1.1-.844 1.968-2.04 1.968" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Heading -->
+                <div class="bd-highlight ms-1 mb-0 mt-2">
+                    <h3 class="mb-0 pb-0">@leaves.EmployeeName</h3>
+                </div>
+
+                <!-- Button -->
+                <div class="ms-auto bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1 mt-2 me-2" @onclick="ToggleCreateLeaveOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* <div class="col-12">
+    <div class="card">
+        <div class="card-body p-2">
+            <div class="d-flex bd-highlight">
+                <div class="w-100 bd-highlight">
+                    <h3 class="m-0">@leaves.EmployeeName</h3>
+                </div>
+                <div class="flex-shrink-1 bd-highlight">
+                    <button class="btn p-0 border btn-light rounded-3 ms-1" @onclick="ToggleCreateLeaveOffCanvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+<div class="col-12 mt-2">
+    <div class="card">
+        <div class="card-body py-2">
+            <div class="datagrid">
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Employee Name</div>
+                    <div class="datagrid-content">@(!string.IsNullOrEmpty(leaves.EmployeeName) ? leaves.EmployeeName : "___")</div>
+                </div>
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Leave Type</div>
+                    <div class="datagrid-content">
+                        @if (!string.IsNullOrEmpty(leaves.LeaveType))
+                        {
+                            <Badge Text="@leaves.LeaveType" BackgroundColor="@GetBackgroundTypeColor(leaves.LeaveType)" />
+                        }
+                        else
+                        {
+                            <span>___</span>
+                        }
+                    </div>
+                </div>
+                 <div class="datagrid-item">
+                    <div class="datagrid-title">Leave Status</div>
+                    <div class="datagrid-content">
+                        @if (!string.IsNullOrEmpty(leaves.LeaveStatus))
+                        {
+                            <Badge Text="@leaves.LeaveStatus" BackgroundColor="@GetBackgroundStatusColor(leaves.LeaveStatus)" />
+                        }
+                        else
+                        {
+                            <span>___</span>
+                        }
+                    </div>
+                </div>
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Leave Date</div>
+                    <div class="datagrid-content">@(!string.IsNullOrEmpty(leaves.LeaveDate.ToString()) ? leaves.LeaveDate.ToString("dd/MM/yyyy") : "___")</div>
+                </div>
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Comment</div>
+                    <div class="datagrid-content">@(!string.IsNullOrEmpty(leaves.Comment) ? leaves.Comment : "___")</div>
+                </div>
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Created Date</div>
+                    <div class="datagrid-content">@(!string.IsNullOrEmpty(leaves.CreatedAt) ? leaves.CreatedAt : "___")</div>
+                </div>
+                @if (leaves.UpdatedAt != null)
+                {
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Updated Date</div>
+                        <div class="datagrid-content">@(!string.IsNullOrEmpty(leaves.UpdatedAt) ? leaves.UpdatedAt : "___")</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Create/Update OffCanvas -->
+<LeaveCreateOffCanvas @ref="empLeaveCreateUpdateOffCanvas" GetEmployeeLeave="GetLeaves" EditLeaveEmployee="leaves" IsEditMode="true" />
+
+@code {
+    [Parameter] public string Id { get; set; }
+
+    // OffCanvas reference for employee leave creation or update
+    public LeaveCreateOffCanvas? empLeaveCreateUpdateOffCanvas { get; set; }
+    private EmpLeaveCreateUpdateRequest? employeeLeaveRequest = new();
+    private EmployeeLeave? leaves = new();
+
+    // Toggle OffCanvas visibility
+    private void ToggleCreateLeaveOffCanvas()
+    {
+        empLeaveCreateUpdateOffCanvas?.ToggleOffCanvas();
+    }
+
+    // Called when parameters are set or page navigates to this route
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetLeaves();
+    }
+
+    // Fetch leave details by ID
+    private async Task GetLeaves()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int leaveId))
+            {
+                alertService.ShowError("Invalid Leave ID");
+                return;
+            }
+
+            var request = new EmpLeaveGetRequest
+                {
+                    LeaveId = leaveId,
+                    PageSize = 1,
+                    PageNumber = 1
+                };
+
+            var response = await LeaveService.GetEmployeesLeave(request);
+
+            if (response != null && response.IsSuccess && response.Data?.Count > 0)
+            {
+                leaves = new EmployeeLeave
+                    {
+                        EmployeeLeaveId = response.Data[0].EmployeeLeaveId,
+                        EmployeeId = response.Data[0].EmployeeId,
+                        EmployeeName = response.Data[0].EmployeeName,
+                        LeaveTypeId = response.Data[0].LeaveTypeId,
+                        LeaveType = response.Data[0].LeaveType,
+                        LeaveStatusId = response.Data[0].LeaveStatusId,
+                        LeaveStatus = response.Data[0].LeaveStatus,
+                        LeaveDate = response.Data[0].LeaveDate,
+                        Comment = response.Data[0].Comment,
+                        CreatedAt = response.Data[0].CreatedAt,
+                        UpdatedAt = response.Data[0].UpdatedAt,
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    // Method to handle the add/update operation for employee leave
+    private async Task AddLeave(EmpLeaveCreateUpdateRequest leave)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+
+            if (leave.LeaveId > 0)
+            {
+                // Update leave if an ID is present
+                response = await LeaveService.EmpLeaveUpdate(leave);
+            }
+
+            if (response != null && response.IsSuccess)
+            {
+                alertService.Show("Leave Updated Successfully");
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+    private string GetBackgroundStatusColor(string status)
+    {
+        return status switch
+        {
+            "Approved" => "bg-success",
+            "Pending" => "bg-warning",
+            "Rejected" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+    private string GetBackgroundTypeColor(string status)
+    {
+        return status switch
+        {
+            "Annual" => "bg-info",
+            "Sick" => "bg-primary",
+            "Casual" => "bg-secondary",
+            "Maternity" => "bg-pink",
+            "Paternity" => "bg-lightblue",
+            "Unpaid" => "bg-gray",
+            "Other" => "bg-dark",
+            "HalfLeave" => "bg-orange",
+            _ => "bg-secondary"
+        };
+    }
+}

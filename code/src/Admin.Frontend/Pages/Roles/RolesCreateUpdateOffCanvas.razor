@@ -1,0 +1,113 @@
+﻿@using IApply.Frontend.Models.Roles
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Offcanvas
+
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject AlertService alertService
+
+<Offcanvas Width="25" @ref="Offcanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Role</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <RolesCreateUpdate @ref="createRoleComponent" RolesCreateUpdateRequest="AddRole"  EditAsset="EditAsset"/>
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveRole">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetRoles { get; set; }
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public RoleModel? EditAsset { get; set; }
+    private Offcanvas? Offcanvas { get; set; }
+    private RolesCreateUpdate? createRoleComponent { get; set; }
+    private RolesCreateUpdateRequest roleRequest { get; set; } = new();
+
+    public void ToggleOffCanvas()
+    {
+        createRoleComponent?.ResetForm();
+        Offcanvas?.Open();
+    }
+
+    private async Task HandleSaveRole()
+    {
+        if (createRoleComponent != null)
+        {
+            await createRoleComponent.HandleValidSubmit();
+        }
+    }
+
+    public void SetRole(RolesCreateUpdateRequest item)
+    {
+        roleRequest = item;
+
+        if (createRoleComponent != null)
+        {
+            createRoleComponent.roleCreateRequest = item;
+        }
+
+        Offcanvas?.Open();
+    }
+
+    private void CloseOffCanvas()
+    {
+        createRoleComponent?.ResetForm();
+    }
+
+    private async Task AddRole(RolesCreateUpdateRequest role)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+            if (role.RoleId > 0)
+            {
+                response = await SystemService.RolesUpdate(role);
+            }
+            else
+            {
+                response = await SystemService.RolesCreate(role);
+            }
+            
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetRoles.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+                if(role.RoleId > 0)
+                {
+                    alertService.Show("Role Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Role Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

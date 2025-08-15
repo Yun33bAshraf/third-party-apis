@@ -1,0 +1,148 @@
+﻿@using IApply.Frontend.Models.PublicHoliday
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Holiday
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Services.ApiService.Leaves
+@using static IApply.Frontend.Pages.PublicHoliday.View.HolidayListing
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IHolidayService HolidayService
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="HolidayForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <!-- Holiday Name -->
+        <div class="col-md-6 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-firstname">Holiday Name <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="name" Name="Name" Placeholder="Name"
+                        @bind-Value="createholiday.HolidayName" Validate="() => createholiday.HolidayName" />
+            </div>
+        </div>
+
+        <!-- Holiday Date -->
+        <div class="col-md-6 col-sm-12">
+            <div class="mb-2">
+                <label>Holiday Date <span class="text-danger">*</span></label>
+                <InputDate class="form-control" @bind-Value="createholiday.HolidayDate" />
+                <ValidationMessage For="@(() => createholiday.HolidayDate)" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Is Working Day -->
+        <div class="col-md-6 col-sm-12">
+
+        <div class="d-flex bd-highlight">
+                <div class="p-1 bd-highlight">Working Day</div>
+                <div class="p-1 me-3 bd-highlight">
+                    <label class="form-check form-check-single form-switch">
+                        <input class="form-check-input" type="checkbox" @bind="createholiday.IsWorkingDay" />
+                    </label>
+                </div>
+@*             <div class="p-2 bd-highlight">Flex item</div>
+ *@        </div>
+        </div>
+     @*    <label class="row">
+            <span class="col p-1">Is Working Day</span>
+            <label class="form-check form-check-single form-switch">
+                <input class="form-check-input" type="checkbox" @bind="createholiday.IsWorkingDay" />
+            </label>
+        </label> *@
+    </div>
+</EditForm>
+
+@code {
+    // Parameters and injected services
+    [SupplyParameterFromForm(FormName = "HolidayForm")]
+    public HolidayCreate createholiday { get; set; } = new();
+
+    private EditContext editContext;
+
+    [Parameter]
+    public EventCallback<HolidayCreate> AddHoliday { get; set; }
+
+    [Parameter]
+    public Holidays? EditHoliday { get; set; }
+
+    public Holidays? prevEditHoliday { get; set; }
+
+    // Lifecycle Methods
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditHoliday != null && EditHoliday != prevEditHoliday)
+        {
+            prevEditHoliday = EditHoliday;
+            await GetHoliday();
+            SetEditContext();
+        }
+    }
+
+    // Setup the EditContext for validation
+    private void SetEditContext()
+    {
+        editContext = new EditContext(createholiday);
+    }
+
+    // Reset form to its initial state
+    public void ResetForm()
+    {
+        createholiday = new();
+        EditHoliday = null;
+        prevEditHoliday = null;
+        SetEditContext();
+    }
+
+    // Handle form submission
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddHoliday.InvokeAsync(createholiday);
+        }
+    }
+
+    // Fetch holiday details if in edit mode
+    private async Task GetHoliday()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new HolidayGet
+                {
+                    HolidayId = EditHoliday.HolidayId,
+                };
+
+            var response = await HolidayService.GetHolidays(request);
+
+            if (response != null && response.IsSuccess)
+            {
+                var holiday = response.Data.FirstOrDefault();
+                if (holiday != null)
+                {
+                    createholiday = new HolidayCreate
+                        {
+                            HolidayId = holiday.HolidayId,
+                            HolidayName = holiday.HolidayName,
+                            IsWorkingDay = holiday.IsWorkingDay,
+                            HolidayDate = holiday.HolidayDate,
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

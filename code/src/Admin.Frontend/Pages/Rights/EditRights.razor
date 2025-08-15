@@ -1,0 +1,188 @@
+﻿@using IApply.Frontend.Common.Constants
+@using IApply.Frontend.Models.Rights
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService
+@using IApply.Frontend.Services.ApiService.Role
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Services.ApiService.User
+@using IApply.Frontend.Models.Rights.GetRights
+
+
+
+@inject ApiService ApiService
+@inject LoadingService LoadingService
+@inject IJSRuntime js
+@inject IRoleService roleService
+@inject IUserService userService
+@inject ISystemService systemService
+@inject AlertService alertService
+@inject CacheService CacheService
+
+<div class="row">
+    <Virtualize Items="@Rights" Context="item">
+        <div class="mb-2 col-6">
+            <label class="form-check form-switch">
+                <span class="form-check-label">
+                    @item.Name
+                    <input class="form-check-input" type="checkbox"
+                           checked="@SelectedRights.Any(sr => sr.Id == item.Id)"
+                           @onchange="@(e => OnCheckboxChanged(e, item))" />
+                </span>
+            </label>
+        </div>
+    </Virtualize>
+</div>
+
+<button type="submit" style="display: none"></button>
+
+@code {
+    [Parameter]
+    public Guid? UserId { get; set; }
+    [Parameter]
+    public Guid? RoleId { get; set; }
+    [Parameter]
+    public EventCallback<(List<Right> OriginalRights, List<Right> ModifiedRights)> UpdateRightsMethod { get; set; }
+
+    private List<Right> Rights = new();
+    private List<Right> SpecificRights = new();
+    private List<Right> SelectedRights = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetRights();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (UserId != null)
+        {
+            await GetUserRights();
+        }
+        else if(RoleId != null)
+        {
+            await GetRoleRights();
+        }
+    }
+
+    public async Task GetRights()
+    {
+        try
+        {
+            // LoadingService.Show();
+            var cacheRights = CacheService.GetCache<List<Right>>(CacheKeys.SYSTEM_RIGHTS);
+            if (cacheRights != null)
+            {
+                Rights = cacheRights;
+            }
+            else
+            {
+                var response = await systemService.GetSystemRights();
+
+                if (response != null && response.IsSuccess)
+                {
+                    Rights = response.Rights;
+                    CacheService.SetCache(CacheKeys.SYSTEM_RIGHTS, Rights, TimeSpan.FromMinutes(5));
+                }
+                else if (response != null)
+                {
+                    string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                    alertService.ShowError(errorMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            // LoadingService.Hide();
+        }
+    }
+
+    public async Task GetUserRights()
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await userService.GetUserRights((Guid)UserId);
+
+            if (response != null && response.IsSuccess)
+            {
+                SpecificRights = response.Rights.ToList();
+                SelectedRights = response.Rights.ToList();
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public async Task GetRoleRights()
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.GetRoleRights((Guid)RoleId);
+
+            if (response != null && response.IsSuccess)
+            {
+                SpecificRights = response.Rights.ToList();
+                SelectedRights = response.Rights.ToList();
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await UpdateRightsMethod.InvokeAsync((SpecificRights, SelectedRights));
+    }
+
+    private void OnCheckboxChanged(ChangeEventArgs e, Right item)
+    {
+        bool isChecked = (bool)e.Value;
+
+        if (isChecked)
+        {
+            if (!SelectedRights.Any(sr => sr.Id == item.Id))
+            {
+                SelectedRights.Add(item);
+            }
+        }
+        else
+        {
+            SelectedRights.RemoveAll(sr => sr.Id == item.Id);
+        }
+    }
+
+    public void ResetForm()
+    {
+        SpecificRights = new();
+        SelectedRights = new();
+    }
+}

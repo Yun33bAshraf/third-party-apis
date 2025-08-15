@@ -1,0 +1,146 @@
+﻿@page "/project-board/{Id}"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Project
+@using IApply.Frontend.Services.ApiService.Project
+
+@inject IJSRuntime jsRuntime
+@inject AlertService alertService
+@inject LoadingService loadingService
+@inject ISystemService systemService
+@inject IProjectService projectService
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navigation
+
+
+<PageTitle>Project Board</PageTitle>
+
+@attribute [Authorize]
+
+@* filter card *@
+
+<div class="col-12">
+    <FilterCard Title="Filters" ExecApi="true" IsFilter="true">
+
+        <EditForm Model="ProjectTickets" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+
+                    <!-- Ticket Title -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name" @bind-Value="TicketTitle" />
+                        </div>
+                    </div>
+
+                    <div class="card-footer m-0 px-2  py-1 border-0 ">
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                            <button class="btn btn-primary py-1" type="submit">Filter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+@* table *@
+
+<div class="col-12">
+    <CTable Items="ProjectTickets"
+            ActionRequired="false"
+            BackendPagination="true"
+            BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged"
+            InitialPageNumber="CurrentPage"
+            InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    // Properties
+    [Parameter]
+    public string? Id { get; set; }
+    public int WorkspaceId { get; set; }
+    public int ProjectId { get; set; }
+    public List<ProjectResponse> ProjectResponse { get; set; } = new();
+    public List<ProjectTicketsResponse>? ProjectTickets { get; set; } = new();
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+    private ClaimsPrincipal? UserState { get; set; }
+    private string TicketTitle { get; set; } = string.Empty;
+
+    // Data
+    private async Task GetWorkspaceProjects()
+    {
+        try
+        {
+            loadingService.Show();
+
+            if (!int.TryParse(Id, out int projectId))
+            {
+                alertService.ShowError("Invalid Project ID");
+                return;
+            }
+
+            var response = await projectService.GetProjectAsync(0, string.Empty, projectId, string.Empty, 0, 0, 0, 0, 1, 1);
+            if (response != null && response.Data != null && response.Status == true && response.Pagination != null)
+            {
+                var ticketsResponse = response.Data.FirstOrDefault();
+                if (ticketsResponse != null && ticketsResponse.Tickets != null)
+                {
+                    ProjectTickets = ticketsResponse.Tickets;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+    // Events
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetWorkspaceProjects();
+        // StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetWorkspaceProjects();
+        StateHasChanged();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetWorkspaceProjects();
+        StateHasChanged();
+    }
+
+    private async Task ResetFilters()
+    {
+        TicketTitle = string.Empty;
+
+        await GetWorkspaceProjects();
+    }
+}

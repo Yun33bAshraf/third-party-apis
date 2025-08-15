@@ -1,0 +1,150 @@
+﻿@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Profile.AddEducation
+@using IApply.Frontend.Models.Profile.UpdateEducation
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider authStateProvider
+@inject LoadingService loadingService
+@inject NavigationManager navigationManager
+@inject AlertService alertService
+@inject IUserService userService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Education</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @foreach (var edu in Educations)
+                    {
+                        <div class="border rounded p-2 mb-3" style="font-size: 0.9rem;">
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Institution" @bind="edu.Institution" />
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Degree" @bind="edu.Degree" />
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-control" placeholder="Field of Study" @bind="edu.FieldOfStudy" />
+                            </div>
+                            <div class="mb-2">
+                                <input type="date" class="form-control" @bind="edu.StartDate" />
+                            </div>
+                            <div class="mb-2">
+                                <input type="date" class="form-control" @bind="edu.EndDate" />
+                            </div>
+                        </div>
+
+                        @if (edu != Educations.Last())
+                        {
+                            <hr class="my-3" />
+                        }
+                    }
+
+                    <button class="btn btn-outline-primary" @onclick="AddEducation">
+                        <i class="bi bi-plus-lg"></i> Add More Education
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="Close">Close</button>
+                    <button class="btn btn-primary" @onclick="SaveEducation">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSaveComplete { get; set; }
+
+    private List<EducationDto> Educations { get; set; } = new();
+
+    private int CurrentUserId { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+
+        loadingService.OnChange += StateHasChanged;
+
+        AddEducation(); 
+    }
+
+    private void AddEducation()
+    {
+        Educations.Add(new EducationDto
+            {
+                StartDate = DateTime.UtcNow
+            });
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        Educations = new List<EducationDto>();
+        AddEducation(); 
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task SaveEducation()
+    {
+        loadingService.Show();
+        try
+        {
+            foreach (var edu in Educations)
+            {
+                if (edu.Id == 0)
+                {
+                    // Create new
+                    var createRequest = new EducationCreateRequest
+                        {
+                            Educations = new List<EducationDto> { edu }
+                        };
+
+                    await userService.AddEductionsAsync(createRequest);
+                }
+                else
+                {
+                    // Update existing
+                    var updateRequest = new EducationUpdateRequest
+                        {
+                            Id = edu.Id,
+                            Institution = edu.Institution,
+                            Degree = edu.Degree,
+                            FieldOfStudy = edu.FieldOfStudy,
+                            StartDate = edu.StartDate,
+                            EndDate = edu.EndDate
+                        };
+
+                    await userService.UpdateEducationAsync(updateRequest);
+                }
+            }
+
+            alertService.Show("Education saved!");
+            Educations = new List<EducationDto>();
+            AddEducation();
+            await OnSaveComplete.InvokeAsync();
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError("Failed to save education.");
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+    }
+
+}

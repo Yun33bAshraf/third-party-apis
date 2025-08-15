@@ -1,0 +1,134 @@
+﻿@page "/complete-registration"
+
+@using System.Web
+@using Microsoft.AspNetCore.Components
+@using IApply.Frontend.Models.User.ERPUsers.CompleteRegistration
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.System
+
+@layout ForgetPassword
+
+@inject NavigationManager _navigationManager
+@inject ISystemService SystemService
+@inject AlertService alertService
+@inject LoadingService LoadingService
+
+<PageTitle>Complete Registration</PageTitle>
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <form class="card card-md" @onsubmit="SubmitRegistration">
+            <div class="card-body p-6">
+                <h2 class="card-title text-center mb-4">Complete Registration</h2>
+                <p class="text-secondary mb-4">Set your new password to activate your account.</p>
+
+                <div class="mb-3">
+                    <div class="input-group">
+                        <div class="form-floating">
+                            <InputText id="currentPassword" name="currentPassword" autocomplete="off"
+                                       type="@(ShowCurrentPassword ? "text" : "password")"
+                                       placeholder="Enter your current password"
+                                       @bind-Value="completeRegistrationRequest.Password" class="form-control" />
+                            <label for="currentPassword" class="form-label text-muted">New Password</label>
+                        </div>
+                        <span class="input-group-text pe-2" @onclick="()=> ShowCurrentPassword = !ShowCurrentPassword">
+                            <i class="@(ShowCurrentPassword ? "ti ti-eye-off" : "ti ti-eye") text-black fs-2"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="input-group">
+                        <div class="form-floating">
+                            <InputText id="newPassword" name="newPassword" autocomplete="off"
+                                       type="@(ShowPassword ? "text" : "password")"
+                                       placeholder="Confirm new password"
+                                       @bind-Value="completeRegistrationRequest.RetypePassword" class="form-control" />
+                            <label for="newPassword" class="form-label text-muted">Confirm Password</label>
+                        </div>
+                        <span class="input-group-text pe-2" @onclick="()=> ShowPassword = !ShowPassword">
+                            <i class="@(ShowPassword ? "ti ti-eye-off" : "ti ti-eye") text-black fs-2"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" class="btn custom-btn w-100" disabled="@LoadingService.IsLoading">
+                        @(LoadingService.IsLoading ? "Processing..." : "Register")
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(message))
+                {
+                    <div class="alert @(isSuccess ? "alert-success" : "alert-danger") text-center mt-3">@message</div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    private bool ShowPassword { get; set; } = false;
+    private bool ShowCurrentPassword { get; set; } = false;
+    private CompleteRegistrationRequest completeRegistrationRequest = new();
+    private string message = string.Empty;
+    private bool isSuccess = false;
+    private int userId;
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(_navigationManager.Uri);
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+
+        if (int.TryParse(queryParams["U"], out int parsedUserId))
+        {
+            userId = parsedUserId;
+        }
+    }
+
+    private async Task SubmitRegistration()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(completeRegistrationRequest.Password) ||
+                string.IsNullOrWhiteSpace(completeRegistrationRequest.RetypePassword))
+            {
+                alertService.ShowError("Both password fields are required.");
+                return;
+            }
+
+            if (completeRegistrationRequest.Password != completeRegistrationRequest.RetypePassword)
+            {
+                alertService.ShowError("Passwords do not match.");
+                return;
+            }
+
+            LoadingService.Show();
+
+            var response = await SystemService.CompleteRegistration(userId, completeRegistrationRequest.Password, completeRegistrationRequest.RetypePassword);
+
+            if (response != null && response.IsSuccess)
+            {
+                message = "Registration completed successfully. Redirecting to login...";
+                isSuccess = true;
+
+                await Task.Delay(2000);
+                _navigationManager.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                message = "Failed to complete registration. Please try again.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "An error occurred: " + ex.Message;
+            isSuccess = false;
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

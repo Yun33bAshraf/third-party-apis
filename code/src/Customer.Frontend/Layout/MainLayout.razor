@@ -1,0 +1,298 @@
+﻿@inherits LayoutComponentBase
+
+@using System.Security.Claims
+@using IApply.Frontend.Models.Profile.GetProfile
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Options
+@using IApply.Frontend.Common.Models
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Auth
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Auth
+@using IApply.Frontend.Services.ApiService.Me
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Alert
+@using IApply.Frontend.Components.CLoader
+@using IApply.Frontend.Models.Profile
+@using IApply.Frontend.Models.System.DeviceRegister
+
+@inject LoadingService loadingService
+@inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider authStateProvider
+@inject IJSRuntime JSRuntime
+@inject IAuthService authService
+@inject ISystemService systemService
+@inject AlertService alertService
+@inject IOptions<FirebaseConfig> firebaseConfig
+@inject IUserService userService
+
+<AuthorizeView>
+    <Authorized>
+        <div class="page">
+            <NavMenu SidebarClass="@ASidebarClass" ToggleSidebar="ToggleSidebar" />
+            <div class="page-wrapper @SidebarClass overflow-x-hidden">
+                <div class="page-header d-print-none px-1">
+                    <div class="container-fluid">
+                        <div class="row g-2 align-items-center">
+                            <div class="col ">
+                                <div class="row align-items-center">
+                                    <div class="col-auto desktop-responsive pe-0">
+                                        <button type="button" class="btn btn-icon btn-6 btn-primary  hide-on-mobile" @onclick="ToggleSidebar">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-menu-2">
+                                                <path d="M4 6l16 0"></path>
+                                                <path d="M4 12l16 0"></path>
+                                                <path d="M4 18l16 0"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    @if (PageTitle != "")
+                                    {
+                                        <div class="col ms-1">
+                                            @*                                             <div class="page-pretitle">overview</div>
+ *@                                            <h3 class="page-title">@PageTitle</h3>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-auto ms-auto d-print-none">
+                                <div class="btn-list">
+                                    <span class="btn btn-icon  btn-primary" @onclick="ToggleFullScreen">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-arrows-maximize">
+                                            <path d="M16 4l4 0l0 4"></path>
+                                            <path d="M14 10l6 -6"></path>
+                                            <path d="M8 20l-4 0l0 -4"></path>
+                                            <path d="M4 20l6 -6"></path>
+                                            <path d="M16 20l4 0l0 -4"></path>
+                                            <path d="M14 14l6 6"></path>
+                                            <path d="M8 4l-4 0l0 4"></path>
+                                            <path d="M4 4l6 6"></path>
+                                        </svg>
+                                    </span>
+
+                                    <div class="nav-item dropdown">
+                                        <span class="nav-link d-flex text-reset cursor-pointer" data-bs-toggle="dropdown" aria-label="Open user menu" aria-expanded="false">
+                                            @if (!string.IsNullOrWhiteSpace(UserInitials))
+                                            {
+                                                <div class="avatar avatar-md border avatar-rounded bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    @UserInitials
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <img class="avatar avatar-md border avatar-rounded"
+                                                     src="https://ui-avatars.com/api/?name=@(DisplayName ?? "User")"
+                                                     alt="Avatar" />
+                                            }
+                                        </span>
+                                        <div class="dropdown-menu " data-bs-popper="static">
+                                            <div class="container">
+                                                <a class="dropdown-item cursor-pointer" href="/profile">Profile</a>
+
+                                                <a class="dropdown-item cursor-pointer" @onclick="Logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                @* Page Body *@
+                <div class="page-body px-1">
+                    <div class="container-fluid">
+                        @Body
+                    </div>
+                </div>
+                <Footer />
+            </div>
+
+            <CLoader Show="loadingService.IsLoading" HandleClose="@(async (val) => { })" />
+            <Alert />
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    // Properties
+    private string PageTitle { get; set; } = "";
+    private bool isSidebarOpen = true;
+    private string SidebarClass => isSidebarOpen ? "custom-sidebar-expanded" : "custom-sidebar-collapsed";
+    private string ASidebarClass => isSidebarOpen ? "" : "sidebar-collapsed";
+    private int screenWidth;
+
+    private int CurrentUserId { get; set; }
+    private ClaimsPrincipal? UserState { get; set; }
+
+    private ProfileGetResponseModel ProfileResponse { get; set; } = new ProfileGetResponseModel();
+    private string DisplayName { get; set; } = string.Empty;
+    private string FirstName { get; set; } = string.Empty;
+    private string LastName { get; set; } = string.Empty;
+    private string UserInitials { get; set; } = string.Empty;
+
+
+    //Events
+    private async Task ToggleFullScreen()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleFullScreen");
+    }
+
+    private void ToggleSidebar()
+    {
+        isSidebarOpen = !isSidebarOpen;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        CurrentUserId = Utils.GetUserId(UserState);
+
+        _navigationManager.LocationChanged += OnLocationChanged;
+
+        loadingService.OnChange += StateHasChanged;
+
+        await LoadProfileData();
+
+        UserInitials = GetUserInitials(DisplayName, FirstName, LastName);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (firebaseConfig?.Value != null)
+            {
+                await JSRuntime.InvokeVoidAsync("initializeFirebase", firebaseConfig.Value);
+                // await RegisterDevice();
+            }
+
+            screenWidth = await JSRuntime.InvokeAsync<int>("eval", "window.innerWidth");
+
+            await JSRuntime.InvokeVoidAsync("addResizeListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void OnScreenResize(int width)
+    {
+        screenWidth = width;
+        if (screenWidth < 992 && !isSidebarOpen)
+        {
+            isSidebarOpen = true;
+            StateHasChanged();
+        }
+    }
+
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        UpdatePageTitle();
+        StateHasChanged();
+    }
+
+    private void UpdatePageTitle()
+    {
+        var currentUrl = _navigationManager.Uri;
+        var uri = new Uri(currentUrl);
+
+        // Get all segments of the path
+        var segments = uri.AbsolutePath.TrimEnd('/').Split('/');
+
+        // last non-numeric segment
+        var lastSegment = segments.Reverse().FirstOrDefault(s => !int.TryParse(s, out _));
+
+        if (!string.IsNullOrWhiteSpace(lastSegment))
+        {
+            PageTitle = Utils.FormatTitle(lastSegment);
+        }
+        else
+        {
+            PageTitle = "";
+        }
+    }
+
+    private string GetUserInitials(string? displayName, string? firstName, string? lastName)
+    {
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            var parts = displayName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return string.Concat(parts.Select(p => p[0])).ToUpper();
+        }
+
+        string firstInitial = !string.IsNullOrWhiteSpace(firstName) ? firstName[0].ToString().ToUpper() : "";
+        string lastInitial = !string.IsNullOrWhiteSpace(lastName) ? lastName[0].ToString().ToUpper() : "";
+        return firstInitial + lastInitial;
+    }
+
+    public void Dispose()
+    {
+        loadingService.OnChange -= StateHasChanged;
+        _navigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private void Logout()
+    {
+        _navigationManager.NavigateTo("logout", forceLoad: true);
+    }
+
+    // Data
+    private async Task LoadProfileData()
+    {
+        try
+        {
+            loadingService.Show();
+
+            var response = await userService.ProfileGet();
+            if (response is { Status: true, Data: not null })
+            {
+                DisplayName = response.Data.DisplayName ?? "Unknown User";
+                FirstName = response.Data.FirstName ?? "Unknown";
+                LastName = response.Data.LastName ?? "User";
+            }
+            else if (response != null && response.Error != null)
+            {
+                alertService.ShowError(response.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            loadingService.Hide();
+        }
+
+    }
+
+    private async Task RegisterDevice()
+    {
+        try
+        {
+            var FcmToken = await JSRuntime.InvokeAsync<string>("getFCMToken");
+            if (!string.IsNullOrEmpty(FcmToken))
+            {
+                var request = new DeviceRegisterRequest
+                {
+                    Token = FcmToken
+                };
+                var response = await systemService.DeviceRegister(request);
+                if (response is { IsSuccess: true })
+                {
+
+                }
+                else if (response != null)
+                {
+                    var errorMessage = ErrorService.GetErrorMessage(response.ErrorCode);
+                    // AlertService.ShowError(errorMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+}

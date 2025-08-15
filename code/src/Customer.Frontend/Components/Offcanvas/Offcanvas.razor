@@ -1,0 +1,66 @@
+﻿@inject IJSRuntime JS
+
+<div class="offcanvas px-0 @(offcanvasClass)" tabindex="-1" role="dialog">
+    <div class="offcanvas-header p-2 px-3">
+        <h2 class="offcanvas-title fw-bold" id="offcanvasEndLabel">
+            @OffCanvasHeader
+        </h2>
+        <button type="button" @onclick="Close" class="btn-close text-reset" data-dismiss="offcanvas" aria-label="Close">
+        </button>
+    </div>
+    <div class="offcanvas-body p-3">
+        @OffCanvasBody
+    </div>
+    <div class="offcanvas-footer py-3">
+        @OffCanvasFooter
+
+    </div>
+</div>
+
+
+@if (showBackdrop)
+{
+    <div class="offcanvas-backdrop fade show"></div>
+}
+
+
+@code {
+    [Parameter]
+    public RenderFragment? OffCanvasHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment? OffCanvasBody { get; set; }
+
+    [Parameter]
+    public RenderFragment? OffCanvasFooter { get; set; }
+
+    [Parameter]
+    public int Width { get; set; } = 25;
+
+    [Parameter]
+    public string Orientation { get; set; } = "end";
+
+    [Parameter]
+    public EventCallback CloseFunc { get; set; }
+
+    private string offcanvasClass = "";
+    private bool showBackdrop = false;
+
+
+    public void Open()
+    {
+        offcanvasClass = $"offcanvas-{Orientation} show w-{Width}";
+        showBackdrop = true;
+        JS.InvokeVoidAsync("toggleBodyScroll", true);
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        CloseFunc.InvokeAsync();
+        offcanvasClass = "";
+        showBackdrop = false;
+        JS.InvokeVoidAsync("toggleBodyScroll", false);
+        StateHasChanged();
+    }
+}

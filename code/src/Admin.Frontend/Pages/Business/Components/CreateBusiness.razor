@@ -1,0 +1,733 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.Accordian
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Business
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Models.Cities
+@using IApply.Frontend.Models.EmployeeLeave
+@using System.Text.Json
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IBusinessService BusinessService
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="BusinessForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <!-- Business Name -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-firstname">businessName <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="businessName" Name="businessName" Placeholder="businessName"
+                        @bind-Value="createBusinessRequest.BusinessName"
+                        Validate="() => createBusinessRequest.BusinessName" />
+            </div>
+        </div>
+
+        <!-- TimeZone -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-timeZone">Time Zone <span class="text-danger">*</span></label>
+                <CInput Type="text" Id="TimeZone" Name="TimeZone" Placeholder="TimeZone"
+                        @bind-Value="createBusinessRequest.TimeZone" Validate="() => createBusinessRequest.TimeZone" />
+            </div>
+        </div>
+
+
+        <!-- DefaultProfitPercentage -->
+
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-defaultProfitPercentage">Default Profit Percentage</label>
+                <CInput Type="number" Id="defaultProfitPercentage" Name="defaultProfitPercentage" Placeholder="defaultProfitPercentage"
+                        @bind-Value="createBusinessRequest.DefaultProfitPercent"
+                        Validate="() => createBusinessRequest.DefaultProfitPercent" />
+            </div>
+        </div>
+
+        <!-- DefaultShippingPercentage -->
+
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-defaultShippingPercentage">Default Shipping Percentage</label>
+                <CInput Type="number" Id="defaultShippingPercentage" Name="defaultShippingPercentage" Placeholder="defaultShippingPercentage"
+                        @bind-Value="createBusinessRequest.DefaultShippingPercent"
+                        Validate="() => createBusinessRequest.DefaultShippingPercent" />
+            </div>
+        </div>
+
+        <!-- CurrencyId -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="floating-CurrencyId">Currency <span class="text-danger">*</span></label>
+                <select class="form-control form-select" id="CurrencyId" name="CurrencyId" @bind="createBusinessRequest.CurrencyId">
+                    <option value="0">-- Select Currency --</option>
+                    @foreach (var currency in currencyList)
+                    {
+                        <option value="@currency.Id">@currency.CurrencyName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- FyStartMonth -->
+        <div class="col-md-4 col-sm-12">
+            <div class="mb-2">
+                <label for="FyStartMonth">Fy Start Month <span class="text-danger">*</span></label>
+                <select class="form-control form-select" id="FyStartMonth" name="FyStartMonth" @bind="createBusinessRequest.FyStartMonth">
+                    <option value="">-- Select Month --</option>
+                    @foreach (var month in Enum.GetValues(typeof(Month)).Cast<Month>())
+                    {
+                        <option value="@(Convert.ToInt32(month))">@month</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="isActiveSwitch"
+                       @bind="createBusinessRequest.IsActive" />
+                <label class="form-check-label" for="isActiveSwitch">
+                    Active
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="productExpirySwitch"
+                       @bind="createBusinessRequest.EnableProductExpiry" />
+                <label class="form-check-label" for="enableProductExpirySwitch">
+                    Product Expiry
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="brandSwitch"
+                       @bind="createBusinessRequest.EnableBrand" />
+                <label class="form-check-label" for="brandSwitch">
+                    Brand
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="categorySwitch"
+                       @bind="createBusinessRequest.EnableCategory" />
+                <label class="form-check-label" for="categorySwitch">
+                    Category
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="subCategorySwitch"
+                       @bind="createBusinessRequest.EnableSubCategory" />
+                <label class="form-check-label" for="subCategorySwitch">
+                    Sub Category
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="priceTaxSwitch"
+                       @bind="createBusinessRequest.EnablePriceTax" />
+                <label class="form-check-label" for="priceTaxSwitch">
+                    Price Tax
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="purchaseStatusSwitch"
+                       @bind="createBusinessRequest.EnablePurchaseStatus" />
+                <label class="form-check-label" for="purchaseStatusSwitch">
+                    Purchase Status
+                </label>
+            </div>
+        </div>
+
+    </div>
+    <div class="mt-2">
+        <Accordion AccordionId="create-accordian"
+                   AccordionClass=""
+                   Items="accordionItems" />
+    </div>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm(FormName = "BusinessForm")]
+    public CreateBusinessRequest createBusinessRequest { get; set; } = new();
+    private EditContext editContext;
+
+    [Parameter]
+    public Models.Business.BusinessListing? EditBusiness { get; set; }
+
+    public Models.Business.BusinessListing? prevEditBusiness { get; set; }
+    private DateTime minDate = DateTime.Today;
+    private DateTime maxDate = DateTime.Today;
+
+    public List<CategoryGet> categories { get; set; } = new();
+    private List<Models.Business.GetAllCurrency>? currencyList = new();
+
+    private void SetEditContext()
+    {
+        editContext = new EditContext(createBusinessRequest);
+    }
+
+    [Parameter]
+    public EventCallback<CreateBusinessRequest> AddBusiness { get; set; }
+
+
+    private List<Accordion.AccordionItem> accordionItems = new();
+
+    public void ResetForm()
+    {
+        createBusinessRequest = new();
+        EditBusiness = null;
+        prevEditBusiness = null;
+        SetEditContext();
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await AddBusiness.InvokeAsync(createBusinessRequest);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+        InitializeAccordionItems();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditBusiness != null)
+        {
+            if (EditBusiness != prevEditBusiness)
+            {
+                prevEditBusiness = EditBusiness;
+                await GetEmployee();
+                await GetAllCurrencyList();
+                SetEditContext();
+            }
+        }
+    }
+
+    private async Task GetAllCurrencyList()
+    {
+        try
+        {
+            LoadingService.Show();
+
+
+            var response = await BusinessService.GetAllCurrency(0);
+
+            if (response != null && response.Status)
+            {
+                currencyList = response.Data;
+
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task GetEmployee()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new GetBusinessListingRequest
+                    {
+                        BusinessId = EditBusiness.Id,
+                        PageNo = 0,
+                        PageSize = 0
+                    };
+            var response = await BusinessService.GetBusinessListing(request);
+            if (response != null && response.Status)
+            {
+                var business = response.Data.FirstOrDefault();
+                if (business != null)
+                {
+                    var names = business.Name.Split(' ');
+                    createBusinessRequest = new CreateBusinessRequest
+                            {
+                                Id = business.Id,
+                                BusinessName = names.Length > 0 ? names[0] : string.Empty,
+                                FyStartMonth = business.FyStartMonth,
+                                TimeZone = business.TimeZone,
+                                CurrencyId = business.CurrencyId,
+                                IsActive = business.IsActive,
+                                DefaultProfitPercent = business.DefaultProfitPercent,
+                                DefaultShippingPercent = business.DefaultShippingPercent,
+                                EnableProductExpiry = business.EnableProductExpiry,
+                                EnableCategory = business.EnableCategory,
+                                EnableBrand = business.EnableBrand,
+                                EnableSubCategory = business.EnableSubCategory,
+                                EnablePriceTax = business.EnablePriceTax,
+                                EnablePurchaseStatus = business.EnablePurchaseStatus,
+                            };
+                    if (business.RefNoPrefixes != null && business.RefNoPrefixes != "null")
+                    {
+                        createBusinessRequest.RefNoPrefixes = JsonSerializer.Deserialize<RefNoPrefixes>(business.RefNoPrefixes) ?? null;
+                    }
+                    if (business.KeyboardShortcuts != null && business.KeyboardShortcuts != "null")
+                    {
+                        createBusinessRequest.KeyboardShortcuts = JsonSerializer.Deserialize<KeyboardShortcuts>(business.KeyboardShortcuts) ?? null;
+                    }
+                    if (business.WeighingScaleSetting != null && business.WeighingScaleSetting != "null")
+                    {
+                        createBusinessRequest.WeighingScaleSetting = JsonSerializer.Deserialize<WeighingScaleSetting>(business.WeighingScaleSetting) ?? null;
+                    }
+                    if (business.PosSettings != null && business.PosSettings != "null")
+                    {
+                        createBusinessRequest.PosSettings = JsonSerializer.Deserialize<PosSettings>(business.PosSettings) ?? null;
+                    }
+
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private void InitializeAccordionItems()
+    {
+
+        if (createBusinessRequest.RefNoPrefixes != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Ref No Prefixes",
+                        Body = @<div class="row">
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.Purchase">Purchase</label>
+            <CInput Type="text" Id="refNoPrefixes.Purchase" Name="refNoPrefixes.Purchase" Placeholder="Purchase"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.Purchase" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.PurchaseReturn">Purchase Return</label>
+            <CInput Type="text" Id="refNoPrefixes.PurchaseReturn" Name="refNoPrefixes.PurchaseReturn" Placeholder="Purchase Return"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.PurchaseReturn" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.PurchaseOrder">Purchase Order</label>
+            <CInput Type="text" Id="refNoPrefixes.PurchaseOrder" Name="refNoPrefixes.PurchaseOrder" Placeholder="Purchase Order"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.PurchaseOrder" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.StockTransfer">Stock Transfer</label>
+            <CInput Type="text" Id="refNoPrefixes.StockTransfer" Name="refNoPrefixes.StockTransfer" Placeholder="Stock Transfer"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.StockTransfer" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.StockAdjustment">Stock Adjustment</label>
+            <CInput Type="text" Id="refNoPrefixes.StockAdjustment" Name="refNoPrefixes.StockAdjustment" Placeholder="Stock Adjustment"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.StockAdjustment" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.SaleReturn">Sale Return</label>
+            <CInput Type="text" Id="refNoPrefixes.SaleReturn" Name="refNoPrefixes.SaleReturn" Placeholder="Sale Return"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.SaleReturn" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.Expense">Expense</label>
+            <CInput Type="text" Id="refNoPrefixes.Expense" Name="refNoPrefixes.Expense" Placeholder="Expense"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.Expense" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.Contacts">Contacts</label>
+            <CInput Type="text" Id="refNoPrefixes.Contacts" Name="refNoPrefixes.Contacts" Placeholder="Contacts"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.Contacts" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.PurchasePayment">Purchase Payment</label>
+            <CInput Type="text" Id="refNoPrefixes.PurchasePayment" Name="refNoPrefixes.PurchasePayment" Placeholder="Purchase Payment"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.PurchasePayment" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.SalePayment">Sale Payment</label>
+            <CInput Type="text" Id="refNoPrefixes.SalePayment" Name="refNoPrefixes.SalePayment" Placeholder="Sale Payment"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.SalePayment" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.ExpensePayment">Expense Payment</label>
+            <CInput Type="text" Id="refNoPrefixes.ExpensePayment" Name="refNoPrefixes.ExpensePayment" Placeholder="Expense Payment"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.ExpensePayment" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.BusinessLocation">Business Location</label>
+            <CInput Type="text" Id="refNoPrefixes.BusinessLocation" Name="refNoPrefixes.BusinessLocation" Placeholder="Business Location"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.BusinessLocation" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.Draft">Draft</label>
+            <CInput Type="text" Id="refNoPrefixes.Draft" Name="refNoPrefixes.Draft" Placeholder="Draft"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.Draft" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.SalesOrder">Sales Order</label>
+            <CInput Type="text" Id="refNoPrefixes.SalesOrder" Name="refNoPrefixes.SalesOrder" Placeholder="Sales Order"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.SalesOrder" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="refNoPrefixes.Transfer">Transfer</label>
+            <CInput Type="text" Id="refNoPrefixes.Transfer" Name="refNoPrefixes.Transfer" Placeholder="Transfer"
+                    @bind-Value="createBusinessRequest.RefNoPrefixes.Transfer" />
+        </div>
+    </div>,
+                    IsCollapsed = true
+                });
+        }
+
+        if (createBusinessRequest.WeighingScaleSetting != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Weighing Scale Setting Config",
+                        Body = @<div class="row">
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="weighingScaleSetting.LabelPrefix">Label Prefix</label>
+            <CInput Type="text" Id="weighingScaleSetting.LabelPrefix" Name="weighingScaleSetting.LabelPrefix" Placeholder="Label Prefix"
+                    @bind-Value="createBusinessRequest.WeighingScaleSetting.LabelPrefix" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="weighingScaleSetting.ProductSkuLength">Product SKU Length</label>
+            <CInput Type="text" Id="weighingScaleSetting.ProductSkuLength" Name="weighingScaleSetting.ProductSkuLength" Placeholder="Product SKU Length"
+                    @bind-Value="createBusinessRequest.WeighingScaleSetting.ProductSkuLength" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="weighingScaleSetting.QtyLength">Quantity Length</label>
+            <CInput Type="text" Id="weighingScaleSetting.QtyLength" Name="weighingScaleSetting.QtyLength" Placeholder="Quantity Length"
+                    @bind-Value="createBusinessRequest.WeighingScaleSetting.QtyLength" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="weighingScaleSetting.QtyLengthDecimal">Quantity Length Decimal</label>
+            <CInput Type="text" Id="weighingScaleSetting.QtyLengthDecimal" Name="weighingScaleSetting.QtyLengthDecimal" Placeholder="Quantity Length Decimal"
+                    @bind-Value="createBusinessRequest.WeighingScaleSetting.QtyLengthDecimal" />
+        </div>
+    </div>,
+                    IsCollapsed = true
+                });
+        }
+
+        if (createBusinessRequest.KeyboardShortcuts != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "Keyboard Shortcuts Settings",
+                        Body = @<div class="row">
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.ExpressCheckout">Express Checkout</label>
+            <CInput Type="text" Id="keyboardShortcuts.ExpressCheckout" Name="keyboardShortcuts.ExpressCheckout" Placeholder="ExpressCheckout"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.ExpressCheckout" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.PayAndCheckout">Pay And Checkout</label>
+            <CInput Type="text" Id="keyboardShortcuts.PayAndCheckout" Name="keyboardShortcuts.PayAndCheckout" Placeholder="PayAndCheckout"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.PayAndCheckout" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.Draft">Draft</label>
+            <CInput Type="text" Id="keyboardShortcuts.Draft" Name="keyboardShortcuts.Draft" Placeholder="Draft"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.Draft" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.Cancel">Cancel</label>
+            <CInput Type="text" Id="keyboardShortcuts.Cancel" Name="keyboardShortcuts.Cancel" Placeholder="Cancel"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.Cancel" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.Quotation">Quotation</label>
+            <CInput Type="text" Id="keyboardShortcuts.Quotation" Name="keyboardShortcuts.Quotation" Placeholder="Quotation"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.Quotation" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.CheckoutMultiPay">Checkout Multi Pay</label>
+            <CInput Type="text" Id="keyboardShortcuts.CheckoutMultiPay" Name="keyboardShortcuts.CheckoutMultiPay" Placeholder="CheckoutMultiPay"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.CheckoutMultiPay" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.RecentTransactions">Recent Transactions</label>
+            <CInput Type="text" Id="keyboardShortcuts.RecentTransactions" Name="keyboardShortcuts.RecentTransactions" Placeholder="RecentTransactions"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.RecentTransactions" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.RecentProductQuantity">Recent Product Quantity</label>
+            <CInput Type="text" Id="keyboardShortcuts.RecentProductQuantity" Name="keyboardShortcuts.RecentProductQuantity" Placeholder="Recent Product Quantity"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.RecentProductQuantity" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.WeighingScale">Weighing Scale</label>
+            <CInput Type="text" Id="keyboardShortcuts.WeighingScale" Name="keyboardShortcuts.WeighingScale" Placeholder="Weighing Scale"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.WeighingScale" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.EditDiscount">Edit Discount</label>
+            <CInput Type="text" Id="keyboardShortcuts.EditDiscount" Name="keyboardShortcuts.EditDiscount" Placeholder="Edit Discount"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.EditDiscount" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.EditOrderTax">Edit Order Tax</label>
+            <CInput Type="text" Id="keyboardShortcuts.EditOrderTax" Name="keyboardShortcuts.EditOrderTax" Placeholder="Edit Order Tax"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.EditOrderTax" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.AddPaymentRow">Add Payment Row</label>
+            <CInput Type="text" Id="keyboardShortcuts.AddPaymentRow" Name="keyboardShortcuts.AddPaymentRow" Placeholder="Add Payment Row"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.AddPaymentRow" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.FinalizePayment">Finalize Payment</label>
+            <CInput Type="text" Id="keyboardShortcuts.FinalizePayment" Name="keyboardShortcuts.FinalizePayment" Placeholder="Finalize Payment"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.FinalizePayment" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="keyboardShortcuts.AddNewProduct">Add New Product</label>
+            <CInput Type="text" Id="keyboardShortcuts.AddNewProduct" Name="keyboardShortcuts.AddNewProduct" Placeholder="Add New Product"
+                    @bind-Value="createBusinessRequest.KeyboardShortcuts.AddNewProduct" />
+        </div>
+    </div>,
+                    IsCollapsed = true
+                });
+        }
+
+        if (createBusinessRequest.PosSettings != null)
+        {
+            accordionItems.Add(new Accordion.AccordionItem
+                    {
+                        Header = "POS Settings Config",
+                        Body = @<div class="row">
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.CmmsnCalculationType">Cmmsn Calculation Type</label>
+            <CInput Type="text" Id="posSettings.CmmsnCalculationType" Name="posSettings.CmmsnCalculationType" Placeholder="Cmmsn Calculation Type"
+                    @bind-Value="createBusinessRequest.PosSettings.CmmsnCalculationType" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.AmountRoundingMethod">Amount Rounding Method</label>
+            <CInput Type="text" Id="posSettings.AmountRoundingMethod" Name="posSettings.AmountRoundingMethod" Placeholder="Amount Rounding Method"
+                    @bind-Value="createBusinessRequest.PosSettings.AmountRoundingMethod" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.AllowOverselling">Allow Overselling</label>
+            <CInput Type="text" Id="posSettings.AllowOverselling" Name="posSettings.AllowOverselling" Placeholder="Allow Overselling"
+                    @bind-Value="createBusinessRequest.PosSettings.AllowOverselling" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.RazorPayKeyId">RazorPayKey Id</label>
+            <CInput Type="text" Id="posSettings.RazorPayKeyId" Name="posSettings.RazorPayKeyId" Placeholder="RazorPayKey Id"
+                    @bind-Value="createBusinessRequest.PosSettings.RazorPayKeyId" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.RazorPayKeySecret">RazorPayKey Secret</label>
+            <CInput Type="text" Id="posSettings.RazorPayKeySecret" Name="posSettings.RazorPayKeySecret" Placeholder="RazorPayKey Secret"
+                    @bind-Value="createBusinessRequest.PosSettings.RazorPayKeySecret" />
+        </div>
+
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.StripePublicKey">StripePublicKey</label>
+            <CInput Type="text" Id="posSettings.StripePublicKey" Name="posSettings.StripePublicKey" Placeholder="StripePublicKey"
+                    @bind-Value="createBusinessRequest.PosSettings.StripePublicKey" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.StripeSecretKey">StripeSecretKey</label>
+            <CInput Type="text" Id="posSettings.StripeSecretKey" Name="posSettings.StripeSecretKey" Placeholder="StripeSecretKey"
+                    @bind-Value="createBusinessRequest.PosSettings.StripeSecretKey" />
+        </div>
+        <div class="col-md-4 col-sm-12 mb-2">
+            <label for="posSettings.CashDenominations">CashDenominations</label>
+            <CInput Type="text" Id="posSettings.CashDenominations" Name="posSettings.CashDenominations" Placeholder="CashDenominations"
+                    @bind-Value="createBusinessRequest.PosSettings.CashDenominations" />
+        </div>
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="DisablePayCheckoutSwitch"
+                       @bind="createBusinessRequest.PosSettings.DisablePayCheckout" />
+                <label class="form-check-label" for="DisablePayCheckoutSwitch">
+                    DisablePayCheckout
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="DisableDraftSwitch"
+                       @bind="createBusinessRequest.PosSettings.DisableDraft" />
+                <label class="form-check-label" for="DisableDraftSwitch">
+                    DisableDraft
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="DisableExpressCheckoutSwitch"
+                       @bind="createBusinessRequest.PosSettings.DisableExpressCheckout" />
+                <label class="form-check-label" for="DisableExpressCheckoutSwitch">
+                    DisableExpressCheckout
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="HideProductSuggestionSwitch"
+                       @bind="createBusinessRequest.PosSettings.HideProductSuggestion" />
+                <label class="form-check-label" for="HideProductSuggestionSwitch">
+                    HideProductSuggestion
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="HideRecentTransactionsSwitch"
+                       @bind="createBusinessRequest.PosSettings.HideRecentTransactions" />
+                <label class="form-check-label" for="HideRecentTransactionsSwitch">
+                    HideRecentTransactions
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="DisableDiscountSwitch"
+                       @bind="createBusinessRequest.PosSettings.DisableDiscount" />
+                <label class="form-check-label" for="DisableDiscountSwitch">
+                    DisableDiscount
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="DisableOrderTaxSwitch"
+                       @bind="createBusinessRequest.PosSettings.DisableOrderTax" />
+                <label class="form-check-label" for="DisableOrderTaxSwitch">
+                    DisableOrderTax
+                </label>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12">
+
+            <div class="mt-4 form-check form-switch">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="IsPosSubtotalEditableSwitch"
+                       @bind="createBusinessRequest.PosSettings.IsPosSubtotalEditable" />
+                <label class="form-check-label" for="IsPosSubtotalEditableSwitch">
+                    IsPosSubtotalEditable
+                </label>
+            </div>
+        </div>
+
+    </div>,
+                IsCollapsed = true
+            });
+        }
+
+
+    }
+
+}

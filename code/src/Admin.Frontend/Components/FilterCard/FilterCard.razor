@@ -1,0 +1,66 @@
+﻿@using Microsoft.JSInterop
+@inherits OwningComponentBase
+@inject IJSRuntime JSRuntime
+<div class="card mb-2 overflow-hidden">
+    <div class="card-header justify-content-between px-2 py-1 border-0">
+        <div class="card-title  d-flex justify-content-between align-items-center" @onclick="ToggleCollapse">
+            @if (IsFilter)
+            {
+                <span class="me-1">
+                    @if (IsCollapsed)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m7 10l5 5m0 0l5-5"/></svg>
+                    }
+                    else
+                    {
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m17 14l-5-5m0 0l-5 5"/></svg>
+                    }
+                </span>
+            }
+            @Title
+            </div>
+            @if (IsBtn)
+            {
+            <button type="submit" class="btn btn-primary py-1 rounded-5" @onclick="HandleBtnClick">
+                <span>@BtnTitle</span>
+                </button>
+            }
+        </div>
+
+        <div id="contentDiv" class="collapse-transition" style="max-height: @MaxHeight">
+            @ChildContent
+        </div>
+    </div>
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string BtnTitle { get; set; } = "Add";
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public bool IsBtn { get; set; }
+    [Parameter] public EventCallback HandleBtnClick { get; set; }
+    [Parameter] public bool ExecApi { get; set; }
+    [Parameter] public EventCallback HandleApi { get; set; } = new();
+    [Parameter] public bool IsFilter { get; set; } = false;
+
+    private bool IsCollapsed { get; set; } = true;
+    private string MaxHeight { get; set; } = "0px";
+    private ElementReference contentRef;
+
+    private async Task ToggleCollapse()
+    {
+        if (IsCollapsed && ExecApi)
+        {
+            await HandleApi.InvokeAsync(null);
+        }
+
+        IsCollapsed = !IsCollapsed;
+        MaxHeight = "0px";
+        MaxHeight = IsCollapsed ? "0px" : $"{await GetScrollHeight()}px";
+    }
+
+    private async Task<int> GetScrollHeight()
+    {
+        var height = await JSRuntime.InvokeAsync<int>("eval", $"document.getElementById('contentDiv').scrollHeight");
+        return height;
+    }
+
+}

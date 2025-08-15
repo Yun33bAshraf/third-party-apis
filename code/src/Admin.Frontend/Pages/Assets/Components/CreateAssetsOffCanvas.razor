@@ -1,0 +1,116 @@
+﻿@using IApply.Frontend.Models.Assets
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Asset
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Models
+@using IApply.Frontend.Models.User
+@using IApply.Frontend.Services.ApiService.Auth
+@using IApply.Frontend.Services.ApiService.System
+
+@inject LoadingService LoadingService
+@inject IAssetService AssetService
+@inject AlertService alertService
+
+<Offcanvas Width="50" @ref="Offcanvas">
+    <OffCanvasHeader>
+       <div>@(IsEditMode ? "Update" : "Add") Asset</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <CreateAsset @ref="createasset" AddAsset="AddAsset" EditAsset="EditAsset" />
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => Offcanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveUser">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+  
+@code {
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetAssets { get; set; }
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public Assets? EditAsset { get; set; }
+    
+    private Offcanvas? Offcanvas { get; set; }
+    private CreateAsset? createasset { get; set; }
+   
+
+
+    public void ToggleOffCanvas()
+    {
+        createasset.ResetForm();
+        // if (!IsEditMode)
+        // {
+        //     EditAsset = new();
+        // }
+        Offcanvas?.Open();
+    }
+
+    private void HandleSaveUser()
+    {
+
+        createasset?.HandleValidSubmit();
+
+    }
+    public void SetAsset(Assets item)
+    {
+        EditAsset = item;
+        Offcanvas?.Open();
+    }
+
+    private void CloseOffCanvas()
+    {
+        createasset?.ResetForm();
+    }
+
+    private async Task AddAsset(CreateAssetRequest user)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+
+            if (user.AssetId > 0)
+            {
+                response = await AssetService.UpdateAsset(user);
+            }
+            else
+            {
+                response = await AssetService.CreateBackendAsset(user);
+            }
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetAssets.InvokeAsync((1, 20));
+                Offcanvas?.Close();
+                if(user.AssetId > 0)
+                {
+                    alertService.Show("Asset Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Asset Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}
+

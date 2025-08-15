@@ -1,0 +1,97 @@
+﻿@page "/employee-monthly-summary/{Id}"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.AttendenceMonthly
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Models.Attendances
+
+@inject LoadingService LoadingService
+@inject IAttendenceService AttendenceService
+@inject AlertService alertService
+@attribute [Authorize]
+
+<PageTitle>Employee Attendance</PageTitle>
+
+@* <div class="col-12">
+    <div class="card">
+        <div class="card-body p-2">
+            <div class="d-flex gap-1 align-items-center justify-content-between w-100">
+                <h3 class="m-0">@attendanceSummary?[0].EmployeeName</h3>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+<div class="col-12">
+    <CTable Items="attendanceSummary" TotalCountFromServer="currentMonthSummaryCount"
+            ActionRequired="false" />
+@*     <CTable Items="attendanceSummary" TotalCountFromServer="currentMonthSummaryCount"
+            ActionRequired="false" BackendPagination="true" BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" /> *@
+</div>
+
+@code {
+    private List<Models.Attendances.AttendenceDailySummary>? attendanceSummary = new();
+    private ClaimsPrincipal? UserState { get; set; }
+    public AttendenceDailySummary? attendanceDailySummary { get; set; }
+
+    private int currentMonthSummaryCount = 0;
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    private int? EmployeeId { get; set; }
+    private DateOnly? StartDate { get; set; }
+    private DateOnly? EndDate { get; set; }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetEmployeeMonthlyAttendance();
+    }
+
+    private async Task GetEmployeeMonthlyAttendance()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            if (!int.TryParse(Id, out int employeeId))
+            {
+                alertService.ShowError("Invalid Asset");
+                return;
+            }
+
+            var today = DateTime.Now;
+            var firstDayOfMonth = new DateOnly(today.Year, today.Month, 1);
+            var lastDayOfMonth = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+
+            var request = new AttendanceGetDailyReq
+                {
+                    EmployeeId = employeeId,
+                    StartDate = StartDate ?? firstDayOfMonth,
+                    EndDate = EndDate ?? lastDayOfMonth
+                };
+
+            var response = await AttendenceService.GetAttendanceDailySummary(request);
+            if (response != null && response.IsSuccess && response.Data != null)
+            {
+                attendanceSummary = response.Data;
+                currentMonthSummaryCount = response.Pagination.TotalCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

@@ -1,0 +1,271 @@
+﻿@page "/employee-detail"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Pages.Employee.Components
+@using IApply.Frontend.Services.ApiService.System
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IEmployeeService EmployeeService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+<PageTitle>Employee Management</PageTitle>
+
+<!-- Filters Section -->
+<div class="col-12">
+    <FilterCard Title="Employee Filters" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddEmployee))" ExecApi="true" HandleBtnClick="ToggleEmployeeOffCanvas" IsFilter="true">
+        <EditForm Model="employees" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+                    <!-- Employee Name Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name" @bind-Value="employeeName" />
+                        </div>
+                    </div>
+
+                    <!-- Employee Email Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Email</label>
+                            <CInput Type="text" Id="email" Name="Email" Placeholder="Email" @bind-Value="employeeEmail" />
+                        </div>
+                    </div>
+
+                    <!-- Gender Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label for="select-gender">Gender</label>
+                            <select class="form-select" id="select-gender" @bind="employeeGender">
+                                <option value="0" disabled selected>Select</option>
+                                @foreach (var status in Enum.GetValues(typeof(GenderType)))
+                                {
+                                    <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- City Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label for="select-city">City</label>
+                            <select class="form-select" id="select-city" @bind="employeeCity">
+                                <option value="0" disabled selected>Select</option>
+                                @foreach (var city in Enum.GetValues(typeof(Common.Enums.City)))
+                                {
+                                    var cityName = Utils.GetDescription((Enum)city);
+                                    var cityValue = (int)city;
+                                    <option value="@cityValue">@cityName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Start Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="startDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                    <!-- End Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="endDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<!-- Employee OffCanvas Section -->
+<CreateEmployeeOffCanvas @ref="createEmployeeOffCanvas" GetEmployee="GetEmployee" />
+
+<!-- Employee Table Section -->
+<div class="col-12">
+    <CTable Items="employees" TotalCountFromServer="employeeCount" Action="MyAction"
+    ActionRequired="false" CustomRenderFragments="customRenderFragments" BackendPagination="true" BackendSorting="true"
+    OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    // Injected Services and Variables
+    private List<Employee>? employees = new();
+    private Dictionary<string, RenderFragment<Employee>>? customRenderFragments;
+    private ClaimsPrincipal? UserState { get; set; }
+    private CreateEmployeeOffCanvas? createEmployeeOffCanvas { get; set; }
+    private int employeeCount = 0;
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    // Search Filters
+    private string employeeName { get; set; } = string.Empty;
+    private string employeeEmail { get; set; } = string.Empty;
+    private string employeeGender { get; set; } = string.Empty;
+    private string employeeCity { get; set; } = string.Empty;
+    private DateTime? startDate { get; set; } = null;
+    private DateTime? endDate { get; set; } = null;
+
+    // Action rendering for employee items (e.g., edit button)
+    private RenderFragment<Employee> MyAction => item => builder =>
+        {
+            builder.OpenElement(0, "button");
+            builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createEmployeeOffCanvas.SetEmployee(item)));
+
+            builder.OpenElement(3, "i");
+            builder.AddAttribute(4, "class", "ti ti-edit");
+            builder.CloseElement();
+
+            builder.AddContent(5, " Edit");
+            builder.CloseElement();
+        };
+
+    // Event Handlers
+    public async Task HandleValidSubmit()
+    {
+        await GetEmployee();
+        StateHasChanged();
+    }
+
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetEmployee();
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetEmployee();
+    }
+
+    private async Task GetEmployee()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            // Create the request object with updated filters
+            var request = new EmployeeGetRequest
+                    {
+                        EmployeeName = string.IsNullOrWhiteSpace(employeeName) ? string.Empty : employeeName,
+                        Email = string.IsNullOrWhiteSpace(employeeEmail) ? string.Empty : employeeEmail,
+                        Gender = string.IsNullOrWhiteSpace(employeeGender) ? string.Empty : employeeGender,
+                        City = string.IsNullOrWhiteSpace(employeeCity) ? 0 : int.Parse(employeeCity),
+                        StartDate = startDate ?? null,
+                        EndDate = endDate ?? DateTime.UtcNow,
+                        PageNumber = CurrentPage,
+                        PageSize = CurrentPageSize
+                    };
+
+            // Call the API to fetch filtered employees
+            var response = await EmployeeService.GetEmployees(request);
+            if (response != null && response.IsSuccess)
+            {
+                employees = response.Data;
+                employeeCount = response.Pagination.TotalCount;
+                SetCustomFragments();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        employeeName = string.Empty;
+        employeeEmail = string.Empty;
+        employeeGender = string.Empty;
+        employeeCity = string.Empty;
+        startDate = default;
+        endDate = default;
+
+        await GetEmployee();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleEmployeeOffCanvas()
+    {
+        createEmployeeOffCanvas?.ToggleOffCanvas();
+    }
+
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Employee>>
+                {
+            ["DisplayEmployeeName"] = item => new RenderFragment(builder =>
+                {
+                    builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/employee/{item.EmployeeId}")>
+        <span class="link-primary text-blue">@item.DisplayEmployeeName</span>
+    </NavLink>);
+            }),
+            ["DisplayStatus"] = item => new RenderFragment(builder =>
+            {
+                builder.AddContent(0, @<div class="text-center">
+        <Badge Text="@(item.DisplayStatus)" BackgroundColor="@GetBackgroundColor(item.DisplayStatus)" />
+    </div>);
+            }),
+        };
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-success",
+            "In-Active" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    // Employee Request Model
+    public class EmployeeGetRequest
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public int City { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalRecords { get; set; }
+    }
+}

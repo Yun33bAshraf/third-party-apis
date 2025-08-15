@@ -1,0 +1,282 @@
+﻿@page "/lead-detail"
+@attribute [Authorize]
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Category
+@using IApply.Frontend.Services.ApiService.Leads
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Lead
+@using IApply.Frontend.Pages.Lead.Components
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject IJSRuntime JSRuntime
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject ILeadService LeadService
+@inject ICategoryService CategoryService
+@inject AuthenticationStateProvider authStateProvider
+
+<PageTitle>Lead Management</PageTitle>
+
+<!-- Filters Section -->
+<div class="col-12">
+    <FilterCard Title="Lead Filters" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddLead))" ExecApi="true" HandleBtnClick="ToggleLeadsOffCanvas" IsFilter="true">
+        <EditForm Model="leads" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+
+                    <!-- Name Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Name</label>
+                            <CInput Type="text" Id="name" Name="Name" Placeholder="Name" @bind-Value="fullName" />
+                        </div>
+                    </div>
+
+                    <!-- Email Filter -->
+                    <div class="col-md-4 col-sm-12">
+                        <div class="mb-2">
+                            <label>Lead Source</label>
+                            <InputSelect class="form-select" @bind-Value="source">
+                                <option value="0" disabled selected>Select</option>
+                                @foreach (var category in AvailableCategories)
+                                {
+                                    <option value="@category.CategoryId">@category.CategoryName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <!-- Start Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="startDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                    <!-- End Date Filter -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" autocomplete="off" @bind="endDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<!-- Create Lead Offcanvas Component -->
+<CreateLeadOffCanvas @ref="createLeadOffCanvas" GetLead="GetLeads" />
+
+<!-- Lead Listing Table -->
+@if (Utils.HasUserRight(UserState, UserRights.CanEditLead))
+{
+    <div class="col-12">
+        <CTable Items="leads"
+        TotalCountFromServer="leadCount"
+        Action="MyAction"
+        ActionRequired="false"
+        CustomRenderFragments="customRenderFragments"
+        BackendPagination="true"
+        BackendSorting="true"
+        OnPaginationChanged="HandlePaginationChanged"
+        InitialPageNumber="CurrentPage"
+        InitialPageSize="CurrentPageSize" />
+    </div>
+}
+
+@code {
+    // Components and Services
+    private CreateLeadOffCanvas? createLeadOffCanvas { get; set; }
+    public List<GetCategory> AvailableCategories { get; set; } = new();
+
+
+    // Data
+    private List<Lead>? leads = new();
+    private Dictionary<string, RenderFragment<Lead>>? customRenderFragments;
+
+    // Sorting & Pagination
+    private string? SortProperty = null;
+    private bool SortDescending = false;
+    private int TotalRecords = 0;
+    private int leadCount = 0;
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    // Auth
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // Search Filters
+    private string fullName { get; set; } = string.Empty;
+    private string companyName { get; set; } = string.Empty;
+    private string source { get; set; } = string.Empty;
+    private string status { get; set; } = string.Empty;
+    private string industry { get; set; } = string.Empty;
+    private DateTime? startDate { get; set; } = null;
+    private DateTime? endDate { get; set; } = null;
+
+    // Lifecycle
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetLeads();
+        await CategorySource();
+    }
+
+    // Form Submission
+    public async Task HandleValidSubmit()
+    {
+        await GetLeads();
+        StateHasChanged();
+    }
+
+    // Pagination Handler
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetLeads();
+        StateHasChanged();
+    }
+
+    // Reset Filter Values
+    private async Task ResetFilters()
+    {
+        fullName = string.Empty;
+        companyName = string.Empty;
+        source = string.Empty;
+        status = string.Empty;
+        industry = string.Empty;
+        startDate = default;
+        endDate = default;
+
+        await GetLeads();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // Action Column Button
+    private RenderFragment<Lead> MyAction => item => builder =>
+        {
+    builder.OpenElement(0, "button");
+    builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => createLeadOffCanvas.SetLead(item)));
+
+    builder.OpenElement(3, "i");
+    builder.AddAttribute(4, "class", "ti ti-edit");
+    builder.CloseElement();
+
+    builder.AddContent(5, " Edit");
+    builder.CloseElement();
+        };
+    private async Task CategorySource()
+    {
+        var request = new GetCategory { EntityTypeId = 4 };
+        var response = await CategoryService.GetCategory(request);
+        if (response?.Data != null)
+        {
+            AvailableCategories = response.Data;
+        }
+    }
+
+    // Fetch Leads
+    private async Task GetLeads()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new LeadGetRequest
+                    {
+                        FullName = string.IsNullOrWhiteSpace(fullName) ? string.Empty : fullName,
+                        CompanyName = string.IsNullOrWhiteSpace(companyName) ? string.Empty : companyName,
+                        LeadSourceId = string.IsNullOrWhiteSpace(source) ? 0 : int.Parse(source),
+                        LeadStatusId = string.IsNullOrWhiteSpace(status) ? 0 : int.Parse(status),
+                        IndustryId = string.IsNullOrWhiteSpace(industry) ? 0 : int.Parse(industry),
+                        StartDate = startDate ?? DateTime.UtcNow,
+                        EndDate = endDate ?? DateTime.UtcNow,
+                        PageNumber = CurrentPage,
+                        PageSize = CurrentPageSize
+                    };
+
+            var response = await LeadService.GetLead(request);
+            if (response != null && response.IsSuccess)
+            {
+                leads = response.Data;
+                leadCount = response.Pagination.TotalCount;
+                SetCustomFragments();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    // Toggle Create Lead Panel
+    private void ToggleLeadsOffCanvas()
+    {
+        createLeadOffCanvas?.ToggleLeadOffCanvas();
+    }
+
+    // Render Custom Columns
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Lead>>
+                {
+                    ["FullName"] = item => builder =>
+                {
+                    builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/lead/{item.LeadId}")>
+        <span class="link-primary text-blue">@item.FullName</span>
+    </NavLink>);
+            },
+            ["LeadStatus"] = item => builder =>
+            {
+                builder.AddContent(0, @<div class="text-center">
+        <Badge Text="@(item.LeadStatus)" BackgroundColor="@GetBackgroundColor(item.LeadStatus)" />
+    </div>);
+            }
+        };
+    }
+
+    // Background Color Based on Status
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "New" => "bg-success",
+            "Contacted" => "bg-info",
+            "Qualified" => "bg-warning",
+            "Lost" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

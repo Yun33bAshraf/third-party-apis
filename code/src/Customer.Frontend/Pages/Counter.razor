@@ -1,0 +1,118 @@
+﻿@page "/FilteredDropdown"
+@using IApply.Frontend.Components.Accordian
+@using IApply.Frontend.Components.MultiSelect
+@using IApply.Frontend.Components.Stepper
+<h3>FilteredDropdown</h3>
+
+<div class="row">
+    <div class="col-4">
+        <MultiSelect TItem="MyModel"
+                     Options="@modelList"
+                     SelectedOptions="@selectedItems"
+                     SelectedOptionsChanged="OnSelectedOptionsChanged"
+                     LabelProperty="Name"
+                     ValueProperty="Id"
+                     DefaultText="Select items..."
+                     CanFilter="true"
+                     IsMultiSelect="true" />
+    </div>
+    <div class="col-4">
+        <p>Selected Items:</p>
+        <ul>
+            @foreach (var item in selectedItems)
+            {
+                <li>@item.Name (ID: @item.Id)</li>
+            }
+        </ul>
+    </div>
+</div>
+
+<h3>Accordion Example</h3>
+
+<Accordion AccordionClass="custom-accordion-class" Items="@accordionItems" />
+
+<div class="card">
+<Stepper Steps="@steps" />  
+</div>
+@code {
+    private List<MyModel> modelList = new List<MyModel>
+    {
+        new MyModel { Id = 1, Name = "Option 1" },
+        new MyModel { Id = 2, Name = "Option 2" },
+        new MyModel { Id = 3, Name = "Option 3" },
+        new MyModel { Id = 4, Name = "Option 4" },
+        new MyModel { Id = 5, Name = "Option 5" }
+    };
+
+    private List<MyModel> selectedItems = new List<MyModel>();
+
+    private void OnSelectedOptionsChanged(List<MyModel> newSelectedItems)
+    {
+        selectedItems = newSelectedItems;
+    }
+
+    public class MyModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    private List<Accordion.AccordionItem> accordionItems = new List<Accordion.AccordionItem>
+    {
+ new Accordion.AccordionItem
+        {
+            Header = "Form Example",
+            Body = builder =>
+            {
+                builder.AddMarkupContent(0, @"
+                    <form>
+                        <div class='mb-3'>
+                            <label for='exampleInputEmail1' class='form-label'>Email address</label>
+                            <input type='email' class='form-control' id='exampleInputEmail1' aria-describedby='emailHelp'>
+                            <div id='emailHelp' class='form-text'>We'll never share your email with anyone else.</div>
+                        </div>
+                        <div class='mb-3'>
+                            <label for='exampleInputPassword1' class='form-label'>Password</label>
+                            <input type='password' class='form-control' id='exampleInputPassword1'>
+                        </div>
+                        <button type='submit' class='btn btn-primary'>Submit</button>
+                    </form>
+                ");
+            }
+        },
+     new Accordion.AccordionItem { Header = "Item 2", Body = builder => builder.AddContent(0, "This is item 2 content") },
+        new Accordion.AccordionItem { Header = "Item 3", Body = builder => builder.AddContent(0, "This is item 3 content") }
+    };
+
+    private List<Stepper.StepperStep> steps = new List<Stepper.StepperStep>
+    {
+        new Stepper.StepperStep
+        {
+            Label = "Step 1",
+            Content = builder => builder.AddMarkupContent(0, "<p>Content for Step 1</p>")
+        },
+        new Stepper.StepperStep
+        {
+            Label = "Step 2",
+            Content = builder =>  builder.AddMarkupContent(0, @"
+                    <form>
+                        <div class='mb-3'>
+                            <label for='exampleInputEmail1' class='form-label'>Email address</label>
+                            <input type='email' class='form-control' id='exampleInputEmail1' aria-describedby='emailHelp'>
+                            <div id='emailHelp' class='form-text'>We'll never share your email with anyone else.</div>
+                        </div>
+                        <div class='mb-3'>
+                            <label for='exampleInputPassword1' class='form-label'>Password</label>
+                            <input type='password' class='form-control' id='exampleInputPassword1'>
+                        </div>
+                        <button type='submit' class='btn btn-primary'>Submit</button>
+                    </form>
+                ")
+        },
+        new Stepper.StepperStep
+        {
+            Label = "Step 3",
+            Content = builder => builder.AddMarkupContent(0, "<p>Content for Step 3</p>")
+        }
+    };
+}

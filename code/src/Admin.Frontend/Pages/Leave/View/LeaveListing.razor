@@ -1,0 +1,307 @@
+﻿@page "/leave-detail"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Services.ApiService.Leaves
+@using IApply.Frontend.Services.ApiService.System
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Pages.Leave.Components
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ISystemService SystemService
+@inject ILeaveService LeaveService
+@inject IEmployeeService EmployeeService
+@inject AuthenticationStateProvider authStateProvider
+@attribute [Authorize]
+
+<PageTitle>Leave Management</PageTitle>
+
+<!-- Filter Section -->
+<div class="col-12">
+    <FilterCard Title="Leave Filters" IsBtn="@(Utils.HasUserRight(UserState, UserRights.CanAddLeave))" ExecApi="true" IsFilter="true" BtnTitle="Add" HandleBtnClick="ToggleEmpLeaveCreateUpdateOffCanvas">
+        <EditForm Model="leaves" OnValidSubmit="HandleValidSubmit" Enhance>
+            <DataAnnotationsValidator />
+            <div class="card-body px-3 py-1 border-y">
+                <div class="row">
+                    <!-- Employee Dropdown -->
+                    @if (!Utils.HasUserRole(UserState, RoleEnum.Employee))
+                    {
+                        <div class="col-md-3 col-sm-12">
+                            <div class="mb-2">
+                                <label for="select-employee">Employee</label>
+                                <InputSelect class="form-select" id="select-employee" @bind-Value="employeeName">
+                                    <option value="0" disabled selected>Select</option>
+                                    @foreach (var employee in AvailableEmployees)
+                                    {
+                                        <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Leave Type Dropdown -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Leave Type</label>
+                            <InputSelect class="form-select" id="select-leave-type" @bind-Value="leaveType">
+                                <option value="0" disabled selected>Select</option>
+                                @foreach (var status in Enum.GetValues(typeof(LeaveType)))
+                                {
+                                    <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <!-- Leave Status Dropdown -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Leave Status</label>
+                            <InputSelect class="form-select" id="select-leave-status" @bind-Value="leaveStatus">
+                                <option value="0" disabled selected>Select</option>
+                                @foreach (var status in Enum.GetValues(typeof(LeaveStatus)))
+                                {
+                                    <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <!-- Start Date Input -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>Start Date</label>
+                            <input type="date" class="form-control" id="start-date" autocomplete="off" @bind="startDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+
+                    <!-- End Date Input -->
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2">
+                            <label>End Date</label>
+                            <input type="date" class="form-control" id="end-date" autocomplete="off" @bind="endDate" onfocus="this.showPicker();" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="card-footer m-0 px-2 py-1 border-0">
+                <div class="d-flex justify-content-end">
+                    <!-- Reset Button -->
+                    <button class="btn btn-light border me-1 py-1" type="reset" @onclick="ResetFilters">Reset</button>
+                    <button class="btn btn-primary py-1" type="submit">Filter</button>
+                </div>
+            </div>
+        </EditForm>
+    </FilterCard>
+</div>
+
+<!-- Table and OffCanvas for Add/Edit Leave -->
+<LeaveCreateOffCanvas @ref="empLeaveCreateUpdateOffCanvas" GetEmployeeLeave="GetEmployeeLeaves" />
+
+<!-- Employee Leaves Table -->
+<div class="col-12">
+    <CTable Items="leaves" TotalCountFromServer="leaveCount" Action="MyAction"
+            ActionRequired="false" CustomRenderFragments="customRenderFragments" BackendPagination="true" BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" />
+</div>
+
+@code {
+    private List<EmployeeLeave>? leaves = new();
+    private Dictionary<string, RenderFragment<EmployeeLeave>> customRenderFragments;
+    private ClaimsPrincipal? UserState { get; set; }
+    public List<Employee> AvailableEmployees { get; set; } = new();
+    private int leaveCount = 0;
+
+    // Search filters
+    private int? leaveType { get; set; }
+    private string employeeName { get; set; } = string.Empty;
+    private int? leaveStatus { get; set; }
+    private DateTime? startDate { get; set; } = null;
+    private DateTime? endDate { get; set; } = null;
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    public LeaveCreateOffCanvas? empLeaveCreateUpdateOffCanvas { get; set; }
+
+    // Custom action buttons for each table row
+    private RenderFragment<EmployeeLeave> MyAction => item => builder =>
+        {
+            builder.OpenElement(0, "button");
+            builder.AddAttribute(1, "class", "btn custom-btn btn-sm me-2");
+            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, () => empLeaveCreateUpdateOffCanvas.SetEmpLeaves(item)));
+
+            builder.OpenElement(3, "i");
+            builder.AddAttribute(4, "class", "ti ti-edit");
+            builder.CloseElement();
+
+            builder.AddContent(5, " Edit");
+            builder.CloseElement();
+        };
+
+    // Reset the filter form values
+    private async Task ResetFilters()
+    {
+        employeeName = string.Empty;
+        leaveType = null;
+        leaveStatus = null;
+        startDate = null;
+        endDate = null;
+        CurrentPage = 1;
+        CurrentPageSize = 20;
+
+        // Fetch leaves data again with no filters
+        await GetEmployeeLeaves();
+
+        // Ensure the UI refreshes
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // Submit filter form and fetch filtered employee leaves
+    public async Task HandleValidSubmit()
+    {
+        await GetEmployeeLeaves();
+        StateHasChanged();
+    }
+
+    // Handle pagination changes and fetch the corresponding leaves data
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+        await GetEmployeeLeaves();
+        StateHasChanged();
+    }
+
+    // Load employees for the dropdown
+    private async Task LoadEmployees()
+    {
+        EmployeeGetRequest request = new()
+                {
+                    PageNumber = 1,
+                    PageSize = 1000,
+                };
+
+        var response = await EmployeeService.GetEmployees(request);
+        if (response?.Data != null)
+        {
+            AvailableEmployees = response.Data;
+        }
+    }
+
+    // Initialize the component and get the current user state
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+        await GetEmployeeLeaves();
+        await LoadEmployees();
+    }
+
+    // Toggle off-canvas for creating or editing leaves
+    private void ToggleEmpLeaveCreateUpdateOffCanvas()
+    {
+        empLeaveCreateUpdateOffCanvas?.ToggleOffCanvas();
+    }
+
+    // Get employee leaves based on the applied filters
+    private async Task GetEmployeeLeaves()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var request = new EmpLeaveGetRequest
+                    {
+                        EmployeeName = string.IsNullOrWhiteSpace(employeeName) ? null : employeeName,
+                        StartDate = startDate ?? null,
+                        EndDate = endDate ?? DateTime.UtcNow, // Default to current date if no end date is selected
+                        LeaveType = leaveType,
+                        LeaveStatus = leaveStatus,
+                        PageNumber = CurrentPage,
+                        PageSize = CurrentPageSize,
+                    };
+
+            var response = await LeaveService.GetEmployeesLeave(request);
+            if (response != null && response.IsSuccess)
+            {
+                leaves = response.Data;
+                leaveCount = response.Pagination.TotalCount;
+                SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+            StateHasChanged();
+        }
+    }
+
+    // Set custom render fragments for table rows
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<EmployeeLeave>>();
+
+        if (!Utils.HasUserRole(UserState, RoleEnum.Employee))
+        {
+            customRenderFragments["EmployeeName"] = item => new RenderFragment(builder =>
+            {
+                builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/leave/{item.EmployeeLeaveId}")>
+                    <span class="link-primary text-blue">@item.EmployeeName</span>
+                </NavLink>);
+            });
+        }
+
+        customRenderFragments["LeaveStatus"] = item => new RenderFragment(builder =>
+        {
+            builder.AddContent(0, @<div class="text-center">
+                <Badge Text="@(item.LeaveStatus)" BackgroundColor="@GetBackgroundColor(item.LeaveStatus)" />
+            </div>);
+        });
+
+        customRenderFragments["LeaveType"] = item => new RenderFragment(builder =>
+        {
+            builder.AddContent(0, @<div class="text-center">
+                <Badge Text="@(item.LeaveType)" BackgroundColor="@GetBackgroundColor(item.LeaveType)" />
+            </div>);
+        });
+    }
+
+
+    // Determine background color for badge based on status
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "Approved" => "bg-success",
+            "Pending" => "bg-warning",
+            "Rejected" => "bg-danger",
+            "Annual" => "bg-info",          
+            "Sick" => "bg-primary",         
+            "Casual" => "bg-secondary",     
+            "Maternity" => "bg-pink",       
+            "Paternity" => "bg-lightblue",  
+            "Unpaid" => "bg-gray",          
+            "Other" => "bg-dark",           
+            "HalfLeave" => "bg-orange",     
+            _ => "bg-secondary"             
+        };
+    }
+
+}

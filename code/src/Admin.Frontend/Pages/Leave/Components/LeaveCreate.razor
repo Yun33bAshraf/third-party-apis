@@ -1,0 +1,238 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Employee
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Employees
+@using IApply.Frontend.Services.ApiService.Leaves
+@using IApply.Frontend.Models.Enum
+@using IApply.Frontend.Services.ApiService.System
+@using static IApply.Frontend.Pages.Employee.View.EmployeeListing
+@using static IApply.Frontend.Pages.Leave.View.LeaveListing;
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject ILeaveService LeaveService
+@inject IEmployeeService EmployeeService
+@inject AuthenticationStateProvider authStateProvider
+
+<EditForm EditContext="@editContext" method="post" OnValidSubmit="HandleValidSubmit" FormName="LeaveForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <div class="row">
+
+        @if (!Utils.HasUserRole(UserState, RoleEnum.Employee))
+        {
+        <!-- Employee Selection -->
+        <div class="col-md-6 col-sm-12">
+            <div class="mb-2">
+                <label for="select-city">Employee <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-city" @bind-Value="empLeaveCreateRequest.EmployeeId">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var employee in AvailableEmployees)
+                    {
+                        <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => empLeaveCreateRequest.EmployeeId" class="text-danger" />
+            </div>
+        </div>
+        }
+
+        <!-- Leave Type Selection -->
+        <div class="col-md-6 col-sm-12">
+            <div class="mb-2">
+                <label for="select-status">Leave Type <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" id="select-status" @bind-Value="empLeaveCreateRequest.LeaveType">
+                    <option value="0" disabled selected>Select</option>
+                    @foreach (var status in Enum.GetValues(typeof(LeaveType)))
+                    {
+                        <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => empLeaveCreateRequest.LeaveType" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Leave Date Selection -->
+        <div class="col-md-6 col-sm-12">
+            <div class="mb-2">
+                <label>Leave Date <span class="text-danger">*</span></label>
+                <InputDate class="form-control" @bind-Value="empLeaveCreateRequest.LeaveDate" />
+                <ValidationMessage For="@(() => empLeaveCreateRequest.LeaveDate)" class="text-danger" />
+            </div>
+        </div>
+
+        <!-- Leave Status Selection -->
+        @if (!Utils.HasUserRole(UserState, RoleEnum.Employee))
+        {
+            <div class="col-md-6 col-sm-12">
+                <div class="mb-2">
+                    <label for="select-status">Leave Status <span class="text-danger">*</span></label>
+                    <InputSelect class="form-select" id="select-status" @bind-Value="empLeaveCreateRequest.LeaveStatus">
+                        <option value="0" disabled selected>Select</option>
+                        @foreach (var status in Enum.GetValues(typeof(LeaveStatus)))
+                        {
+                            <option value="@((int)status)">@Utils.GetDescription((Enum)status)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => empLeaveCreateRequest.LeaveStatus" class="text-danger" />
+                </div>
+            </div>
+        }
+
+        <!-- Comment Section -->
+        <div class="col-md-12 col-sm-12">
+            <div class="mb-2">
+                <label>Comment</label>
+                <InputTextArea class="form-control h-100" id="floating-input" @bind-Value="empLeaveCreateRequest.Comment" autocomplete="off" rows="8" placeholder="Comment" />
+                <ValidationMessage For="() => empLeaveCreateRequest.Comment" class="text-danger" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    // Parameters for the component
+    [Parameter] public EventCallback<EmpLeaveCreateUpdateRequest> EmpLeaveCreateUpdateRequest { get; set; }
+    [SupplyParameterFromForm(FormName = "LeaveForm")]
+    public EmpLeaveCreateUpdateRequest empLeaveCreateRequest { get; set; } = new();
+
+    public EmployeeCreateRequest createEmployeeRequest { get; set; } = new();
+    public List<Employee> AvailableEmployees { get; set; } = new();
+    [Parameter] public EmployeeLeave? EditLeaveEmployee { get; set; }
+    public EmployeeLeave? prevEditLeaveEmployee { get; set; }
+
+    private int CurrentEmployeeId = 0;
+
+    private EditContext editContext;
+
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // Initialization Methods
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        UserState = authState.User;
+
+        if (Utils.HasUserRole(UserState, RoleEnum.Employee))
+        {
+            CurrentEmployeeId = Utils.GetUserId(UserState);
+        }
+
+        await LoadEmployees();
+    }
+
+    protected override void OnInitialized()
+    {
+        SetEditContext();
+    }
+
+    // Load Employees
+    private async Task LoadEmployees()
+    {
+        EmployeeGetRequest request = new()
+            {
+                PageNumber = 1,
+                PageSize = 1000,
+            };
+
+        var response = await EmployeeService.GetEmployees(request);
+
+        if (response?.Data != null)
+        {
+            // AvailableEmployees = response.Data
+            //     .Where(e => Enum.TryParse<EmployeeStatus>(e.Status, true, out var status) && status != EmployeeStatus.InActive)
+            //     .ToList();
+            AvailableEmployees = response.Data;
+
+        }
+    }
+
+    // Fetch Employee Leave Data
+    private async Task GetLeaveEmployee()
+    {
+        try
+        {
+            LoadingService.Show();
+            var request = new EmpLeaveGetRequest
+                {
+                    LeaveId = EditLeaveEmployee.EmployeeLeaveId,
+                };
+
+            var response = await LeaveService.GetEmployeesLeave(request);
+
+            if (response != null && response.IsSuccess)
+            {
+                var Leaveemployee = response.Data.FirstOrDefault();
+
+                if (Leaveemployee != null)
+                {
+                    empLeaveCreateRequest = new EmpLeaveCreateUpdateRequest
+                        {
+                            LeaveId = Leaveemployee.EmployeeLeaveId,
+                            EmployeeId = Leaveemployee.EmployeeId,
+                            LeaveDate = Leaveemployee.LeaveDate,
+                            LeaveStatus = Leaveemployee.LeaveStatusId,
+                            LeaveType = Leaveemployee.LeaveTypeId,
+                            Comment = Leaveemployee.Comment,
+                        };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    // Handle Parameter Changes
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EditLeaveEmployee != null && EditLeaveEmployee != prevEditLeaveEmployee)
+        {
+            empLeaveCreateRequest = new EmpLeaveCreateUpdateRequest
+            {
+                LeaveId = EditLeaveEmployee.EmployeeLeaveId,
+                EmployeeId = EditLeaveEmployee.EmployeeId,
+                LeaveStatus = EditLeaveEmployee.LeaveStatusId,
+                LeaveType = EditLeaveEmployee.LeaveTypeId,
+                LeaveDate = EditLeaveEmployee.LeaveDate,
+                Comment = EditLeaveEmployee.Comment ?? string.Empty,
+            };
+            prevEditLeaveEmployee = EditLeaveEmployee;
+            await GetLeaveEmployee();
+            SetEditContext();
+        }
+    }
+
+    // Handle Form Submission
+    public async Task HandleValidSubmit()
+    {
+        if (editContext.Validate())
+        {
+            await EmpLeaveCreateUpdateRequest.InvokeAsync(empLeaveCreateRequest);
+        }
+    }
+
+    // Reset Form Data
+    public void ResetForm()
+    {
+        empLeaveCreateRequest = new();
+        EditLeaveEmployee = null;
+        prevEditLeaveEmployee = null;
+        SetEditContext();
+    }
+
+    // Set Edit Context
+    private void SetEditContext()
+    {
+        editContext = new EditContext(empLeaveCreateRequest);
+    }
+}

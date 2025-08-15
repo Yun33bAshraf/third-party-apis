@@ -1,0 +1,131 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Common.Enums
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.EmployeeLeave
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Leaves
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Services.ApiService.System
+
+@inject LoadingService LoadingService
+@inject ILeaveService LeaveService
+@inject AlertService alertService
+@inject AuthenticationStateProvider authStateProvider
+
+<Offcanvas Width="50" @ref="OffCanvas" CloseFunc="CloseOffCanvas">
+    <OffCanvasHeader>
+        <div>@(IsEditMode ? "Update" : "Add") Leave</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <LeaveCreate @ref="createEmpLeaveComponent" EmpLeaveCreateUpdateRequest="AddEmpLeave" EditLeaveEmployee="EditLeaveEmployee" />
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border me-1 py-1 rounded-5" @onclick="() => OffCanvas?.Close()">Close</button>
+            <button class="btn btn-primary py-1 rounded-5" @onclick="HandleSaveLeave">@(IsEditMode ? "Update" : "Save")</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    private Offcanvas? OffCanvas { get; set; }
+    private LeaveCreate? createEmpLeaveComponent { get; set; }
+
+    [Parameter]
+    public EmployeeLeave? EditLeaveEmployee { get; set; }
+
+    [Parameter]
+    public EventCallback<(int PageNumber, int PageSize)> GetEmployeeLeave { get; set; }
+
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    private int CurrentEmployeeId = 0;
+
+    private ClaimsPrincipal? UserState { get; set; }
+
+    // Toggle the off-canvas visibility and reset form
+    public void ToggleOffCanvas()
+    {
+        createEmpLeaveComponent?.ResetForm();
+        OffCanvas?.Open();
+    }
+
+    // Handle saving or updating the leave record
+    private void HandleSaveLeave()
+    {
+        createEmpLeaveComponent?.HandleValidSubmit();
+    }
+
+    // Close off-canvas and reset form
+    private void CloseOffCanvas()
+    {
+        createEmpLeaveComponent?.ResetForm();
+    }
+
+    // Set the employee leave and open the off-canvas
+    public void SetEmpLeaves(EmployeeLeave item)
+    {
+        EditLeaveEmployee = item;
+        OffCanvas?.Open();
+    }
+
+    // Add or update employee leave based on the provided leave object
+    private async Task AddEmpLeave(EmpLeaveCreateUpdateRequest leave)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = new BaseResponse();
+
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            UserState = authState.User;
+
+            if (Utils.HasUserRole(UserState, RoleEnum.Employee))
+            {
+                CurrentEmployeeId = Utils.GetUserId(UserState);
+                leave.EmployeeId = CurrentEmployeeId;
+            }
+
+            if (leave.LeaveId > 0)
+            {
+                response = await LeaveService.EmpLeaveUpdate(leave);
+            }
+            else
+            {
+                response = await LeaveService.EmpLeaveCreate(leave);
+            }
+
+            if (response != null && response.IsSuccess)
+            {
+                await GetEmployeeLeave.InvokeAsync((1, 20));
+                OffCanvas?.Close();
+
+                if (leave.LeaveId > 0)
+                {
+                    alertService.Show("Leave Updated Successfully");
+                }
+                else
+                {
+                    alertService.Show("Leave Created Successfully");
+                }
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null
+                    ? ErrorService.GetErrorMessage(response.ErrorCode)
+                    : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+}

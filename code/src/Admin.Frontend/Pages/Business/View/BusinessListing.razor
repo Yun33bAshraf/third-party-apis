@@ -1,0 +1,221 @@
+﻿@page "/business-listing"
+@using System.Globalization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using IApply.Frontend.Components.Badge
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
+@using IApply.Frontend.Models.Business
+@using IApply.Frontend.Services.ApiService.Business
+
+
+@inject AlertService AlertService
+@inject LoadingService LoadingService
+@inject IBusinessService BusinessService
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Business Listing</PageTitle>
+
+<div class="col-12">
+    <FilterCard Title="Business Listing Filters" ExecApi="false" IsFilter="false" IsBtn="false">
+    </FilterCard>
+</div>
+
+<div class="col-12">
+    <CTable Items="businessListing" TotalCountFromServer="businessListingCount"
+            ActionRequired="false" BackendPagination="true" BackendSorting="true"
+            OnPaginationChanged="HandlePaginationChanged" InitialPageNumber="CurrentPage" InitialPageSize="CurrentPageSize" CustomRenderFragments="customRenderFragments" />
+</div>
+
+@* <AttendenceDailySummary @ref="attendenceDailySummary"  /> *@
+
+@code {
+
+
+    private List<Models.Business.BusinessListing>? businessListing = new();
+    private List<Models.Business.GetAllCurrency>? currencyList = new();
+
+    private GetBusinessListingRequest? getBusinessListingRequest = new();
+    private int businessListingCount = 0;
+
+    private int CurrentPage { get; set; } = 1;
+    private int CurrentPageSize { get; set; } = 20;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await LoadMonthYearFilter();
+        getBusinessListingRequest.PageSize = CurrentPageSize;
+        getBusinessListingRequest.PageNo = CurrentPage;
+        getBusinessListingRequest.BusinessId = 0;
+
+        await GetBusinessListing();
+
+        await GetAllCurrencyList();
+    }
+
+
+    private async Task GetBusinessListing()
+    {
+        try
+        {
+            LoadingService.Show();
+
+
+            var response = await BusinessService.GetBusinessListing(getBusinessListingRequest);
+
+            if (response != null && response.Status)
+            {
+                businessListing = response.Data;
+
+                if (response.Pagination != null)
+                {
+                    businessListingCount = response.Pagination.TotalCount;
+                }
+
+                SetCustomFragments();
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task GetAllCurrencyList()
+    {
+        try
+        {
+            LoadingService.Show();
+
+
+            var response = await BusinessService.GetAllCurrency(0);
+
+            if (response != null && response.Status)
+            {
+                currencyList = response.Data;
+
+            }
+        }
+        catch (Exception ex)
+        {
+            AlertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        await GetBusinessListing();
+        await GetAllCurrencyList();
+    }
+
+    private async Task ResetFilters()
+    {
+        getBusinessListingRequest.PageSize = CurrentPageSize;
+        getBusinessListingRequest.PageNo = CurrentPage;
+        getBusinessListingRequest.BusinessId = 0;
+        await GetBusinessListing();
+        await GetAllCurrencyList();
+    }
+
+
+    // Handle pagination changes
+    private async Task HandlePaginationChanged((int PageNumber, int PageSize, string? OrderBy, bool Ascending) paginationParams)
+    {
+        CurrentPage = paginationParams.PageNumber;
+        CurrentPageSize = paginationParams.PageSize;
+
+        getBusinessListingRequest.PageSize = paginationParams.PageSize;
+        getBusinessListingRequest.PageNo = paginationParams.PageNumber;
+        getBusinessListingRequest.BusinessId = 0;
+
+        await GetBusinessListing();
+    }
+
+    // Render custom fragments for Name column
+    private Dictionary<string, RenderFragment<Models.Business.BusinessListing>>? customRenderFragments { get; set; }
+    private void SetCustomFragments()
+    {
+        customRenderFragments = new Dictionary<string, RenderFragment<Models.Business.BusinessListing>>
+        {
+            ["Name"] = item => new RenderFragment(builder =>
+                {
+                    builder.AddContent(0, @<NavLink class="link-opacity-100" href=@($"/business-detail/{item.Id}")>
+        <span class="link-primary text-blue">@item.Name</span>
+    </NavLink>);
+        }),
+
+        ["IsActive"] = item => new RenderFragment(builder =>
+    {
+        builder.AddContent(0, @<div class="text-center">
+        <Badge Text="@(item.IsActive.ToString())" BackgroundColor="@GetBackgroundColor(item.IsActive.ToString())" />
+    </div>
+    );
+        }),
+
+            ["FyStartMonth"] = item => new RenderFragment(builder =>
+            {
+                int monthNumber = Convert.ToInt32(item.FyStartMonth);
+                string monthName = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(monthNumber);
+
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "text-center");
+                builder.AddContent(2, monthName);
+                builder.CloseElement();
+            }),
+
+            ["CurrencyId"] = item => new RenderFragment(async builder =>
+{
+    int currencyId = Convert.ToInt32(item.CurrencyId);
+    string currencyName = GetCurrencyName(currencyId);
+
+
+    builder.OpenElement(0, "div");
+    builder.AddAttribute(1, "class", "text-center");
+    builder.AddContent(2, currencyName);
+    builder.CloseElement();
+}),
+
+
+            ["StartDate"] = item => new RenderFragment(async builder =>
+{
+    var startDate = item.StartDate.ToString("dd-MMM-yyyy").ToUpper();
+
+
+    builder.OpenElement(0, "div");
+    builder.AddAttribute(1, "class", "text-center");
+    builder.AddContent(2, startDate);
+    builder.CloseElement();
+}),
+        };
+    }
+
+    private string GetBackgroundColor(string status)
+    {
+        return status switch
+        {
+            "True" => "bg-success",
+            "False" => "bg-danger",
+            _ => "bg-light"
+        };
+    }
+
+    private string GetCurrencyName(int currencyId)
+    {
+        var currency = currencyList?.Find(x => x.Id == currencyId);
+
+        return currency != null
+            ? $"{currency.CurrencyName}, {currency.Symbol}"
+            : "Unknown";
+    }
+}

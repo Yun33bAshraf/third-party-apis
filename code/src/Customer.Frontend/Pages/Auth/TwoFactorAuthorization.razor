@@ -1,0 +1,122 @@
+﻿@page "/2Factor"
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Models.Auth._2Factor
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Auth
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@layout IApply.Frontend.Layout.AuthLayout
+@inject HttpClient httpClient
+@using Microsoft.JSInterop
+@inject LoadingService LoadingService
+@inject NavigationManager _navigationManager
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject AuthResponseService authResponceService
+@inject IAuthService accountService
+@inject AlertService alertService
+
+<PageTitle>Verify - Mishwar</PageTitle>
+
+<div class="container">
+    <div class="text-center mb-4">
+        <a href="." class="navbar-brand navbar-brand-autodark">
+            <img src="tabler/static/logo.svg" height="36" alt="">
+        </a>
+    </div>
+    <div class="card card-lg card-borderless">
+        <div class="card-header d-flex justify-content-center">
+            <div class="card-title">Verify your account</div>
+        </div>
+        <div class="card-body pt-0 px-2">
+            @if (!string.IsNullOrEmpty(qrCodeImage))
+            {
+                <div class="d-flex align-items-center">
+                    <div class="col-6">
+                        <img src="@qrCodeImage" alt="QR Code" />
+                    </div>
+                    <div class="col-6">
+                        <ul>
+                            <li class="small text-secondary">Scan the QR code in authenticator app.</li>
+                            <li class="small text-secondary">Enter the code from the app below.</li>
+                        </ul>
+                        <EditForm method="post" Model="verify2f" OnValidSubmit="handleVerification" FormName="Verify2Factor" Enhance>
+                            <DataAnnotationsValidator />
+                            <div class="mb-2">
+                                <label for="code"
+                                       class="form-label">@(Utils.GetDisplayName<VerifyTwoFactorRequest>(nameof(verify2f.Code)))</label>
+                                <InputText id="code" name="code" type="text" placeholder="Enter Verification Code"
+                                           @bind-Value="verify2f.Code" class="form-control" />
+                                <ValidationMessage For="()=> verify2f.Code" class="text-danger" />
+                            </div>
+                            <button type="submit" class="btn w-100 custom-btn">Verify</button>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center text-red">Something went wrong! Please return to the login page.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? qrCodeImage;
+    [SupplyParameterFromForm(FormName = "Verify2Factor")]
+    public VerifyTwoFactorRequest verify2f { get; set; } = new();
+    public ConfigureAuthenticatorRequest authenticatorRequest { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            LoadingService.Show();
+            // var token = await sessionStorage.GetItemAsync<string>("Token");
+            // httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            // var response = await httpClient.PostAsJsonAsync<ConfigureAuthenticatorRequest>("https://mishwarbe.11values.com/api/account/configure-authenticator",authenticatorRequest);
+            var responseFromApi = await accountService.ConfigureAuthenticator(authenticatorRequest);
+
+            if (responseFromApi != null && responseFromApi.IsSuccess == true && !string.IsNullOrEmpty(responseFromApi.QrCode))
+            {
+                qrCodeImage = $"data:image/png;base64,{responseFromApi.QrCode}";
+            }
+            else
+            {
+                string errorMessage = responseFromApi?.ErrorCode != null ? ErrorService.GetErrorMessage(responseFromApi.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+
+    }
+
+    private async void handleVerification()
+    {
+        try
+        {
+            LoadingService.Show();
+
+            var response = await accountService.Verify2Factor(verify2f);
+
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+}

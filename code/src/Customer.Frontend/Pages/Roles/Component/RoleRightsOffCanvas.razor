@@ -1,0 +1,137 @@
+﻿@using IApply.Frontend.Models.Rights
+@using IApply.Frontend.Models.Roles.GetRoles
+@using IApply.Frontend.Services
+@using IApply.Frontend.Services.ApiService.Role
+@using IApply.Frontend.Components.Offcanvas
+@using IApply.Frontend.Pages.Rights
+
+
+@inject AlertService alertService
+@inject LoadingService LoadingService
+@inject IRoleService roleService
+
+<Offcanvas Width="50" @ref="RightsOffcanvas" CloseFunc="CloseRightsOffCanvas">
+    <OffCanvasHeader>
+        <div>@(RightRole != null ? RightRole.Name + "'s" : "") Rights</div>
+    </OffCanvasHeader>
+    <OffCanvasBody>
+        <EditRights @ref="EditRights" RoleId="@(RightRole != null ? RightRole.Id : null)" UpdateRightsMethod="args => UpdateRights(args.OriginalRights, args.ModifiedRights)" />
+    </OffCanvasBody>
+    <OffCanvasFooter>
+        <div class="text-end">
+            <button class="btn btn-light border" @onclick="() => RightsOffcanvas?.Close()">Close</button>
+            <button class="btn custom-btn" @onclick="HandleSaveRights">Save</button>
+        </div>
+    </OffCanvasFooter>
+</Offcanvas>
+
+@code {
+    private Offcanvas? RightsOffcanvas { get; set; }
+    private EditRights? EditRights { get; set; }
+    private Role? RightRole;
+
+    private void CloseRightsOffCanvas()
+    {
+        RightRole = null;
+        EditRights?.ResetForm();
+    }
+
+    public void SetRightRole(Role item)
+    {
+        RightRole = item;
+        RightsOffcanvas?.Open();
+    }
+
+    private void HandleSaveRights()
+    {
+        EditRights?.HandleValidSubmit();
+    }
+
+    private async Task UpdateRights(List<Right> OriginalRights, List<Right> ModifiedRights)
+    {
+        LoadingService.Show();
+
+        var newRights = ModifiedRights
+        .Where(modified => !OriginalRights.Any(original => original.Id == modified.Id))
+        .Select(role => role.Id)
+        .ToList();
+
+        if (newRights.Count > 0)
+        {
+            RightsRequest request = new RightsRequest { Rights = newRights };
+            await CreateRoleRights(request);
+        }
+
+        var deletedRights = OriginalRights
+            .Where(original => !ModifiedRights.Any(modified => modified.Id == original.Id))
+            .Select(role => role.Id)
+            .ToList();
+
+        if (deletedRights.Count > 0)
+        {
+            RightsRequest request = new RightsRequest { Rights = deletedRights };
+            await DeleteRoleRights(request);
+        }
+
+        RightsOffcanvas?.Close();
+        LoadingService.Hide();
+        alertService.Show("Role Rights Updated Successfully");
+    }
+
+    private async Task CreateRoleRights(RightsRequest rights)
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.CreateRoleRights(rights, (Guid)RightRole?.Id);
+
+            if (response != null && response.IsSuccess)
+            {
+
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task DeleteRoleRights(RightsRequest request)
+    {
+
+        try
+        {
+            LoadingService.Show();
+            var response = await roleService.DeleteRoleRights(request, (Guid)RightRole?.Id);
+
+            if (response != null && response.IsSuccess)
+            {
+
+            }
+            else if (response != null)
+            {
+                string errorMessage = response?.ErrorCode != null ? ErrorService.GetErrorMessage(response.ErrorCode) : "An unknown error occurred.";
+                alertService.ShowError(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            alertService.ShowError(ex.Message);
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+
+    }
+
+}
