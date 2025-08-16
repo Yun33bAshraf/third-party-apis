@@ -16,28 +16,25 @@ jobs:
       contents: read
 
     steps:
-      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Setup .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      # 3️⃣ Restore dependencies
       - name: Restore dependencies
         run: dotnet restore ./code/src/Web/Web.csproj
 
-      # 4️⃣ Build API project
       - name: Build API
         run: dotnet build ./code/src/Web/Web.csproj --configuration Release --no-restore
 
-      # 5️⃣ Publish API project
       - name: Publish API
         run: dotnet publish ./code/src/Web/Web.csproj -c Release -o ./publish --no-build
 
-      # 6️⃣ Upload published artifact
+      - name: List publish directory contents
+        run: dir .\publish
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -49,19 +46,20 @@ jobs:
     needs: build
 
     steps:
-      # 1️⃣ Download published artifact
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: api-publish
-          path: ./api-publish-folder
+          path: ./publish
 
-      # 2️⃣ Deploy to Azure using Zip Deploy
+      - name: List downloaded artifact contents
+        run: dir .\publish
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'third-party-apis'  # Azure Web App name
-          package: ./api-publish-folder
+          app-name: 'third-party-apis'
+          package: ./publish
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_814732FB4F12465DBCD630A528751F37 }}
 
 
