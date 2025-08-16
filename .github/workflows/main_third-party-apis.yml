@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - third-party-apis
+name: Build and deploy ASP.Net Core API to Azure Web App
 
 on:
   push:
@@ -13,44 +13,53 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
+      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      # 2️⃣ Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      - name: Build with dotnet
-        run: dotnet build ./code/src/Web/Web.csproj --configuration Release
+      # 3️⃣ Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore ./code/src/Web/Web.csproj
 
-      - name: dotnet publish
-        run: dotnet publish ./code/src/Web/Web.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      # 4️⃣ Build API project
+      - name: Build API
+        run: dotnet build ./code/src/Web/Web.csproj --configuration Release --no-restore
 
-      - name: Upload artifact for deployment job
+      # 5️⃣ Publish API project
+      - name: Publish API
+        run: dotnet publish ./code/src/Web/Web.csproj -c Release -o "${{ env.DOTNET_ROOT }}/myapp" --no-build
+
+      # 6️⃣ Upload published artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: api-publish
+          path: ${{ env.DOTNET_ROOT }}/myapp
 
   deploy:
     runs-on: windows-latest
     needs: build
-    
+
     steps:
-      - name: Download artifact from build job
+      # 1️⃣ Download published artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: api-publish
+
+      # 2️⃣ Deploy to Azure using Zip Deploy
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'third-party-apis'
-          slot-name: 'Production'
-          package: .
-
+          app-name: 'third-party-apis'  # Azure Web App name
+          package: ${{ env.DOTNET_ROOT }}/myapp
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_814732FB4F12465DBCD630A528751F37 }}
+
