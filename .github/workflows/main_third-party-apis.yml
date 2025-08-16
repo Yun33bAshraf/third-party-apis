@@ -60,7 +60,8 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'third-party-apis'  # Azure Web App name
-          package: ${{ env.DOTNET_ROOT }}/myapp
+          package: ./publish
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_814732FB4F12465DBCD630A528751F37 }}
+
 
 
