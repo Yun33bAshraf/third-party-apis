@@ -54,14 +54,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: api-publish
+          path: ./api-publish-folder
 
       # 2️⃣ Deploy to Azure using Zip Deploy
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'third-party-apis'  # Azure Web App name
-          package: ./publish
+          package: ./api-publish-folder
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_814732FB4F12465DBCD630A528751F37 }}
+
 
 
 
