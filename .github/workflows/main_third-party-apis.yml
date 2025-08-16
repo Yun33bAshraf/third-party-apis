@@ -35,14 +35,14 @@ jobs:
 
       # 5️⃣ Publish API project
       - name: Publish API
-        run: dotnet publish ./code/src/Web/Web.csproj -c Release -o "${{ env.DOTNET_ROOT }}/myapp" --no-build
+        run: dotnet publish ./code/src/Web/Web.csproj -c Release -o ./publish --no-build
 
       # 6️⃣ Upload published artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: api-publish
-          path: ${{ env.DOTNET_ROOT }}/myapp
+          path: ./publish
 
   deploy:
     runs-on: windows-latest
@@ -62,4 +62,5 @@ jobs:
           app-name: 'third-party-apis'  # Azure Web App name
           package: ${{ env.DOTNET_ROOT }}/myapp
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_814732FB4F12465DBCD630A528751F37 }}
+
 
