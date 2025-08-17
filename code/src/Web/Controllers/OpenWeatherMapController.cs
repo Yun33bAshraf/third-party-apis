@@ -37,4 +37,14 @@ public class OpenWeatherMapController(ISender sender) : ControllerBase
         var result = await sender.Send(query);
         return result.Status ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("weather-map")]
+    [ProducesResponseType(typeof(ResponseBase), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseBase), StatusCodes.Status400BadRequest)]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> WeatherMapGetQuery([FromQuery] WeatherMapGetQuery query)
+    {
+        var result = await sender.Send(query);
+        return result.Status ? Ok(result) : BadRequest(result);
+    }
 }
