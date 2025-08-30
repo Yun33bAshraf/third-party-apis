@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThirdPartyAPIs.Domain.Entities;
+namespace OpenProfileAPI.Domain.Entities;
 
 public class UserRight : BaseAuditableEntity
 {

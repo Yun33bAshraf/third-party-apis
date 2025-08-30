@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Rights
+﻿namespace OpenProfileAPI.Frontend.Models.Rights
 {
     public class Right
     {

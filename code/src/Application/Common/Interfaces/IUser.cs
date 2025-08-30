@@ -1,6 +1,6 @@
-﻿using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 
 public interface IUser
 {

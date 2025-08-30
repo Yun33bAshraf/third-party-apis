@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Auth;
+namespace OpenProfileAPI.Frontend.Models.Auth;
 
 public class ChangePasswordRequest
 {

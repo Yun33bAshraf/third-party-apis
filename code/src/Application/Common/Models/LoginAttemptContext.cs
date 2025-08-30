@@ -1,6 +1,6 @@
-﻿using ThirdPartyAPIs.Domain.Entities;
+﻿using OpenProfileAPI.Domain.Entities;
 
-namespace ThirdPartyAPIs.Application.Common.Models;
+namespace OpenProfileAPI.Application.Common.Models;
 public class LoginAttemptContext
 {
     public LoginAttempts Attempt { get; set; } = null!;

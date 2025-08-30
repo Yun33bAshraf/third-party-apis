@@ -1,4 +1,4 @@
-﻿//namespace ThirdPartyAPIs.Application.Users.Commands.CompleteProfile;
+﻿//namespace OpenProfileAPI.Application.Users.Commands.CompleteProfile;
 
 //public class CompleteProfileCommandValidator : AbstractValidator<CompleteProfileCommand>
 //{

@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ThirdPartyAPIs.Domain.Common;
+namespace OpenProfileAPI.Domain.Common;
 public static class TypeExtensions
 {
     public static string GetDescription(this Enum genericEnum) //Hint: Change the method signature and input paramter to use the type parameter T

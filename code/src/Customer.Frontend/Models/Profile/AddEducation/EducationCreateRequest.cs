@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Profile.AddEducation;
+﻿namespace OpenProfileAPI.Frontend.Models.Profile.AddEducation;
 
 public class EducationCreateRequest
 {

@@ -1,11 +1,11 @@
 ﻿using System.Data.Common;
-using ThirdPartyAPIs.Infrastructure.Data;
+using OpenProfileAPI.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Respawn;
 
-namespace ThirdPartyAPIs.Application.FunctionalTests;
+namespace OpenProfileAPI.Application.FunctionalTests;
 
 public class SqlServerTestDatabase : ITestDatabase
 {

@@ -1,6 +1,6 @@
-﻿using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.Common.Models;
+namespace OpenProfileAPI.Application.Common.Models;
 
 public class UserDto
 {

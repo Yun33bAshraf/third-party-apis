@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace ThirdPartyAPIs.Domain.Entities;
+namespace OpenProfileAPI.Domain.Entities;
 
 public class User : IdentityUser<int>
 {

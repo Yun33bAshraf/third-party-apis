@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Enums;
-using AuthPolicyModel = ThirdPartyAPIs.Domain.Entities.AuthPolicy;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Enums;
+using AuthPolicyModel = OpenProfileAPI.Domain.Entities.AuthPolicy;
 
-namespace ThirdPartyAPIs.Application.AuthPolicy.Queries;
+namespace OpenProfileAPI.Application.AuthPolicy.Queries;
 public class AuthPolicyGetQuery : IRequest<ResponseBase>
 {
     public int AuthPolicyId { get; set; }

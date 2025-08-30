@@ -1,4 +1,4 @@
-﻿//namespace ThirdPartyAPIs.Domain.Constants;
+﻿//namespace OpenProfileAPI.Domain.Constants;
 
 //public abstract class Roles
 //{

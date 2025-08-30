@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Assets
+namespace OpenProfileAPI.Frontend.Models.Assets
 {
     public class CreateAssetRequest
     {

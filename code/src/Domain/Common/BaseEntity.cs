@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ThirdPartyAPIs.Domain.Common;
+namespace OpenProfileAPI.Domain.Common;
 
 public abstract class BaseEntity
 {

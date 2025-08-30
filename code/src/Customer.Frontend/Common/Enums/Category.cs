@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace IApply.Frontend.Common.Enums;
+namespace OpenProfileAPI.Frontend.Common.Enums;
 
 // these are prequisite enums for the Category enum, all other must be added in category and entity type table.
 public enum Country

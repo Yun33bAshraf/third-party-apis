@@ -1,6 +1,6 @@
 ﻿using FluentValidation.Results;
 
-namespace ThirdPartyAPIs.Application.Common.Exceptions;
+namespace OpenProfileAPI.Application.Common.Exceptions;
 
 public class ValidationException : Exception
 {

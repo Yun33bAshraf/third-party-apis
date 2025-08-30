@@ -1,8 +1,8 @@
-﻿using ThirdPartyAPIs.Application.Common.Exceptions;
+﻿using OpenProfileAPI.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ThirdPartyAPIs.Web.Infrastructure;
+namespace OpenProfileAPI.Web.Infrastructure;
 
 public class CustomExceptionHandler : IExceptionHandler
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace IApply.Frontend.Models.Enum
+namespace OpenProfileAPI.Frontend.Models.Enum
 {
     public enum MaritalStatus
     {

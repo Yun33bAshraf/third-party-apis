@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Entities;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Entities;
 
-namespace ThirdPartyAPIs.Application.Roles.Queries.GetRolesWithPagination;
+namespace OpenProfileAPI.Application.Roles.Queries.GetRolesWithPagination;
 
 public record GetRolesWithPaginationQuery : IRequest<ResponseBase>
 {

@@ -1,10 +1,13 @@
 ﻿@page "/2Factor"
-@using Microsoft.AspNetCore.Components.Authorization;
-@using Microsoft.AspNetCore.Components.Forms;
 @using IApply.Frontend.Common.Utilities
 @using IApply.Frontend.Models.Auth._2Factor
 @using IApply.Frontend.Services
 @using IApply.Frontend.Services.ApiService.Auth
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using OpenProfileAPI.Frontend.Common.Utilities
+@using OpenProfileAPI.Frontend.Services
+@using OpenProfileAPI.Frontend.Services.ApiService.Auth
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @layout IApply.Frontend.Layout.AuthLayout
 @inject HttpClient httpClient

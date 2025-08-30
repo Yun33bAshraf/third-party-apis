@@ -1,6 +1,6 @@
 using System;
 
-namespace IApply.Frontend.Models.Profile;
+namespace OpenProfileAPI.Frontend.Models.Profile;
 
 public class ChangeProfileResponse
 {

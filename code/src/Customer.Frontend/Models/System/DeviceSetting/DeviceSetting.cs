@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.System.DeviceSetting;
+namespace OpenProfileAPI.Frontend.Models.System.DeviceSetting;
 
 public class DeviceSetting
 {

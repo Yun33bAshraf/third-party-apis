@@ -1,6 +1,6 @@
-﻿//using ThirdPartyAPIs.Domain.Entities;
+﻿//using OpenProfileAPI.Domain.Entities;
 
-//namespace ThirdPartyAPIs.Application.Roles.Queries.GetRolesWithPagination;
+//namespace OpenProfileAPI.Application.Roles.Queries.GetRolesWithPagination;
 
 //public class RoleDto
 //{

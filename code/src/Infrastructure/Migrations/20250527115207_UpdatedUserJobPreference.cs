@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace ThirdPartyAPIs.Infrastructure.Migrations
+namespace OpenProfileAPI.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class UpdatedUserJobPreference : Migration

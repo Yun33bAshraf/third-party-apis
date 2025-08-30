@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Assets;
+﻿namespace OpenProfileAPI.Frontend.Models.Assets;
 
 public class AssetsRequest
 {

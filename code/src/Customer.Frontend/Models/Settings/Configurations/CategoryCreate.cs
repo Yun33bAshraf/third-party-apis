@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Settings.Configurations;
+namespace OpenProfileAPI.Frontend.Models.Settings.Configurations;
 public class CategoryCreate
 {
     [Required(ErrorMessage = "Name is required.")]

@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Domain.Enums;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.Department.Commands.UpdateDepartment;
+namespace OpenProfileAPI.Application.Users.Commands.UpdateUser;
 public class UpdateUserCommand : IRequest<ResponseBase>
 {
     public required int Id { get; set; }

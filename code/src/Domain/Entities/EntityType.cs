@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace ThirdPartyAPIs.Domain.Entities;
+namespace OpenProfileAPI.Domain.Entities;
 
 public class EntityType : BaseAuditableEntity
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThirdPartyAPIs.Application.Common.Utilities;
+namespace OpenProfileAPI.Application.Common.Utilities;
 
 public class DateUtility
 {

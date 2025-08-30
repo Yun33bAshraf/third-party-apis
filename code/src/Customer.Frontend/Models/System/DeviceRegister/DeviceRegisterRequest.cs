@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.System.DeviceRegister
+﻿namespace OpenProfileAPI.Frontend.Models.System.DeviceRegister
 {
     public class DeviceRegisterRequest
     {

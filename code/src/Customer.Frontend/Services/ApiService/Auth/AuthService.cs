@@ -1,17 +1,18 @@
 ﻿using System.Text.Json;
 using Blazored.SessionStorage;
-using IApply.Frontend.Common.Constants;
-using IApply.Frontend.Models;
-using IApply.Frontend.Models.Auth;
 using IApply.Frontend.Models.Auth._2Factor;
-using IApply.Frontend.Models.Auth.Login;
-using IApply.Frontend.Models.Auth.Otp;
-using IApply.Frontend.Models.Auth.Register;
-using IApply.Frontend.Models.Auth.VerifyEmail;
-using IApply.Frontend.Services.ApiService.Me;
 using Microsoft.AspNetCore.Components;
+using OpenProfileAPI.Frontend.Common.Constants;
+using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Auth;
+using OpenProfileAPI.Frontend.Models.Auth.Login;
+using OpenProfileAPI.Frontend.Models.Auth.Otp;
+using OpenProfileAPI.Frontend.Models.Auth.Register;
+using OpenProfileAPI.Frontend.Models.Auth.VerifyEmail;
+using OpenProfileAPI.Frontend.Services;
+using OpenProfileAPI.Frontend.Services.ApiService.Me;
 
-namespace IApply.Frontend.Services.ApiService.Auth;
+namespace OpenProfileAPI.Frontend.Services.ApiService.Auth;
 
 public class AuthService : IAuthService
 {

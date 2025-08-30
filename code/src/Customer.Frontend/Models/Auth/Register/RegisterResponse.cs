@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Auth.Register;
+﻿namespace OpenProfileAPI.Frontend.Models.Auth.Register;
 
 public class RegisterResponse
 {

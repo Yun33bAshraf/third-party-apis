@@ -1,7 +1,7 @@
-﻿using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace ThirdPartyAPIs.Infrastructure.Identity;
+namespace OpenProfileAPI.Infrastructure.Identity;
 
 public static class IdentityResultExtensions
 {

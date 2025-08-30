@@ -5,9 +5,9 @@ using System.Net.Mail;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using ThirdPartyAPIs.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Interfaces;
 
-namespace ThirdPartyAPIs.Application.Services;
+namespace OpenProfileAPI.Application.Services;
 
 public interface IMailService
 {

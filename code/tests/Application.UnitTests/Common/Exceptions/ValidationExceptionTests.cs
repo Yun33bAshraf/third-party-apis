@@ -1,9 +1,9 @@
-﻿using ThirdPartyAPIs.Application.Common.Exceptions;
+﻿using OpenProfileAPI.Application.Common.Exceptions;
 using FluentAssertions;
 using FluentValidation.Results;
 using NUnit.Framework;
 
-namespace ThirdPartyAPIs.Application.UnitTests.Common.Exceptions;
+namespace OpenProfileAPI.Application.UnitTests.Common.Exceptions;
 
 public class ValidationExceptionTests
 {

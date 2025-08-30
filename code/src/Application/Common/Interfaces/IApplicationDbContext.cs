@@ -1,7 +1,7 @@
-﻿using ThirdPartyAPIs.Domain.Entities;
-using AuthPolicyModel = ThirdPartyAPIs.Domain.Entities.AuthPolicy;
+﻿using OpenProfileAPI.Domain.Entities;
+using AuthPolicyModel = OpenProfileAPI.Domain.Entities.AuthPolicy;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {

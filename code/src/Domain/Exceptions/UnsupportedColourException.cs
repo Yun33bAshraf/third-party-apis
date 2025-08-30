@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Exceptions;
+﻿namespace OpenProfileAPI.Domain.Exceptions;
 
 public class UnsupportedColourException : Exception
 {

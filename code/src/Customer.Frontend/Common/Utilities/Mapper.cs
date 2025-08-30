@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-namespace IApply.Frontend.Common.Utilities;
+namespace OpenProfileAPI.Frontend.Common.Utilities;
 
 public class MappingProfile : Profile
 {

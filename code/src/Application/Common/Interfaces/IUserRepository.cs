@@ -1,5 +1,5 @@
-﻿using ThirdPartyAPIs.Application.Common.Models;
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+﻿using OpenProfileAPI.Application.Common.Models;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 
 public interface IUserRepository
 {

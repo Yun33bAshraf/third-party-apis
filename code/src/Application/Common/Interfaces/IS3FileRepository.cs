@@ -1,6 +1,6 @@
-﻿using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 public interface IS3FileRepository
 {
     Task<(FileDto file, string url)> UploadFileAsync(Stream fileStream, FileDto fileDto);

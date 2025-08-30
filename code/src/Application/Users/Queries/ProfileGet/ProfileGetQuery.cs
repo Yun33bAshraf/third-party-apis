@@ -1,11 +1,11 @@
-﻿//using ThirdPartyAPIs.Application.Common.Interfaces;
-//using ThirdPartyAPIs.Application.Common.Models;
-//using ThirdPartyAPIs.Domain.Common;
-//using ThirdPartyAPIs.Domain.Entities;
-//using ThirdPartyAPIs.Domain.Enums;
+﻿//using OpenProfileAPI.Application.Common.Interfaces;
+//using OpenProfileAPI.Application.Common.Models;
+//using OpenProfileAPI.Domain.Common;
+//using OpenProfileAPI.Domain.Entities;
+//using OpenProfileAPI.Domain.Enums;
 //using Microsoft.AspNetCore.SignalR;
 
-//namespace ThirdPartyAPIs.Application.Users.Queries.ProfileGet;
+//namespace OpenProfileAPI.Application.Users.Queries.ProfileGet;
 //public class ProfileGetQuery : IRequest<ResponseBase>
 //{
 //}

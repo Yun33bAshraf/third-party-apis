@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
 
-namespace ThirdPartyAPIs.Application.FunctionalTests;
+namespace OpenProfileAPI.Application.FunctionalTests;
 
 public interface ITestDatabase
 {

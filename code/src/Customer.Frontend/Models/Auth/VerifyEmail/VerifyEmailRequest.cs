@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Auth.VerifyEmail;
+namespace OpenProfileAPI.Frontend.Models.Auth.VerifyEmail;
 
 public class VerifyEmailRequest
 {

@@ -3,10 +3,10 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using Microsoft.Extensions.Configuration;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 public class S3FileRepository : IS3FileRepository
 {
     private readonly IAmazonS3 _s3Client;

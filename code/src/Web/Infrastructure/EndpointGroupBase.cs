@@ -1,4 +1,4 @@
-﻿//namespace ThirdPartyAPIs.Web.Infrastructure;
+﻿//namespace OpenProfileAPI.Web.Infrastructure;
 
 //public abstract class EndpointGroupBase
 //{

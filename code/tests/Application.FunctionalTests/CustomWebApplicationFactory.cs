@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Infrastructure.Data;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace ThirdPartyAPIs.Application.FunctionalTests;
+namespace OpenProfileAPI.Application.FunctionalTests;
 
 using static Testing;
 

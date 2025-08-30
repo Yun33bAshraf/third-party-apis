@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Application.FunctionalTests;
+﻿namespace OpenProfileAPI.Application.FunctionalTests;
 
 using static Testing;
 

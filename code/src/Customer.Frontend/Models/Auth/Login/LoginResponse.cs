@@ -1,6 +1,6 @@
-﻿using IApply.Frontend.Models;
+﻿using OpenProfileAPI.Frontend.Models;
 
-namespace IApply.Frontend.Models.Auth.Login;
+namespace OpenProfileAPI.Frontend.Models.Auth.Login;
 
 public class LoginResponse : BaseResponse<LoginResponseData>
 {

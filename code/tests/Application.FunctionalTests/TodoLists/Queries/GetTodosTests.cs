@@ -1,8 +1,8 @@
-﻿//using ThirdPartyAPIs.Application.TodoLists.Queries.GetTodos;
-//using ThirdPartyAPIs.Domain.Entities;
-//using ThirdPartyAPIs.Domain.ValueObjects;
+﻿//using OpenProfileAPI.Application.TodoLists.Queries.GetTodos;
+//using OpenProfileAPI.Domain.Entities;
+//using OpenProfileAPI.Domain.ValueObjects;
 
-//namespace ThirdPartyAPIs.Application.FunctionalTests.TodoLists.Queries;
+//namespace OpenProfileAPI.Application.FunctionalTests.TodoLists.Queries;
 
 //using static Testing;
 

@@ -1,6 +1,6 @@
 ﻿//using System.Diagnostics.CodeAnalysis;
 
-//namespace ThirdPartyAPIs.Web.Infrastructure;
+//namespace OpenProfileAPI.Web.Infrastructure;
 
 //public static class IEndpointRouteBuilderExtensions
 //{

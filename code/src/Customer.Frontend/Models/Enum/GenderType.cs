@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Enum
+﻿namespace OpenProfileAPI.Frontend.Models.Enum
 {
     public enum GenderType
     {

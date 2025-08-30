@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
-using ThirdPartyAPIs.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace ThirdPartyAPIs.Application.Common.Behaviours;
+namespace OpenProfileAPI.Application.Common.Behaviours;
 
 public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
@@ -44,7 +44,7 @@ public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequ
                 userName = await _identityService.GetUserNameAsync(userId);
             }
 
-            _logger.LogWarning("ThirdPartyAPIs Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@UserName} {@Request}",
+            _logger.LogWarning("OpenProfileAPI Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@UserName} {@Request}",
                 requestName, elapsedMilliseconds, userId, userName, request);
         }
 

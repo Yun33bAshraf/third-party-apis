@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 
-namespace IApply.Frontend.Models.Assets;
+namespace OpenProfileAPI.Frontend.Models.Assets;
 
 public class AssetFileUploadRequest
 {

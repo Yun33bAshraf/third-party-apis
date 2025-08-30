@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.AuthPolicies.GetAuthPolicies;
+﻿namespace OpenProfileAPI.Frontend.Models.AuthPolicies.GetAuthPolicies;
 
 public class AuthPolicyGetRequest
 {

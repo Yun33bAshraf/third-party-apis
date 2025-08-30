@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Enums;
+﻿namespace OpenProfileAPI.Domain.Enums;
 public enum ApplicationRights
 {
     [RightAttribute(1, roleIds: [1, 2])]

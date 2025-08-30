@@ -1,7 +1,7 @@
-﻿//using ThirdPartyAPIs.Application.Common.Interfaces;
-//using ThirdPartyAPIs.Application.Common.Models;
+﻿//using OpenProfileAPI.Application.Common.Interfaces;
+//using OpenProfileAPI.Application.Common.Models;
 
-//namespace ThirdPartyAPIs.Application.Users.Commands.CreateUser;
+//namespace OpenProfileAPI.Application.Users.Commands.CreateUser;
 
 //public record SetPasswordCommand : IRequest<ResponseBase>
 //{

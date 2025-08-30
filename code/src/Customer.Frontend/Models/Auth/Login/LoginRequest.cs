@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Auth.Login;
+namespace OpenProfileAPI.Frontend.Models.Auth.Login;
 
 public class LoginRequest
 {

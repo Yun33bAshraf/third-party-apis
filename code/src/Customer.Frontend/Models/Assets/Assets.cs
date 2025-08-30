@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using IApply.Frontend.Common.CustomAttributes;
 
-namespace IApply.Frontend.Models.Assets;
+namespace OpenProfileAPI.Frontend.Models.Assets;
 
 public class Assets
 {

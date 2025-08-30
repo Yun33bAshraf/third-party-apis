@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Common.CustomAttributes
+﻿namespace OpenProfileAPI.Frontend.Common.CustomAttributes
 {
 
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]

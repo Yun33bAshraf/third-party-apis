@@ -1,12 +1,12 @@
 ﻿using System.Web;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Domain.Enums;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
-namespace ThirdPartyAPIs.Application.Auth.Command.Register;
+namespace OpenProfileAPI.Application.Auth.Command.Register;
 
 public record RegisterCommand : IRequest<ResponseBase>
 {
@@ -166,13 +166,13 @@ public class RegisterCommandHandler(
                 <table style='max-width: 600px; background-color: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);'>
                   <tr>
                     <td align='center' style='padding-bottom: 20px;'>
-                      <h2 style='color: #333;'>Welcome to ThirdPartyAPIs 👋</h2>
+                      <h2 style='color: #333;'>Welcome to OpenProfileAPI 👋</h2>
                     </td>
                   </tr>
                   <tr>
                     <td>
                       <p>Hi <strong>{user.FirstName}</strong>,</p>
-                      <p>Thank you for registering with <strong>ThirdPartyAPIs</strong>. To get started, please verify your email address by clicking the button below:</p>
+                      <p>Thank you for registering with <strong>OpenProfileAPI</strong>. To get started, please verify your email address by clicking the button below:</p>
                       <p style='text-align: center; margin: 30px 0;'>
                         <a href='{verificationLink}' style='background-color: #0066ff; color: #ffffff; padding: 12px 24px; border-radius: 4px; text-decoration: none;'>Verify Email</a>
                       </p>
@@ -182,7 +182,7 @@ public class RegisterCommandHandler(
                         <span style='font-size: 0; color: transparent; user-select: text;'>{verificationLink}</span>
                     </p>
                       <p>If you didn’t create an account, no further action is required.</p>
-                      <p style='margin-top: 40px;'>Best regards,<br/>The ThirdPartyAPIs Team</p>
+                      <p style='margin-top: 40px;'>Best regards,<br/>The OpenProfileAPI Team</p>
                     </td>
                   </tr>
                   <tr>

@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Entities;
+﻿namespace OpenProfileAPI.Domain.Entities;
 public class UserFile : BaseAuditableEntity
 {
     public int UserId { get; set; }

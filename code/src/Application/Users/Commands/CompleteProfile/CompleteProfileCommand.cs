@@ -1,13 +1,13 @@
-﻿//using ThirdPartyAPIs.Application.Common.Interfaces;
-//using ThirdPartyAPIs.Application.Common.Models;
-//using ThirdPartyAPIs.Domain.Common;
-//using ThirdPartyAPIs.Domain.Entities;
-//using ExperienceModel = ThirdPartyAPIs.Domain.Entities.Experience;
-//using SkillsModel = ThirdPartyAPIs.Domain.Entities.Skill;
-//using ThirdPartyAPIs.Domain.Enums;
+﻿//using OpenProfileAPI.Application.Common.Interfaces;
+//using OpenProfileAPI.Application.Common.Models;
+//using OpenProfileAPI.Domain.Common;
+//using OpenProfileAPI.Domain.Entities;
+//using ExperienceModel = OpenProfileAPI.Domain.Entities.Experience;
+//using SkillsModel = OpenProfileAPI.Domain.Entities.Skill;
+//using OpenProfileAPI.Domain.Enums;
 //using Microsoft.AspNetCore.Identity;
 
-//namespace ThirdPartyAPIs.Application.Users.Commands.CompleteProfile;
+//namespace OpenProfileAPI.Application.Users.Commands.CompleteProfile;
 //public class CompleteProfileCommand : IRequest<ResponseBase>
 //{
 //    public string? Address { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace IApply.Frontend.Common.Enums;
+namespace OpenProfileAPI.Frontend.Common.Enums;
 
 public enum RoleEnum
 {

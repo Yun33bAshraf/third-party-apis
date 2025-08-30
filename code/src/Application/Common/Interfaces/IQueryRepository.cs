@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
-using ThirdPartyAPIs.Domain.Common;
+using OpenProfileAPI.Domain.Common;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 public interface IQueryRepository<T> where T : BaseAuditableEntity
 {
     Task<T?> GetAsync(

@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace IApply.Frontend.Services;
+namespace OpenProfileAPI.Frontend.Services;
 
 public static class LocalStorageService
 {

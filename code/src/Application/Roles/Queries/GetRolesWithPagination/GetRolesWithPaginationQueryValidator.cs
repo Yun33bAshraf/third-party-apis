@@ -1,4 +1,4 @@
-﻿//namespace ThirdPartyAPIs.Application.Roles.Queries.GetRolesWithPagination;
+﻿//namespace OpenProfileAPI.Application.Roles.Queries.GetRolesWithPagination;
 
 //public class GetRolesWithPaginationQueryValidator : AbstractValidator<GetRolesWithPaginationQuery>
 //{

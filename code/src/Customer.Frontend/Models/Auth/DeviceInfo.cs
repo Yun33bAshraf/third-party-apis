@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Auth;
+﻿namespace OpenProfileAPI.Frontend.Models.Auth;
 
 public class DeviceInfo
 {

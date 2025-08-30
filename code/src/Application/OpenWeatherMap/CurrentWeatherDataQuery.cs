@@ -1,11 +1,11 @@
 ﻿using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using ThirdPartyAPIs.Application.Common.Models;
+using OpenProfileAPI.Application.Common.Models;
 using System.Text.Json;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Application.Common.Contracts;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Application.Common.Contracts;
 
-namespace ThirdPartyAPIs.Application.OpenWeatherMap;
+namespace OpenProfileAPI.Application.OpenWeatherMap;
 
 public class CurrentWeatherDataQuery : IRequest<ResponseBase>
 {

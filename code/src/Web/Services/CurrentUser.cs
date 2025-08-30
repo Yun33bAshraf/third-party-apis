@@ -1,8 +1,8 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace ThirdPartyAPIs.Web.Services;
+namespace OpenProfileAPI.Web.Services;
 
 public class CurrentUser : IUser
 {

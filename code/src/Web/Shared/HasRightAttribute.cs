@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Enums;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Web.Shared;
+namespace OpenProfileAPI.Web.Shared;
 
 public class HasRightAttribute : AuthorizeAttribute, IAuthorizationFilter
 {

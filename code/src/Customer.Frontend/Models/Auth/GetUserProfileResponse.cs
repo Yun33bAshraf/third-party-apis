@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-namespace IApply.Frontend.Models.Auth;
+using OpenProfileAPI.Frontend.Models;
+namespace OpenProfileAPI.Frontend.Models.Auth;
 
 public class GetUserProfileResponse : BaseResponse<GetUsersProfile>
 {

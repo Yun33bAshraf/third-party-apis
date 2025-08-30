@@ -1,7 +1,8 @@
 ﻿using System.Reflection;
-using ThirdPartyAPIs.Application.Common.Behaviours;
+using Microsoft.Extensions.DependencyInjection;
+using OpenProfileAPI.Application.Common.Behaviours;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace OpenProfileAPI.Application;
 
 public static class DependencyInjection
 {

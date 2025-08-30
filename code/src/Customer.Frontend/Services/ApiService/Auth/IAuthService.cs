@@ -1,12 +1,12 @@
-﻿using IApply.Frontend.Models;
-using IApply.Frontend.Models.Auth;
-using IApply.Frontend.Models.Auth._2Factor;
-using IApply.Frontend.Models.Auth.Login;
-using IApply.Frontend.Models.Auth.Otp;
-using IApply.Frontend.Models.Auth.Register;
-using IApply.Frontend.Models.Auth.VerifyEmail;
+﻿using IApply.Frontend.Models.Auth._2Factor;
+using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Auth;
+using OpenProfileAPI.Frontend.Models.Auth.Login;
+using OpenProfileAPI.Frontend.Models.Auth.Otp;
+using OpenProfileAPI.Frontend.Models.Auth.Register;
+using OpenProfileAPI.Frontend.Models.Auth.VerifyEmail;
 
-namespace IApply.Frontend.Services.ApiService.Auth;
+namespace OpenProfileAPI.Frontend.Services.ApiService.Auth;
 
 public interface IAuthService
 {

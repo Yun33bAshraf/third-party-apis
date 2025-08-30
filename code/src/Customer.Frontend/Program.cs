@@ -1,18 +1,18 @@
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
-using IApply.Frontend.Common.Constants;
-using IApply.Frontend.Common.Models;
 using IApply.Frontend.Components;
-using IApply.Frontend.Services;
-using IApply.Frontend.Services.ApiService;
-using IApply.Frontend.Services.ApiService.Auth;
-using IApply.Frontend.Services.ApiService.Me;
-using IApply.Frontend.Services.ApiService.Role;
-using IApply.Frontend.Services.ApiService.System;
-using IApply.Frontend.Services.ApiService.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using OpenProfileAPI.Frontend.Common.Constants;
+using OpenProfileAPI.Frontend.Common.Models;
+using OpenProfileAPI.Frontend.Services;
+using OpenProfileAPI.Frontend.Services.ApiService;
+using OpenProfileAPI.Frontend.Services.ApiService.Auth;
+using OpenProfileAPI.Frontend.Services.ApiService.Me;
+using OpenProfileAPI.Frontend.Services.ApiService.Role;
+using OpenProfileAPI.Frontend.Services.ApiService.System;
+using OpenProfileAPI.Frontend.Services.ApiService.User;
 
 var builder = WebApplication.CreateBuilder(args);
 

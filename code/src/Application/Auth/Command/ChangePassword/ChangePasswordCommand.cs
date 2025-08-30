@@ -1,9 +1,9 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.Auth.Command.ChangePassword;
+namespace OpenProfileAPI.Application.Auth.Command.ChangePassword;
 
 public class ChangePasswordCommand : IRequest<ResponseBase>
 {

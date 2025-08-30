@@ -1,11 +1,11 @@
-﻿//using ThirdPartyAPIs.Application.TodoItems.Commands.CreateTodoItem;
-//using ThirdPartyAPIs.Application.TodoItems.Commands.UpdateTodoItem;
-//using ThirdPartyAPIs.Application.TodoItems.Commands.UpdateTodoItemDetail;
-//using ThirdPartyAPIs.Application.TodoLists.Commands.CreateTodoList;
-//using ThirdPartyAPIs.Domain.Entities;
-//using ThirdPartyAPIs.Domain.Enums;
+﻿//using OpenProfileAPI.Application.TodoItems.Commands.CreateTodoItem;
+//using OpenProfileAPI.Application.TodoItems.Commands.UpdateTodoItem;
+//using OpenProfileAPI.Application.TodoItems.Commands.UpdateTodoItemDetail;
+//using OpenProfileAPI.Application.TodoLists.Commands.CreateTodoList;
+//using OpenProfileAPI.Domain.Entities;
+//using OpenProfileAPI.Domain.Enums;
 
-//namespace ThirdPartyAPIs.Application.FunctionalTests.TodoItems.Commands;
+//namespace OpenProfileAPI.Application.FunctionalTests.TodoItems.Commands;
 
 //using static Testing;
 

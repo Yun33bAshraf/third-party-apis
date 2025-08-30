@@ -1,9 +1,9 @@
 ﻿using System.Data;
 using System.Data.Common;
-using ThirdPartyAPIs.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Interfaces;
 using Dapper;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 
 public class DbRepository : IDbRepository
 {

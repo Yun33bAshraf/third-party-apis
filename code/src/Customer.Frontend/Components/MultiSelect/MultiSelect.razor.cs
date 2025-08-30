@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 
-namespace IApply.Frontend.Components.MultiSelect;
+namespace OpenProfileAPI.Frontend.Components.MultiSelect;
 
 public partial class MultiSelect<TItem> : ComponentBase
 {

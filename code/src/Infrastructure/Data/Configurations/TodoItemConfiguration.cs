@@ -1,8 +1,8 @@
-﻿//using ThirdPartyAPIs.Domain.Entities;
+﻿//using OpenProfileAPI.Domain.Entities;
 //using Microsoft.EntityFrameworkCore;
 //using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-//namespace ThirdPartyAPIs.Infrastructure.Data.Configurations;
+//namespace OpenProfileAPI.Infrastructure.Data.Configurations;
 
 //public class TodoItemConfiguration : IEntityTypeConfiguration<TodoItem>
 //{

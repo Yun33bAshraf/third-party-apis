@@ -1,7 +1,7 @@
-﻿using IApply.Frontend.Models.Auth.Login;
-using IApply.Frontend.Models.Rights;
+﻿using OpenProfileAPI.Frontend.Models.Auth.Login;
+using OpenProfileAPI.Frontend.Models.Rights;
 
-namespace IApply.Frontend.Services
+namespace OpenProfileAPI.Frontend.Services
 {
     public class AuthResponseService
     {

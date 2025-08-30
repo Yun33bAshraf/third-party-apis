@@ -1,9 +1,9 @@
-﻿using ThirdPartyAPIs.Application.Common.Contracts;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Entities;
-using AuthPolicyModel = ThirdPartyAPIs.Domain.Entities.AuthPolicy;
+﻿using OpenProfileAPI.Application.Common.Contracts;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Entities;
+using AuthPolicyModel = OpenProfileAPI.Domain.Entities.AuthPolicy;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 public interface ITokenRepository
 {
     Task<LoginAttemptContext> ApplyPolicy(User user, LoginAttempts attempt, AuthPolicyModel policy, string timezone);

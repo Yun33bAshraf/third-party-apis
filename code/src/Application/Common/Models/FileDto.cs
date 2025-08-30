@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Application.Common.Models;
+﻿namespace OpenProfileAPI.Application.Common.Models;
 public class FileDto
 {
     public string FileName { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-namespace IApply.Frontend.Models.Auth.Otp;
+namespace OpenProfileAPI.Frontend.Models.Auth.Otp;
 
 public class VerifyOtpRequest
 {

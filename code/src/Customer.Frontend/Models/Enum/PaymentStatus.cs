@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Enum
+namespace OpenProfileAPI.Frontend.Models.Enum
 {
     public enum PaymentStatus
     {

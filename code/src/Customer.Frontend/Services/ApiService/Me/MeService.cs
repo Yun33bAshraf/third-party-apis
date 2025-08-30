@@ -1,11 +1,11 @@
 ﻿using IApply.Frontend.Models.Auth._2Factor;
-using IApply.Frontend.Common.Constants;
-using IApply.Frontend.Models;
-using IApply.Frontend.Services;
-using IApply.Frontend.Models.Profile;
-using IApply.Frontend.Models.Rights.GetRights;
+using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Common.Constants;
+using OpenProfileAPI.Frontend.Services;
+using OpenProfileAPI.Frontend.Models.Profile;
+using OpenProfileAPI.Frontend.Models.Rights.GetRights;
 
-namespace IApply.Frontend.Services.ApiService.Me
+namespace OpenProfileAPI.Frontend.Services.ApiService.Me
 {
     public class MeService : IMeService
     {

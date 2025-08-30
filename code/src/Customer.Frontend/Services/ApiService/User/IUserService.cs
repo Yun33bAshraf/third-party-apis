@@ -1,11 +1,11 @@
-﻿using IApply.Frontend.Models;
-using IApply.Frontend.Models.Profile.AddEducation;
-using IApply.Frontend.Models.Profile.AddExperience;
-using IApply.Frontend.Models.Profile.GetProfile;
-using IApply.Frontend.Models.Profile.ProfileUpdate;
-using IApply.Frontend.Models.Profile.UpdateEducation;
+﻿using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Profile.AddEducation;
+using OpenProfileAPI.Frontend.Models.Profile.AddExperience;
+using OpenProfileAPI.Frontend.Models.Profile.GetProfile;
+using OpenProfileAPI.Frontend.Models.Profile.ProfileUpdate;
+using OpenProfileAPI.Frontend.Models.Profile.UpdateEducation;
 
-namespace IApply.Frontend.Services.ApiService.User;
+namespace OpenProfileAPI.Frontend.Services.ApiService.User;
 
 public interface IUserService
 {

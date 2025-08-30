@@ -1,11 +1,11 @@
 ﻿using System.Web;
 using Microsoft.Extensions.Configuration;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Enums;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.Auth.Command.ForgetPassword;
+namespace OpenProfileAPI.Application.Auth.Command.ForgetPassword;
 
 public record ForgetPasswordCommand : IRequest<ResponseBase>
 {
@@ -57,7 +57,7 @@ public class ForgetPasswordCommandHandler : IRequestHandler<ForgetPasswordComman
             var feBaseUrl = _configuration.GetValue<string>("AppConfig:FEBaseURL");
             var forgetPasswordUrl = string.Format("{0}/auth/forget-password?type=verifyemail&code={1}&id={2}&email={3}", feBaseUrl, token, user.Id, HttpUtility.UrlEncode(request.Email));
 
-            string body = string.Format("Hi {0},<br /><br /><a href='{1}'>Click Here</a> to Reset Password. <br /><br />Thanks,<br />ThirdPartyAPIs Admin", user.FirstName ?? string.Empty, feBaseUrl);
+            string body = string.Format("Hi {0},<br /><br /><a href='{1}'>Click Here</a> to Reset Password. <br /><br />Thanks,<br />OpenProfileAPI Admin", user.FirstName ?? string.Empty, feBaseUrl);
 
             // SEND Registration Complete Email
             await _emailSenderRepository.SendEmailAsync(request.Email ?? string.Empty, "Reset Password", body);

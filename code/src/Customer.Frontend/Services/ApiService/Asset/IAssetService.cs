@@ -1,7 +1,7 @@
-﻿using IApply.Frontend.Models;
-using IApply.Frontend.Models.Assets;
+﻿using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Assets;
 
-namespace IApply.Frontend.Services.ApiService.Asset
+namespace OpenProfileAPI.Frontend.Services.ApiService.Asset
 {
     public interface IAssetService
     {

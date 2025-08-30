@@ -1,13 +1,13 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace ThirdPartyAPIs.Infrastructure.Data;
+namespace OpenProfileAPI.Infrastructure.Data;
 
 public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>, IApplicationDbContext
 {

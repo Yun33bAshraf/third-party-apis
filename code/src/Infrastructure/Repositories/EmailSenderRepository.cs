@@ -2,9 +2,9 @@
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using ThirdPartyAPIs.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Interfaces;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 
 public class EmailSenderRepository : IEmailSenderRepository
 {
@@ -36,7 +36,7 @@ public class EmailSenderRepository : IEmailSenderRepository
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(_smtpUsername, "ThirdPartyAPIs Admin"),
+                    From = new MailAddress(_smtpUsername, "OpenProfileAPI Admin"),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true // Set to true if the body is HTML

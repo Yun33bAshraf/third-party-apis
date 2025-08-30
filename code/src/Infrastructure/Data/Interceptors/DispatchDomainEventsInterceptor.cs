@@ -1,9 +1,9 @@
-﻿using ThirdPartyAPIs.Domain.Common;
+﻿using OpenProfileAPI.Domain.Common;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace ThirdPartyAPIs.Infrastructure.Data.Interceptors;
+namespace OpenProfileAPI.Infrastructure.Data.Interceptors;
 
 public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
 {

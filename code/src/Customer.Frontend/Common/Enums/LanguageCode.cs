@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Common.Enums;
+namespace OpenProfileAPI.Frontend.Common.Enums;
 
 public enum LanguageCode
 {

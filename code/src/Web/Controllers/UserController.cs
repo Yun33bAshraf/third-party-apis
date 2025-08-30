@@ -1,8 +1,8 @@
 ﻿//using Microsoft.AspNetCore.Authorization;
 //using Microsoft.AspNetCore.Mvc;
-//using ThirdPartyAPIs.Application.Users.Queries.GetUsersWithPagination;
+//using OpenProfileAPI.Application.Users.Queries.GetUsersWithPagination;
 
-//namespace ThirdPartyAPIs.Web.Controllers;
+//namespace OpenProfileAPI.Web.Controllers;
 
 //[Route("api/[controller]")]
 //[ApiController]

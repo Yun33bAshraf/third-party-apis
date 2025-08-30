@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Profile.UpdateEducation;
+﻿namespace OpenProfileAPI.Frontend.Models.Profile.UpdateEducation;
 
 public class EducationUpdateResponse
 {

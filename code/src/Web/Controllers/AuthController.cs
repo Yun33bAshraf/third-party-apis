@@ -1,15 +1,15 @@
-﻿//using ThirdPartyAPIs.Application.Auth.Command.ChangePassword;
-//using ThirdPartyAPIs.Application.Auth.Command.CompleteForgetPassword;
-//using ThirdPartyAPIs.Application.Auth.Command.CompleteSignUp;
-//using ThirdPartyAPIs.Application.Auth.Command.ForgetPassword;
-//using ThirdPartyAPIs.Application.Auth.Command.Login;
-//using ThirdPartyAPIs.Application.Auth.Command.RefreshToken;
-//using ThirdPartyAPIs.Application.Auth.Command.Register;
-//using ThirdPartyAPIs.Application.Users.Commands.CompleteRegistration;
+﻿//using OpenProfileAPI.Application.Auth.Command.ChangePassword;
+//using OpenProfileAPI.Application.Auth.Command.CompleteForgetPassword;
+//using OpenProfileAPI.Application.Auth.Command.CompleteSignUp;
+//using OpenProfileAPI.Application.Auth.Command.ForgetPassword;
+//using OpenProfileAPI.Application.Auth.Command.Login;
+//using OpenProfileAPI.Application.Auth.Command.RefreshToken;
+//using OpenProfileAPI.Application.Auth.Command.Register;
+//using OpenProfileAPI.Application.Users.Commands.CompleteRegistration;
 //using Microsoft.AspNetCore.Authorization;
 //using Microsoft.AspNetCore.Mvc;
 
-//namespace ThirdPartyAPIs.Web.Controllers;
+//namespace OpenProfileAPI.Web.Controllers;
 
 //[Route("api/[controller]")]
 //[ApiController]

@@ -1,9 +1,9 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.AuthPolicy.Command;
+namespace OpenProfileAPI.Application.AuthPolicy.Command;
 public class AuthPolicyUpdateCommand : IRequest<ResponseBase>
 {
     public int UserTypeId { get; set; }

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace ThirdPartyAPIs.Web.Infrastructure;
+namespace OpenProfileAPI.Web.Infrastructure;
 
 public static class MethodInfoExtensions
 {

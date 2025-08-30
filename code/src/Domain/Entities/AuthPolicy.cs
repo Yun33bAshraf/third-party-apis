@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Entities;
+﻿namespace OpenProfileAPI.Domain.Entities;
 public class AuthPolicy : BaseAuditableEntity
 {
     public int UserTypeId { get; set; }

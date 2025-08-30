@@ -1,9 +1,9 @@
-﻿//using ThirdPartyAPIs.Domain.Exceptions;
-//using ThirdPartyAPIs.Domain.ValueObjects;
+﻿//using OpenProfileAPI.Domain.Exceptions;
+//using OpenProfileAPI.Domain.ValueObjects;
 //using FluentAssertions;
 //using NUnit.Framework;
 
-//namespace ThirdPartyAPIs.Domain.UnitTests.ValueObjects;
+//namespace OpenProfileAPI.Domain.UnitTests.ValueObjects;
 
 //public class ColourTests
 //{

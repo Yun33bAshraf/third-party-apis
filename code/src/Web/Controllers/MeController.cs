@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Application.Me;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Application.Me;
 
-namespace ThirdPartyAPIs.Web.Controllers;
+namespace OpenProfileAPI.Web.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

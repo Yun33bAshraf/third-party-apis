@@ -1,12 +1,12 @@
-﻿//using ThirdPartyAPIs.Application.Common.Behaviours;
-//using ThirdPartyAPIs.Application.Common.Interfaces;
-//using ThirdPartyAPIs.Application.TodoItems.Commands.CreateTodoItem;
+﻿//using OpenProfileAPI.Application.Common.Behaviours;
+//using OpenProfileAPI.Application.Common.Interfaces;
+//using OpenProfileAPI.Application.TodoItems.Commands.CreateTodoItem;
 //using Microsoft.CodeAnalysis.CSharp.Syntax;
 //using Microsoft.Extensions.Logging;
 //using Moq;
 //using NUnit.Framework;
 
-//namespace ThirdPartyAPIs.Application.UnitTests.Common.Behaviours;
+//namespace OpenProfileAPI.Application.UnitTests.Common.Behaviours;
 
 //public class RequestLoggerTests
 //{

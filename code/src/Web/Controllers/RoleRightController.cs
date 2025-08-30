@@ -1,10 +1,10 @@
 ﻿//using Microsoft.AspNetCore.Authorization;
 //using Microsoft.AspNetCore.Mvc;
-//using ThirdPartyAPIs.Application.Roles.Commands;
-//using ThirdPartyAPIs.Application.Roles.Queries.GetRolesWithPagination;
-//using ThirdPartyAPIs.Application.Roles.Rights.Queries;
+//using OpenProfileAPI.Application.Roles.Commands;
+//using OpenProfileAPI.Application.Roles.Queries.GetRolesWithPagination;
+//using OpenProfileAPI.Application.Roles.Rights.Queries;
 
-//namespace ThirdPartyAPIs.Web.Controllers;
+//namespace OpenProfileAPI.Web.Controllers;
 
 //[Route("api/[controller]")]
 //[ApiController]

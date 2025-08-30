@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using ThirdPartyAPIs.Application.Common.Models;
+using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Application.OpenWeatherMap;
+namespace OpenProfileAPI.Application.OpenWeatherMap;
 
 public class CurrentAndForecastWeatherQuery : IRequest<ResponseBase>
 {

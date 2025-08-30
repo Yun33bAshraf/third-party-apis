@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Common.Constants
+﻿namespace OpenProfileAPI.Frontend.Common.Constants
 {
     public static class CacheKeys
     {

@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Services
+﻿namespace OpenProfileAPI.Frontend.Services
 {
     public class AlertService
     {

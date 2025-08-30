@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IApply.Frontend.Models.Roles;
+namespace OpenProfileAPI.Frontend.Models.Roles;
 
 public class RoleRequest
 {

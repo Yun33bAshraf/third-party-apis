@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>ThirdPartyAPIs.Application</RootNamespace>
-    <AssemblyName>ThirdPartyAPIs.Application</AssemblyName>
+    <RootNamespace>OpenProfileAPI.Application</RootNamespace>
+    <AssemblyName>OpenProfileAPI.Application</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
-using ThirdPartyAPIs.Application.Common.Exceptions;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
+using OpenProfileAPI.Application.Common.Exceptions;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
 
-namespace ThirdPartyAPIs.Web.Middleware;
+namespace OpenProfileAPI.Web.Middleware;
 
 public class ErrorHandlingMiddleware
 {

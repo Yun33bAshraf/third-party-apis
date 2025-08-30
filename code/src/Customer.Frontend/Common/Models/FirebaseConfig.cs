@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Common.Models
+﻿namespace OpenProfileAPI.Frontend.Common.Models
 {
     public class FirebaseConfig
     {

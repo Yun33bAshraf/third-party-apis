@@ -1,8 +1,8 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
 using Dapper;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {

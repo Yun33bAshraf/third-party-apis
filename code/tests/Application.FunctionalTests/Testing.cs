@@ -1,15 +1,15 @@
-﻿using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Constants;
-using ThirdPartyAPIs.Domain.Enums;
-using ThirdPartyAPIs.Infrastructure.Data;
-using ThirdPartyAPIs.Infrastructure.Identity;
+﻿using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Constants;
+using OpenProfileAPI.Domain.Enums;
+using OpenProfileAPI.Infrastructure.Data;
+using OpenProfileAPI.Infrastructure.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using ThirdPartyAPIs.Domain.Entities;
+using OpenProfileAPI.Domain.Entities;
 
-namespace ThirdPartyAPIs.Application.FunctionalTests;
+namespace OpenProfileAPI.Application.FunctionalTests;
 
 [SetUpFixture]
 public partial class Testing

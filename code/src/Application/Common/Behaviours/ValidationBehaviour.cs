@@ -1,6 +1,6 @@
-﻿using ValidationException = ThirdPartyAPIs.Application.Common.Exceptions.ValidationException;
+﻿using ValidationException = OpenProfileAPI.Application.Common.Exceptions.ValidationException;
 
-namespace ThirdPartyAPIs.Application.Common.Behaviours;
+namespace OpenProfileAPI.Application.Common.Behaviours;
 
 public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
      where TRequest : notnull

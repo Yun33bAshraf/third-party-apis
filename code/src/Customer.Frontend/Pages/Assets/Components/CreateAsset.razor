@@ -1,14 +1,18 @@
 ﻿@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
 @using IApply.Frontend.Common.Enums
 @using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.CInput
+@using IApply.Frontend.Components.CTable
+@using IApply.Frontend.Components.FilterCard
 @using IApply.Frontend.Models.Assets
 @using IApply.Frontend.Services
 @using IApply.Frontend.Services.ApiService.Asset
 @using IApply.Frontend.Services.ApiService.System
-@using IApply.Frontend.Components.CInput
-@using IApply.Frontend.Components.CTable
-@using IApply.Frontend.Components.FilterCard
+@using Microsoft.AspNetCore.Components.Authorization
+@using OpenProfileAPI.Frontend.Models.Assets
+@using OpenProfileAPI.Frontend.Services
+@using OpenProfileAPI.Frontend.Services.ApiService.Asset
+@using OpenProfileAPI.Frontend.Services.ApiService.System
 @inject AlertService AlertService
 @inject ISystemService SystemService
 @inject IAssetService AssetService

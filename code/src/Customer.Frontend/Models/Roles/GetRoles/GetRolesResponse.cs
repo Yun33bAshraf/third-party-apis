@@ -1,8 +1,8 @@
-﻿using IApply.Frontend.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using IApply.Frontend.Common.CustomAttributes;
+using OpenProfileAPI.Frontend.Models;
 
-namespace IApply.Frontend.Models.Roles.GetRoles;
+namespace OpenProfileAPI.Frontend.Models.Roles.GetRoles;
 
 public class GetRolesResponse : BaseResponse
 {

@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Net;
 using System.Security.Claims;
-using IApply.Frontend.Common.Constants;
-using IApply.Frontend.Models;
+using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Common.Constants;
+using OpenProfileAPI.Frontend.Services;
+using OpenProfileAPI.Frontend.Models.Auth.Login;
 
-namespace IApply.Frontend.Services.ApiService;
+namespace OpenProfileAPI.Frontend.Services.ApiService;
 
 public class ApiService(HttpClient httpClient, string baseApiUrl, ILocalStorageService localStorage, AuthenticationStateProvider authStateProvider, AlertService alertService, NavigationManager navigationManager)
 {

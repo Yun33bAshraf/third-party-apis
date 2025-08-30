@@ -1,14 +1,14 @@
-﻿using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Domain.Enums;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Server.IISIntegration;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
-using UserRoleModel = ThirdPartyAPIs.Domain.Entities.UserRole;
+using UserRoleModel = OpenProfileAPI.Domain.Entities.UserRole;
 
-namespace ThirdPartyAPIs.Infrastructure.Data;
+namespace OpenProfileAPI.Infrastructure.Data;
 public class DataSeeder
 {
     private readonly ApplicationDbContext _dbContext;

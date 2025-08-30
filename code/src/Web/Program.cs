@@ -5,9 +5,11 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using ThirdPartyAPIs.Infrastructure.Data;
-using ThirdPartyAPIs.Infrastructure.Data.Configurations;
-using ThirdPartyAPIs.Web.Middleware;
+using OpenProfileAPI.Infrastructure.Data;
+using OpenProfileAPI.Infrastructure.Data.Configurations;
+using OpenProfileAPI.Web.Middleware;
+using OpenProfileAPI.Application;
+using OpenProfileAPI.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,7 +92,7 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<AppConfig>>()
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ThirdPartyAPIs", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "OpenProfileAPI", Version = "v1" });
     // c.SchemaFilter<SwaggerSchemaFilter>();
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

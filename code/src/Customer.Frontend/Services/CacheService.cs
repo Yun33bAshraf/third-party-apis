@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 
-namespace IApply.Frontend.Services
+namespace OpenProfileAPI.Frontend.Services
 {
     public class CacheService
     {

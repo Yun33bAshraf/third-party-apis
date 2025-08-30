@@ -1,10 +1,10 @@
 ﻿using Azure.Identity;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Infrastructure.Data;
-using ThirdPartyAPIs.Web.Services;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Infrastructure.Data;
+using OpenProfileAPI.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace OpenProfileAPI.Web;
 
 public static class DependencyInjection
 {

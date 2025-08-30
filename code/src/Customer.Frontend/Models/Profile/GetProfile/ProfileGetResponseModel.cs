@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Profile.GetProfile;
+﻿namespace OpenProfileAPI.Frontend.Models.Profile.GetProfile;
 
 public class ProfileGetResponseModel
 {

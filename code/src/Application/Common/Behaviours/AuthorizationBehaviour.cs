@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
-using ThirdPartyAPIs.Application.Common.Exceptions;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Security;
+using OpenProfileAPI.Application.Common.Exceptions;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Security;
 
-namespace ThirdPartyAPIs.Application.Common.Behaviours;
+namespace OpenProfileAPI.Application.Common.Behaviours;
 
 public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {

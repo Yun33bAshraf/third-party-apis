@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Enums;
+﻿namespace OpenProfileAPI.Domain.Enums;
 
 public enum LoginType
 {

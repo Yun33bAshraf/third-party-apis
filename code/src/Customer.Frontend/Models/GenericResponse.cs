@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models;
+﻿namespace OpenProfileAPI.Frontend.Models;
 
 public class GenericResponse
 {

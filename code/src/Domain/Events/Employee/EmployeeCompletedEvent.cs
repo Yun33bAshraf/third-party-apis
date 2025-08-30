@@ -1,4 +1,4 @@
-﻿//namespace ThirdPartyAPIs.Domain.Events;
+﻿//namespace OpenProfileAPI.Domain.Events;
 
 //public class EmployeeCompletedEvent : BaseEvent
 //{

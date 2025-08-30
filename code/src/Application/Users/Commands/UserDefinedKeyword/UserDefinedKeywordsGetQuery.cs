@@ -1,9 +1,9 @@
 ﻿//using System.Linq.Expressions;
-//using ThirdPartyAPIs.Application.Common.Interfaces;
-//using ThirdPartyAPIs.Application.Common.Models;
-//using ThirdPartyAPIs.Domain.Entities;
+//using OpenProfileAPI.Application.Common.Interfaces;
+//using OpenProfileAPI.Application.Common.Models;
+//using OpenProfileAPI.Domain.Entities;
 
-//namespace ThirdPartyAPIs.Application.Users.Commands.UserDefinedKeyword;
+//namespace OpenProfileAPI.Application.Users.Commands.UserDefinedKeyword;
 //public class UserDefinedKeywordsGetQuery : IRequest<ResponseBase>
 //{
 //}

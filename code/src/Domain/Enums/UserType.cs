@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace ThirdPartyAPIs.Domain.Enums;
+namespace OpenProfileAPI.Domain.Enums;
 public enum UserType
 {
     [Description("Admin")]

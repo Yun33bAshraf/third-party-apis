@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Entities;
+﻿namespace OpenProfileAPI.Domain.Entities;
 public class LoginAttempts :BaseAuditableEntity
 {
     public int UserId { get; set; }

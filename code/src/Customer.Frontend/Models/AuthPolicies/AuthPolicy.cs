@@ -1,8 +1,8 @@
 ﻿using IApply.Frontend.Common.CustomAttributes;
 using System.ComponentModel.DataAnnotations;
-using IApply.Frontend.Common.Enums;
+using OpenProfileAPI.Frontend.Common.Enums;
 
-namespace IApply.Frontend.Models.AuthPolicies
+namespace OpenProfileAPI.Frontend.Models.AuthPolicies
 {
     public class AuthPolicy : IValidatableObject
     {

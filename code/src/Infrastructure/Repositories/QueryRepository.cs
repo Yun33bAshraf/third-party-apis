@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Infrastructure.Data;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Infrastructure.Data;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 public class QueryRepository<T> : IQueryRepository<T> where T : BaseAuditableEntity
 {
     protected readonly ApplicationDbContext _applicationDbContext;

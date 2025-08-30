@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 
 public interface IDbRepository
 {

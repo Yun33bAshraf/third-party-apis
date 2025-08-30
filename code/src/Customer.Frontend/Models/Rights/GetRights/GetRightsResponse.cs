@@ -1,7 +1,7 @@
-﻿using IApply.Frontend.Models;
-using IApply.Frontend.Models.Rights;
+﻿using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Rights;
 
-namespace IApply.Frontend.Models.Rights.GetRights
+namespace OpenProfileAPI.Frontend.Models.Rights.GetRights
 {
     public class GetRightsResponse : BaseResponse
     {

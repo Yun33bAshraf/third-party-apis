@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Application.Users.Queries.GetUsersWithPagination;
+﻿namespace OpenProfileAPI.Application.Users.Queries.GetUsersWithPagination;
 
 public class GetUsersWithPaginationQueryValidator : AbstractValidator<GetUsersWithPaginationQuery>
 {

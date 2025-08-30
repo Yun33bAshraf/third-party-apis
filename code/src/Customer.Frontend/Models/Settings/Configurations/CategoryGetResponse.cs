@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using IApply.Frontend.Common.CustomAttributes;
 
-namespace IApply.Frontend.Models.Settings.Configurations;
+namespace OpenProfileAPI.Frontend.Models.Settings.Configurations;
 
 public class CategoryGetResponse
 {

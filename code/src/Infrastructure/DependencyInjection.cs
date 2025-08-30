@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Infrastructure.Data;
-using ThirdPartyAPIs.Infrastructure.Data.Interceptors;
-using ThirdPartyAPIs.Infrastructure.Identity;
-using ThirdPartyAPIs.Infrastructure.Repositories;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Infrastructure.Data;
+using OpenProfileAPI.Infrastructure.Data.Interceptors;
+using OpenProfileAPI.Infrastructure.Identity;
+using OpenProfileAPI.Infrastructure.Repositories;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

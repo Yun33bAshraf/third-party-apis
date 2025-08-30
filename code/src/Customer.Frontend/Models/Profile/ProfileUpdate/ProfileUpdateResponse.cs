@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Profile.ProfileUpdate;
+﻿namespace OpenProfileAPI.Frontend.Models.Profile.ProfileUpdate;
 
 public class ProfileUpdateResponse
 {

@@ -1,21 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
 @using System.Security.Claims
-@using IApply.Frontend.Models.Profile.GetProfile
-@using IApply.Frontend.Services.ApiService.User
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.Extensions.Options
 @using IApply.Frontend.Common.Models
 @using IApply.Frontend.Common.Utilities
+@using IApply.Frontend.Components.Alert
+@using IApply.Frontend.Components.CLoader
 @using IApply.Frontend.Models.Auth
+@using IApply.Frontend.Models.Profile
+@using IApply.Frontend.Models.Profile.GetProfile
+@using IApply.Frontend.Models.System.DeviceRegister
 @using IApply.Frontend.Services
 @using IApply.Frontend.Services.ApiService.Auth
 @using IApply.Frontend.Services.ApiService.Me
 @using IApply.Frontend.Services.ApiService.System
-@using IApply.Frontend.Components.Alert
-@using IApply.Frontend.Components.CLoader
-@using IApply.Frontend.Models.Profile
-@using IApply.Frontend.Models.System.DeviceRegister
+@using IApply.Frontend.Services.ApiService.User
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Options
+@using OpenProfileAPI.Frontend.Common.Models
+@using OpenProfileAPI.Frontend.Common.Utilities
+@using OpenProfileAPI.Frontend.Models.Profile.GetProfile
+@using OpenProfileAPI.Frontend.Services
+@using OpenProfileAPI.Frontend.Services.ApiService.Auth
+@using OpenProfileAPI.Frontend.Services.ApiService.System
+@using OpenProfileAPI.Frontend.Services.ApiService.User
 
 @inject LoadingService loadingService
 @inject NavigationManager _navigationManager

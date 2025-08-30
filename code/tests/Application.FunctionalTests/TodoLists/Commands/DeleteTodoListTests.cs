@@ -1,8 +1,8 @@
-﻿//using ThirdPartyAPIs.Application.TodoLists.Commands.CreateTodoList;
-//using ThirdPartyAPIs.Application.TodoLists.Commands.DeleteTodoList;
-//using ThirdPartyAPIs.Domain.Entities;
+﻿//using OpenProfileAPI.Application.TodoLists.Commands.CreateTodoList;
+//using OpenProfileAPI.Application.TodoLists.Commands.DeleteTodoList;
+//using OpenProfileAPI.Domain.Entities;
 
-//namespace ThirdPartyAPIs.Application.FunctionalTests.TodoLists.Commands;
+//namespace OpenProfileAPI.Application.FunctionalTests.TodoLists.Commands;
 
 //using static Testing;
 

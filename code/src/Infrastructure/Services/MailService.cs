@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using System.Net.Mail;
-using ThirdPartyAPIs.Application.Services;
+using OpenProfileAPI.Application.Services;
 
-namespace ThirdPartyAPIs.Infrastructure.Services;
+namespace OpenProfileAPI.Infrastructure.Services;
 
 public class MailService : IMailService
 {

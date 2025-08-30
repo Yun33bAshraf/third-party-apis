@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Entities;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Entities;
 
-namespace ThirdPartyAPIs.Application.Common.Interfaces;
+namespace OpenProfileAPI.Application.Common.Interfaces;
 
 public interface IIdentityService
 {

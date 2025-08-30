@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Application.Common.Exceptions;
+﻿namespace OpenProfileAPI.Application.Common.Exceptions;
 
 public class ForbiddenAccessException : Exception
 {

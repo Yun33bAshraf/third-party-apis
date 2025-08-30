@@ -2,9 +2,9 @@
 using System.Runtime.CompilerServices;
 using AutoMapper;
 using NUnit.Framework;
-using ThirdPartyAPIs.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Interfaces;
 
-namespace ThirdPartyAPIs.Application.UnitTests.Common.Mappings;
+namespace OpenProfileAPI.Application.UnitTests.Common.Mappings;
 
 public class MappingTests
 {

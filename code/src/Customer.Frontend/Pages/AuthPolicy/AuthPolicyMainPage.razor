@@ -1,8 +1,6 @@
 ﻿@page "/auth-policy"
 
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
 @using IApply.Frontend.Common.Enums
 @using IApply.Frontend.Common.Utilities
 @using IApply.Frontend.Models.AuthPolicies
@@ -11,6 +9,12 @@
 @using IApply.Frontend.Services
 @using IApply.Frontend.Services.ApiService
 @using IApply.Frontend.Services.ApiService.System
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using OpenProfileAPI.Frontend.Common.Enums
+@using OpenProfileAPI.Frontend.Models.AuthPolicies.GetAuthPolicies
+@using OpenProfileAPI.Frontend.Services
+@using OpenProfileAPI.Frontend.Services.ApiService.System
 
 @inject AlertService alertService
 @inject LoadingService loadingService

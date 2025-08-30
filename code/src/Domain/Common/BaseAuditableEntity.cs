@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyAPIs.Domain.Common;
+﻿namespace OpenProfileAPI.Domain.Common;
 
 public abstract class BaseAuditableEntity : BaseEntity
 {

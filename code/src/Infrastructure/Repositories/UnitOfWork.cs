@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Infrastructure.Data;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Infrastructure.Data;
 
-namespace ThirdPartyAPIs.Infrastructure.Repositories;
+namespace OpenProfileAPI.Infrastructure.Repositories;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _applicationDbContext;

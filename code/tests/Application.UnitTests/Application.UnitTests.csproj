@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RootNamespace>ThirdPartyAPIs.Application.UnitTests</RootNamespace>
-        <AssemblyName>ThirdPartyAPIs.Application.UnitTests</AssemblyName>
+        <RootNamespace>OpenProfileAPI.Application.UnitTests</RootNamespace>
+        <AssemblyName>OpenProfileAPI.Application.UnitTests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

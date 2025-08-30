@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace IApply.Frontend.Models;
+namespace OpenProfileAPI.Frontend.Models;
 
 public record LoggedInUserModel(int Id, string? Name, string? Email, string Token,int? Role)
 {

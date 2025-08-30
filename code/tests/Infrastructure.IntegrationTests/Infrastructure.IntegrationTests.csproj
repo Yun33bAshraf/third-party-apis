@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RootNamespace>ThirdPartyAPIs.Infrastructure.IntegrationTests</RootNamespace>
-        <AssemblyName>ThirdPartyAPIs.Infrastructure.IntegrationTests</AssemblyName>
+        <RootNamespace>OpenProfileAPI.Infrastructure.IntegrationTests</RootNamespace>
+        <AssemblyName>OpenProfileAPI.Infrastructure.IntegrationTests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

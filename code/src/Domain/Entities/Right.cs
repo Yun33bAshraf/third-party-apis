@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ThirdPartyAPIs.Domain.Entities;
+namespace OpenProfileAPI.Domain.Entities;
 
 public class Right : BaseAuditableEntity
 {

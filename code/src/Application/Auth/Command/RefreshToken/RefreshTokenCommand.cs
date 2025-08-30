@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using ThirdPartyAPIs.Application.Common.Contracts;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
-using AuthPolicyModel = ThirdPartyAPIs.Domain.Entities.AuthPolicy;
-using ThirdPartyAPIs.Domain.Enums;
+using OpenProfileAPI.Application.Common.Contracts;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
+using AuthPolicyModel = OpenProfileAPI.Domain.Entities.AuthPolicy;
+using OpenProfileAPI.Domain.Enums;
 
-namespace ThirdPartyAPIs.Application.Auth.Command.RefreshToken;
+namespace OpenProfileAPI.Application.Auth.Command.RefreshToken;
 public class RefreshTokenCommand : IRequest<ResponseBase>
 {
 }

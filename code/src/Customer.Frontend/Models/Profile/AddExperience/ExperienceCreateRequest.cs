@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Profile.AddExperience;
+﻿namespace OpenProfileAPI.Frontend.Models.Profile.AddExperience;
 
 public class ExperienceCreateRequest
 {

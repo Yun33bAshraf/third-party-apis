@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Settings.Configurations;
+﻿namespace OpenProfileAPI.Frontend.Models.Settings.Configurations;
 
 public class CategoryGetRequest
 {

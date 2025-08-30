@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThirdPartyAPIs.Domain.Enums;
+namespace OpenProfileAPI.Domain.Enums;
 public enum ActionType
 {
     AssignedTo = 1

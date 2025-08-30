@@ -1,10 +1,10 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Domain.Common;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace ThirdPartyAPIs.Infrastructure.Data.Interceptors;
+namespace OpenProfileAPI.Infrastructure.Data.Interceptors;
 
 public class AuditableEntityInterceptor : SaveChangesInterceptor
 {

@@ -4,9 +4,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Text.RegularExpressions;
-using IApply.Frontend.Common.Enums;
+using OpenProfileAPI.Frontend.Common.Enums;
 
-namespace IApply.Frontend.Common.Utilities;
+namespace OpenProfileAPI.Frontend.Common.Utilities;
 
 public static class Utils
 {

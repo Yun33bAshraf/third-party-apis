@@ -1,16 +1,16 @@
 ﻿using System.Runtime.InteropServices;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Constants;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Domain.Enums;
-using ThirdPartyAPIs.Infrastructure.Identity;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Constants;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Domain.Enums;
+using OpenProfileAPI.Infrastructure.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace ThirdPartyAPIs.Infrastructure.Data;
+namespace OpenProfileAPI.Infrastructure.Data;
 
 public static class InitialiserExtensions
 {

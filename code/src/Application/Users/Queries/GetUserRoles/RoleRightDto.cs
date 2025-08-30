@@ -1,7 +1,7 @@
 ﻿//using System.ComponentModel.DataAnnotations.Schema;
-//using ThirdPartyAPIs.Domain.Entities;
+//using OpenProfileAPI.Domain.Entities;
 
-//namespace ThirdPartyAPIs.Application.Salarys.Queries.GetSalariesWithPagination;
+//namespace OpenProfileAPI.Application.Salarys.Queries.GetSalariesWithPagination;
 
 //public class RoleRightDto
 //{

@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.Auth.VerifyEmail;
+﻿namespace OpenProfileAPI.Frontend.Models.Auth.VerifyEmail;
 
 public class VerifyEmailResponse
 {

@@ -1,11 +1,11 @@
-﻿using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
-using ThirdPartyAPIs.Domain.Entities;
-using ThirdPartyAPIs.Domain.Enums;
+﻿using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
+using OpenProfileAPI.Domain.Entities;
+using OpenProfileAPI.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
-namespace ThirdPartyAPIs.Application.Auth.Command.CompleteSignUp;
+namespace OpenProfileAPI.Application.Auth.Command.CompleteSignUp;
 public class SignUpCompleteCommand : IRequest<ResponseBase>
 {
     public int UserId { get; set; }
@@ -80,7 +80,7 @@ public class CompleteSignUpCommandHandler(UserManager<User> userManager, IEmailS
             <p>If you have any questions or need help, feel free to contact our support team.</p>
 
             <p>Best regards,<br/>
-            The ThirdPartyAPIs Team</p>
+            The OpenProfileAPI Team</p>
             """;
 
         await emailRepo.SendEmailAsync(user.Email ?? string.Empty, subject, htmlBody);

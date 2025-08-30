@@ -1,8 +1,12 @@
-﻿@using IApply.Frontend.Common.Utilities
+﻿@using System.Security.Claims
+@using IApply.Frontend.Common.Utilities
 @using IApply.Frontend.Models.Profile.AddExperience
 @using IApply.Frontend.Services.ApiService.User
 @using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
+@using OpenProfileAPI.Frontend.Common.Utilities
+@using OpenProfileAPI.Frontend.Models.Profile.AddExperience
+@using OpenProfileAPI.Frontend.Services
+@using OpenProfileAPI.Frontend.Services.ApiService.User
 
 @inject AuthenticationStateProvider authStateProvider
 @inject LoadingService loadingService

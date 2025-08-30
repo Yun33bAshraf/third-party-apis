@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using ThirdPartyAPIs.Application.Common.Interfaces;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Entities;
+using OpenProfileAPI.Application.Common.Interfaces;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Entities;
 
-namespace ThirdPartyAPIs.Application.Users.Queries.GetUsersWithPagination;
+namespace OpenProfileAPI.Application.Users.Queries.GetUserRoles;
 
 public record GetUserRightsQuery : IRequest<ResponseBase>
 {

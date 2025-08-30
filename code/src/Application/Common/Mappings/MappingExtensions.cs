@@ -1,6 +1,6 @@
-﻿using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Application.Common.Mappings;
+namespace OpenProfileAPI.Application.Common.Mappings;
 
 public static class MappingExtensions
 {

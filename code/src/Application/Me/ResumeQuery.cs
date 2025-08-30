@@ -1,7 +1,7 @@
-﻿using ThirdPartyAPIs.Application.Common.Contracts;
-using ThirdPartyAPIs.Application.Common.Models;
+﻿using OpenProfileAPI.Application.Common.Contracts;
+using OpenProfileAPI.Application.Common.Models;
 
-namespace ThirdPartyAPIs.Application.Me;
+namespace OpenProfileAPI.Application.Me;
 
 public class ResumeQuery : IRequest<ResponseBase>
 {

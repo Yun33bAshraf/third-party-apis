@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
-using ThirdPartyAPIs.Application.Common.Contracts;
-using ThirdPartyAPIs.Application.Common.Models;
-using ThirdPartyAPIs.Domain.Common;
+using OpenProfileAPI.Application.Common.Contracts;
+using OpenProfileAPI.Application.Common.Models;
+using OpenProfileAPI.Domain.Common;
 
-namespace ThirdPartyAPIs.Application.OpenWeatherMap;
+namespace OpenProfileAPI.Application.OpenWeatherMap;
 
 public class WeatherMapGetQuery : IRequest<ResponseBase>
 {

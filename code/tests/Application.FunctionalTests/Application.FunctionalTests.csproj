@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RootNamespace>ThirdPartyAPIs.Application.FunctionalTests</RootNamespace>
-        <AssemblyName>ThirdPartyAPIs.Application.FunctionalTests</AssemblyName>
+        <RootNamespace>OpenProfileAPI.Application.FunctionalTests</RootNamespace>
+        <AssemblyName>OpenProfileAPI.Application.FunctionalTests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

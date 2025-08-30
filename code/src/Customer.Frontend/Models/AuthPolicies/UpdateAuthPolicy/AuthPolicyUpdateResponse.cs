@@ -1,4 +1,4 @@
-﻿namespace IApply.Frontend.Models.AuthPolicies.UpdateAuthPolicy;
+﻿namespace OpenProfileAPI.Frontend.Models.AuthPolicies.UpdateAuthPolicy;
 
 public class AuthPolicyUpdateResponse
 {

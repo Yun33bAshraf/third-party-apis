@@ -1,16 +1,17 @@
 ﻿using System.Web;
-using IApply.Frontend.Common.Constants;
-using IApply.Frontend.Models;
-using IApply.Frontend.Models.AuthPolicies.GetAuthPolicies;
-using IApply.Frontend.Models.AuthPolicies.UpdateAuthPolicy;
-using IApply.Frontend.Models.Rights;
-using IApply.Frontend.Models.Rights.GetRights;
-using IApply.Frontend.Models.Roles;
-using IApply.Frontend.Models.Roles.GetRoles;
-using IApply.Frontend.Models.System.DeviceRegister;
-using IApply.Frontend.Models.System.DeviceSetting;
+using OpenProfileAPI.Frontend.Common.Constants;
+using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.AuthPolicies.GetAuthPolicies;
+using OpenProfileAPI.Frontend.Models.AuthPolicies.UpdateAuthPolicy;
+using OpenProfileAPI.Frontend.Models.Rights;
+using OpenProfileAPI.Frontend.Models.Rights.GetRights;
+using OpenProfileAPI.Frontend.Models.Roles;
+using OpenProfileAPI.Frontend.Models.Roles.GetRoles;
+using OpenProfileAPI.Frontend.Models.System.DeviceRegister;
+using OpenProfileAPI.Frontend.Models.System.DeviceSetting;
+using OpenProfileAPI.Frontend.Services;
 
-namespace IApply.Frontend.Services.ApiService.System;
+namespace OpenProfileAPI.Frontend.Services.ApiService.System;
 
 public class SystemService : ISystemService
 {

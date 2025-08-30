@@ -1,10 +1,10 @@
-﻿using IApply.Frontend.Models;
-using IApply.Frontend.Models.Rights;
-using IApply.Frontend.Models.Rights.GetRights;
-using IApply.Frontend.Models.Roles;
-using IApply.Frontend.Models.Roles.GetRoles;
+﻿using OpenProfileAPI.Frontend.Models;
+using OpenProfileAPI.Frontend.Models.Rights;
+using OpenProfileAPI.Frontend.Models.Rights.GetRights;
+using OpenProfileAPI.Frontend.Models.Roles;
+using OpenProfileAPI.Frontend.Models.Roles.GetRoles;
 
-namespace IApply.Frontend.Services.ApiService.Role;
+namespace OpenProfileAPI.Frontend.Services.ApiService.Role;
 
 public interface IRoleService
 {

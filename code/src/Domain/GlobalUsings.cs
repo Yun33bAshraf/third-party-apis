@@ -1,5 +1,5 @@
-﻿global using ThirdPartyAPIs.Domain.Common;
-global using ThirdPartyAPIs.Domain.Entities;
-global using ThirdPartyAPIs.Domain.Enums;
-//global using ThirdPartyAPIs.Domain.Events;
-global using ThirdPartyAPIs.Domain.Exceptions;
+﻿global using OpenProfileAPI.Domain.Common;
+global using OpenProfileAPI.Domain.Entities;
+global using OpenProfileAPI.Domain.Enums;
+//global using OpenProfileAPI.Domain.Events;
+global using OpenProfileAPI.Domain.Exceptions;
